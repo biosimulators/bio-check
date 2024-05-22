@@ -523,11 +523,16 @@ def run_simulator_comparison(
 
 
 
-def generate_comparison_matrix(outputs: List[np.ndarray], *simulators: str, rtol: float = None, atol: float = None) -> pd.DataFrame:
+def generate_comparison_matrix(outputs: List[np.ndarray], *simulator_names: str, rtol: float = None, atol: float = None, ground_truth: np.ndarray = None) -> pd.DataFrame:
     """Generate a Mean Squared Error comparison matrix of arr1 and arr2, indexed by simulators by default,
     or an AllClose Tolerance routine result if `use_tol` is set to true."""
 
     # TODO: map arrs to simulators more tightly.
+    simulators = [*simulator_names]
+    if ground_truth is not None:
+        simulators.append('ground_truth')
+        outputs.append(ground_truth)
+
     use_tol_method = bool(rtol or atol)
     matrix_dtype = float if not use_tol_method else bool
     mse_matrix = np.zeros((3, 3), dtype=matrix_dtype)
