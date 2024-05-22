@@ -1,5 +1,6 @@
 from typing import *
 
+import numpy as np
 from pydantic import FilePath, Field
 
 from src import BaseModel
