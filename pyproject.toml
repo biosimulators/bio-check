@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "biosimulator-processes"
+version = "0.0.24"
+description = "Core implementations of process-bigraph.composite.Process aligning with BioSimulators simulator tools."
+authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
+readme = "README.md"
+packages = [{include = "src"}, {include = "server"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+zarr = "*"
+termcolor = "*"
+jupyterlab = "*"
+bigraph-schema = "*"
+process-bigraph = "*"
+bigraph-viz = "*"
+bigraph-builder = "*"
+numpy = "*"
+copasi-basico = "*"
+cobra = "*"
+tellurium = "*"
+amici = "*"
+# smoldyn = {version = ">=2.72", optional = true}
+python-libsbml = "*"
+docker = "*"
+python-libnuml = "*"
+notebook = "*"
+toml = "*"
+fastapi = "*"  # "*"
+pyyaml = "*"
+pydantic = "*"
+h5py = "*"
+pydantic-settings = "*"
+httpx = "*"
+tensorstore = "*"
+aiofiles = "*"
+aiobotocore = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+seaborn = "*"
+
+[tool.poetry.extras]
+smoldyn = ["smoldyn"]
+# simulariumio = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+mypy = "*"
+flake8 = "*"
+twine = "*"
+
+[tool.pytest.ini_options]
+testpaths = ["biosimulator_processes", "test_suite"]
+addopts = "--ignore=setup.py"
+python_files = "*.py"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
