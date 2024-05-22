@@ -6,17 +6,16 @@ import numpy as np
 from pydantic import Field, field_validator
 
 from src import BaseModel
-from src.verification.compare import pairwise_comparison
 
 
 # TODO: seperate this into a lib for clarity
 
 # base file class
-class Entrypoint(BaseModel):
+class EntryPoint(BaseModel):
     pass
 
 
-class EntryPointFile(Entrypoint):
+class EntryPointFile(EntryPoint):
     file_path: str
 
 
@@ -141,9 +140,6 @@ class DefaultComparisonMethod(ComparisonMethod):
             if not compare_arrays(arr1[n], arr2[n]):
                 return False
         return True
-
-    def compare_arr_to_truth(self, arr: np.ndarray, ground_truth: np.ndarray) -> ODEProcessIntervalComparison:
-        pass
 
 
 # TODO: update this more closely with the doc
