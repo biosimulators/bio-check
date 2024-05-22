@@ -1,6 +1,8 @@
 from typing import *
 from types import FunctionType
 from abc import ABC, abstractmethod
+import subprocess
+import sys
 
 import numpy as np
 from pydantic import Field, field_validator
@@ -75,13 +77,50 @@ class CellMLFile(SimulationFile):
     pass
 
 
-# simulator arg
-class Simulator(EntryPoint):
+class Package(EntryPoint):
+    """Entrypoint implementation for any reference to a software package to be used at runtime.
+
+        Attributes:
+            name:`str`: the name of the package"""
     name: str
-    version: str
+    version: str = Field(default='latest')
+
+    def install_version(self, version: str) -> bool:
+        """Removes currently installed version of """
+        package = self.name + "==" + version
+        print('Installing ' + package)
+        try:
+            # remove currently installed version
+            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", package])
+
+            # install specified version
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+            return True
+        except Exception as e:
+            print(f'Installation failed:\n{e}')
+
+            return False
 
 
-class DefaultSimulator(Simulator):
+# simulator arg
+class SimulatorTool(Package):
+    """TODO: Somehow dynamically install the specified version if anything other than 'latest'."""
+    pass
+
+
+class PypiPackage(Package):
+    pass
+
+
+class PypiSimulator(PypiPackage):
+    pass
+
+
+class DefaultSimulator(PypiSimulator):
+    """For now, we will default to using PyPI.
+        TODO: resolve this to fit multiple package indices other than just pypi.
+    """
     name: str
     version: str = Field(default='latest')
 

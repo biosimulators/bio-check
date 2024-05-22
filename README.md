@@ -8,3 +8,8 @@ and enforce.
 
 When the functions from `server` are called, instances of the objects from `src` are created. 
 It is then up to the client to implement these rest calls correctly.
+
+
+### **Note (05/22/2024):**
+The only package source that is currently supported by this tooling is `PyPI`. The support of other potential 
+package sources such as `conda`, `brew`, `apt`, and more is currently under development.
