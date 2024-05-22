@@ -4,10 +4,10 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from biosimulator_processes.server.src.io import save_omex_archive
+from server.handlers.io import save_omex_archive
 
 
-app = FastAPI(title='biosimulator-processes-server')
+app = FastAPI(title='verification-service')
 
 
 origins = [
