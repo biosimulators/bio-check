@@ -2,3 +2,4 @@ release_env
 scripts/commit.sh
 .idea/
 scripts/
+.notes

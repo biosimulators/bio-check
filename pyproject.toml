@@ -41,6 +41,7 @@ seaborn = "*"
 
 [tool.poetry.extras]
 smoldyn = ["smoldyn"]
+jupyterlab = ["jupyterlab"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

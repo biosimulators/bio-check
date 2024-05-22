@@ -1,13 +1,18 @@
+"""SED2-based Data model to be instantiated by the REST API."""
+
 from dataclasses import dataclass
 from typing import *
 from types import NoneType
 import requests
+
 from abc import abstractmethod, ABC
 from pydantic import Field, create_model
-from biosimulator_processes.data_model import _BaseClass
+
+from src import _BaseClass
 
 
 __all__ = ['SedDataModel']
+
 
 @dataclass
 class SimulationModelParameter(_BaseClass):

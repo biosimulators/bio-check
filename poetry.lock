@@ -6014,9 +6014,10 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [extras]
+jupyterlab = ["jupyterlab"]
 smoldyn = []
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c4c8168680fda7741e03aeff44ddcbb77877fb59899ec2cd98f423673b0bb474"
+content-hash = "b8cfc1ddecca7b71ca5af1f826069eb190d17b4e96676d88a3c6965472437b87"
