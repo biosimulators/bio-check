@@ -1,8 +1,9 @@
 from typing import *
 
-from pydantic import FilePath
+from pydantic import FilePath, Field
 
 from src import BaseModel
+from src.enter import Simulator
 
 
 class Result(BaseModel):
@@ -33,6 +34,13 @@ class CSVFile(ResultFile):
 
 class SEDMLFile(ResultFile):
     pass
+
+
+class SimulationRun(Result):
+    simulator: Simulator
+    simulation_id: str
+    project_id: str
+    status: str = Field(default="Unknown")
 
 
 
