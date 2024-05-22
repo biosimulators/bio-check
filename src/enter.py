@@ -5,6 +5,8 @@ from pydantic import Field
 from src import BaseModel
 
 
+# TODO: seperate this into a lib for clarity
+
 # base file class
 class Entrypoint(BaseModel):
     pass
