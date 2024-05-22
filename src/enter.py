@@ -103,7 +103,7 @@ class Package(EntryPoint):
             return False
 
 
-# simulator arg
+# simulator and packages
 class SimulatorTool(Package):
     """TODO: Somehow dynamically install the specified version if anything other than 'latest'."""
     pass
@@ -117,9 +117,14 @@ class PypiSimulator(PypiPackage):
     pass
 
 
+class Simulator(PypiSimulator):
+    """Generic simulator instance to be used for any simulator package whose origin is PyPI. TODO: Expand this."""
+    pass
+
+
 class DefaultSimulator(PypiSimulator):
     """For now, we will default to using PyPI.
-        TODO: resolve this to fit multiple package indices other than just pypi.
+       TODO: resolve this to fit multiple package indices other than just pypi.
     """
     name: str
     version: str = Field(default='latest')
