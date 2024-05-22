@@ -1,10 +1,12 @@
 import tempfile
 
+import uvicorn
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+from biosimulations_runutils.common.api_utils import download_file
 
 from server.handlers.io import save_omex_archive
+
 
 
 app = FastAPI(title='verification-service')
@@ -27,9 +29,13 @@ async def upload_omex(file: UploadFile = File(...)):
     contents = await file.read()
 
     save_dir = tempfile.mkdtemp()
-    archive_response = save_omex_archive(contents, save_dir)
+    archive_response = download_file(contents, save_dir)
     print(archive_response['archive'].contents)
     return {"filename": archive_response['source']}
+
+
+
+
 
 
 if __name__ == "__main__":
