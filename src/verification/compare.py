@@ -523,17 +523,22 @@ def run_simulator_comparison(
 
 
 
-def generate_comparison_matrix(outputs: List[np.ndarray], *simulator_names: str, rtol: float = None, atol: float = None, ground_truth: np.ndarray = None) -> pd.DataFrame:
+def generate_comparison_matrix(
+        outputs: List[np.ndarray],
+        simulators: List[str],
+        method: str = 'mse',
+        rtol: float = None,
+        atol: float = None,
+        ground_truth: np.ndarray = None) -> pd.DataFrame:
     """Generate a Mean Squared Error comparison matrix of arr1 and arr2, indexed by simulators by default,
     or an AllClose Tolerance routine result if `use_tol` is set to true."""
 
     # TODO: map arrs to simulators more tightly.
-    simulators = [*simulator_names]
     if ground_truth is not None:
         simulators.append('ground_truth')
         outputs.append(ground_truth)
 
-    use_tol_method = bool(rtol or atol)
+    use_tol_method = method.lower() == 'tol'
     matrix_dtype = float if not use_tol_method else bool
     mse_matrix = np.zeros((3, 3), dtype=matrix_dtype)
 
@@ -542,7 +547,14 @@ def generate_comparison_matrix(outputs: List[np.ndarray], *simulator_names: str,
         for j in range(i, len(simulators)):
             output_i = outputs[i]
             output_j = outputs[j]
-            mse_matrix[i, j] = calculate_mse(output_i, output_j) if not use_tol_method else compare_arrays(output_i, output_j, rtol, atol)
+            method_type = method.lower()
+
+            result = calculate_mse(output_i, output_j) \
+                if method_type == 'mse' else compare_arrays(output_i, output_j, rtol, atol) if use_tol_method else None
+            assert result is not None, "You must pass a valid method argument value of either mse or tol"
+            # mse_matrix[i, j] = calculate_mse(output_i, output_j) if not use_tol_method else compare_arrays(output_i, output_j, rtol, atol)
+
+            mse_matrix[i, j] = result
             if i != j:
                 mse_matrix[j, i] = mse_matrix[i, j]
 
