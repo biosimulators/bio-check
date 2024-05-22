@@ -11,16 +11,21 @@ class Result(BaseModel):
     metadata: Optional[Dict[str, Union[str, List[str]]]] = None
 
 
-class Url(Result):
+class VerificationResult(Result):
+    simulators: List[Simulator]
+    ground_truth: np.ndarray = Field(default=None)
+
+
+class Url(VerificationResult):
     pass
 
 
 # polymorphic
-class Plot(Result):
+class Plot(VerificationResult):
     data: List
 
 
-class ResultFile(Result):
+class ResultFile(VerificationResult):
     location: FilePath
 
 
@@ -41,6 +46,8 @@ class SimulationRun(Result):
     simulation_id: str
     project_id: str
     status: str = Field(default="Unknown")
+
+
 
 
 
