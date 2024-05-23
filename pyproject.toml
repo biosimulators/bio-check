@@ -21,6 +21,7 @@ cobra = "^0.29.0"
 tellurium = "*"
 amici = "*"
 # smoldyn = {version = ">=2.72", optional = true}
+biosimulators-utils = "^0.1.187"
 simulariumio = "^1.11.0"
 python-libsbml = "*"
 docker = "^7.0.0"

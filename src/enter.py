@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 from pydantic import Field, field_validator
+from biosimulators_utils.combine.io import CombineArchiveReader
 
 from src import BaseModel
 from src.service import BiosimulationsRestService
@@ -33,7 +34,7 @@ class OMEXArchive(EntryPointFile):
     out_dir: str
 
     def get_model_file(self):
-        return BiosimulationsRestService.get_model_file()
+        archive =
 
 
 class ModelFile(EntryPointFile):
