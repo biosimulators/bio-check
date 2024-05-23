@@ -53,7 +53,7 @@ class BiosimulationsRestService(RestService):
         super().__init__()
 
     @classmethod
-    async def _search_source(cls, query: str) -> ProjectsQuery:
+    def _search_source(cls, query: str) -> ProjectsQuery:
         get_all_projects_url = 'https://api.biosimulations.dev/projects'
         headers = {'accept': 'application/json'}
         try:
@@ -88,12 +88,12 @@ class BiosimulationsRestService(RestService):
             print(f'Failed to fetch simulation run files:\n{e}')
 
     @classmethod
-    async def fetch_files(cls, query: str = None, simulation_run_id: str = None, selected_project_id: str = None) -> ArchiveFiles:
+    def fetch_files(cls, query: str = None, simulation_run_id: str = None, selected_project_id: str = None) -> ArchiveFiles:
         run_id = simulation_run_id
         proj_id = selected_project_id
         assert query or simulation_run_id and selected_project_id, "you must pass either a query or a simulation run id and with project name"
         if query and not simulation_run_id:
-            archive_query = await cls._search_source(query)
+            archive_query = cls._search_source(query)
             query_results = archive_query.project_ids
 
             options_menu = dict(zip(list(range(len(query_results))), query_results))
@@ -106,9 +106,9 @@ class BiosimulationsRestService(RestService):
         return simulation_run_files
 
     @classmethod
-    async def get_model_file(cls, query: str = None, run_id: str = None, project_id: str = None, save_dir: str = None) -> str:
+    def get_model_file(cls, query: str = None, run_id: str = None, project_id: str = None, save_dir: str = None) -> str:
         """Return a string representation sbml model from the given query"""
-        archive_files = await cls.fetch_files(query, run_id, project_id)
+        archive_files = cls.fetch_files(query, run_id, project_id)
         get_file_url = f'https://api.biosimulations.dev/files/{archive_files.run_id}'
 
         model_file_location = [file['location'] for file in archive_files.files if file['location'].endswith('.xml')].pop()
