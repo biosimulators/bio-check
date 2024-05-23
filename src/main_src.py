@@ -1,4 +1,4 @@
-from src.enter import (
+from src.arguments import (
     ModelFile,
     OMEXArchive,
     SBMLFile,
@@ -19,7 +19,7 @@ from src.enter import (
     DefaultComparisonMethod,
     CustomComparisonMethod
 )
-from src.result import (
+from src.results import (
     VerificationResult,
     Url,
     Plot,

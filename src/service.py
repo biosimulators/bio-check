@@ -106,7 +106,7 @@ class BiosimulationsRestService(RestService):
         return simulation_run_files
 
     @classmethod
-    def get_model_file(cls, query: str = None, run_id: str = None, project_id: str = None, save_dir: str = None) -> str:
+    def get_sbml_model_string(cls, query: str = None, run_id: str = None, project_id: str = None, save_dir: str = None) -> str:
         """Return a string representation sbml model from the given query"""
         archive_files = cls.fetch_files(query, run_id, project_id)
         get_file_url = f'https://api.biosimulations.dev/files/{archive_files.run_id}'

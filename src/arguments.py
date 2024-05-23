@@ -24,6 +24,10 @@ class EntryPointFile(EntryPoint):
     file_path: str
 
 
+class SbmlString(str):
+    pass
+
+
 # model file entrypoints
 class OMEXArchive(EntryPointFile):
     """
@@ -37,9 +41,9 @@ class OMEXArchive(EntryPointFile):
     out_dir: Optional[str] = Field(default=None)
     project_id: Optional[str] = Field(default=None)
 
-    def get_model_file(self) -> str:
-        model_file = BiosimulationsRestService.get_model_file(project_id=self.project_id, save_dir=self.out_dir)
-        return model_file
+    def get_model(self) -> str:
+        """Return a string rep"""
+        return BiosimulationsRestService.get_sbml_model_string(project_id=self.project_id, save_dir=self.out_dir)
 
 
 class ModelFile(EntryPointFile):
