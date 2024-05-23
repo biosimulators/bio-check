@@ -1,5 +1,5 @@
 """
-Compare Data Model
+Functions for comparing two or more data sets.
 
 author: Alex Patrie
 license: Apache License, Version 2.0
@@ -8,26 +8,11 @@ date: 04/2024
 
 
 from typing import *
-from abc import ABC
-from dataclasses import dataclass
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from pydantic import Field, field_validator
 
-from src import BaseModel, _BaseClass
-from src.results import SimulationRun
-
-
-class PairwiseComparison(BaseModel):
-    edge: Tuple[np.ndarray, np.ndarray]
-    value: bool
-
-
-class SimulatorComparison:
-    project_id: str
-    data: List[PairwiseComparison]
+from src.data_model.comparisons import SimulatorComparison
 
 
 def calculate_mse(a, b) -> int:
@@ -79,7 +64,7 @@ def run_simulator_comparison(
 def generate_comparison_matrix(
         outputs: List[np.ndarray],
         simulators: List[str],
-        method: Union[str, any] = 'mse',
+        method: Union[str, any] = 'prox',
         rtol: float = None,
         atol: float = None,
         ground_truth: np.ndarray = None

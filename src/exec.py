@@ -1,4 +1,4 @@
-from src.arguments import (
+"""from src.arguments import (
     ModelFile,
     OMEXArchive,
     SBMLFile,
@@ -28,4 +28,4 @@ from src.results import (
     HDF5File,
     SEDMLFile,
     SimulationRun
-)
+)"""

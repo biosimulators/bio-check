@@ -4,7 +4,7 @@ import numpy as np
 from pydantic import FilePath, Field
 
 from src import BaseModel
-from src.arguments import Simulator
+from src.data_model.arguments import Simulator
 
 
 class Result(BaseModel):

@@ -1,16 +1,17 @@
 from typing import *
-from types import FunctionType, ModuleType
-from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from types import ModuleType
+from abc import abstractmethod
 import subprocess
 import sys
 
 import numpy as np
-from pydantic import Field, field_validator
-from biosimulators_utils.combine.io import CombineArchiveReader
+import pandas as pd
+from pydantic import Field
 
-from src import BaseModel
+from src import BaseModel, _BaseClass
 from src.service import BiosimulationsRestService
-from src.verification.compare import generate_comparison_matrix
+from src.compare import generate_comparison_matrix
 
 
 # TODO: seperate this into a lib for clarity
@@ -93,11 +94,31 @@ class TimeCourseSimulationFile(SimulationFile):
     pass
 
 
-class CellMLFile(SimulationFile):
-    pass
+# simulator and packages
+
+# --- INSTALLATION
+@dataclass
+class DependencyFile(_BaseClass):
+    name: str
+    hash: str
 
 
-class Package(EntryPoint):
+@dataclass
+class InstallationDependency(_BaseClass):
+    name: str
+    version: str
+    markers: str = Field(default='')  # ie: "markers": "platform_system == \"Windows\""
+    files: List[DependencyFile] = Field(default=[])
+
+
+@dataclass
+class SimulatorDependency(_BaseClass):
+    name: str  # name installed by pip
+    version: str
+    deps: List[InstallationDependency]
+
+
+class Package(BaseModel):
     """Entrypoint implementation for any reference to a software package to be used at runtime.
 
         Attributes:
@@ -139,13 +160,12 @@ class Package(EntryPoint):
         return __import__(statement)
 
 
-# simulator and packages
-class SimulatorTool(Package):
+class SimulatorTool(Package, EntryPoint):
     """TODO: Somehow dynamically install the specified version if anything other than 'latest'."""
     pass
 
 
-class PypiPackage(Package):
+class PypiPackage(Package, EntryPoint):
     """TODO: Make this python specific."""
     pass
 
