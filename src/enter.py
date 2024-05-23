@@ -8,6 +8,7 @@ import numpy as np
 from pydantic import Field, field_validator
 
 from src import BaseModel
+from src.verification.compare import generate_comparison_matrix
 
 
 # TODO: seperate this into a lib for clarity
@@ -185,7 +186,7 @@ class ComparisonMethod(EntryPoint, ABC):
 
 
 class DefaultComparisonMethod(ComparisonMethod):
-    method_id: str = Field(default='tolerance_proximity')  # representing the alg based on np.close()
+    method_id: str = Field(default='tol')  # representing the alg based on np.close()
     rtol: float = Field(default=1e-4)
     atol: float = Field(default=None)
 
@@ -216,6 +217,12 @@ class DefaultComparisonMethod(ComparisonMethod):
             if not compare_arrays(arr1[n], arr2[n]):
                 return False
         return True
+
+
+class MSEComparisonMethod(ComparisonMethod):
+    method_id: str = Field(default='mse')
+    def run_comparison(self):
+        return generate_comparison_matrix()
 
 
 # TODO: update this more closely with the doc

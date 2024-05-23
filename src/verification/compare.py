@@ -531,14 +531,30 @@ def generate_comparison_matrix(
         atol: float = None,
         ground_truth: np.ndarray = None) -> pd.DataFrame:
     """Generate a Mean Squared Error comparison matrix of arr1 and arr2, indexed by simulators by default,
-    or an AllClose Tolerance routine result if `use_tol` is set to true."""
+        or an AllClose Tolerance routine result if `method` is set to `prox`.
+
+        Args:
+            outputs: list of output arrays.
+            simulators: list of simulator names.
+            method: `mse` to perform a mean-squared error calculation or `prox` to perform a proximity tolerance test.
+            rtol:`float`: relative tolerance for comparison if `prox` is used.
+            atol:`float`: absolute tolerance for comparison if `prox` is used.
+            ground_truth: If passed, this value is compared against each simulator in simulators. Currently, this
+                field is agnostic to any verified/validated source, and we trust that the user has verified it. Defaults
+                to `None`.
+
+        Returns:
+            Pandas dataframe representing a comparison matrix where `i` and `j` are both indexed by the
+                simulators involved. The aforementioned simulators involved will also include the `ground_truth` value
+                within the indices if one is passed.
+    """
 
     # TODO: map arrs to simulators more tightly.
     if ground_truth is not None:
         simulators.append('ground_truth')
         outputs.append(ground_truth)
 
-    use_tol_method = method.lower() == 'tol'
+    use_tol_method = method.lower() == 'prox'
     matrix_dtype = float if not use_tol_method else bool
     mse_matrix = np.zeros((3, 3), dtype=matrix_dtype)
 
