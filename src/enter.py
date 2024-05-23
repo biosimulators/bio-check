@@ -1,5 +1,5 @@
 from typing import *
-from types import FunctionType
+from types import FunctionType, ModuleType
 from abc import ABC, abstractmethod
 import subprocess
 import sys
@@ -110,9 +110,13 @@ class Package(EntryPoint):
 
             return False
 
-    def module(self, import_statement: str = None):
+    def module(self, import_statement: str = None) -> ModuleType:
+        """module:`method`:(import_statement: `str` = None) -> `ModuleType`: if `module_name` is specified, this
+            refers to how the package would be declared in a normal Python `import` statement. `import statement`
+            refers to an specific nesting of import, otherwise the base pacakge will be imported.
+        """
         statement = import_statement or self.module_name
-        simulator_module = __import__(statement, fromlist=[class_name])
+        return __import__(statement)
 
 
 # simulator and packages
@@ -131,16 +135,23 @@ class PypiSimulator(PypiPackage):
 
 
 class Simulator(PypiSimulator):
-    """Generic simulator instance to be used for any simulator package whose origin is PyPI. TODO: Expand this."""
-    def generate_instance(self):
-        """TODO: Implement this method. It should use self.name to dynamically import the package...maybe it should
-            make and run a script instead?
-        """
-        for simulator in self.config['simulators']:
-            module_name = simulator + '_process'
-            class_name = simulator.replace(simulator[0], simulator[0].upper()) + 'Process'
-            import_statement = f'biosimulator_processes.processes.{module_name}'
-            simulator_module = __import__(import_statement, fromlist=[class_name])
+    """Generic simulator instance to be used for any simulator package whose origin is PyPI. TODO: Expand this.
+
+        Attributes:
+            name:`str`: the name of the package
+            version:`str`: the version as specified in the Python package index.
+            module_name:`Optional[str]`: if specified, this refers to the package itself and enables this
+                class a.k.a `Package` to use its `module` method, which effectively wraps the python `__import__` builtin
+                such that it takes in an `import_statement` as an argument, which is
+                equivalent to an `import ...` statement within a script and then,
+                for package(particularly simulator) tool modules can be imported and used directly from a workflow.
+            install_version:`method`:(version: `str`) -> `bool`: uninstalls the currently installed version and
+                installs that which is spec'd in the `version` arg.
+            module:`method`:(import_statement: `str` = None) -> `ModuleType`: if `module_name` is specified, this
+                refers to how the package would be declared in a normal Python `import` statement. `import statement`
+                refers to an specific nesting of import, otherwise the base pacakge will be imported.
+    """
+    pass
 
 
 class DefaultSimulator(PypiSimulator):
