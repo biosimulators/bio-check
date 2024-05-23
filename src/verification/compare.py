@@ -536,7 +536,8 @@ def generate_comparison_matrix(
         Args:
             outputs: list of output arrays.
             simulators: list of simulator names.
-            method: `mse` to perform a mean-squared error calculation or `prox` to perform a proximity tolerance test.
+            method: pass one of either: `mse` to perform a mean-squared error calculation
+                or `prox` to perform a pair-wise proximity tolerance test using `np.allclose(outputs[i], outputs[i+1])`.
             rtol:`float`: relative tolerance for comparison if `prox` is used.
             atol:`float`: absolute tolerance for comparison if `prox` is used.
             ground_truth: If passed, this value is compared against each simulator in simulators. Currently, this
