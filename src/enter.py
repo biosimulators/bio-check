@@ -86,7 +86,7 @@ class Package(EntryPoint):
             module_name:`Optional[str]`: if specified, this refers to the package itself and enables this
                 class a.k.a `Package` to use its `module` method, which effectively wraps the python `__import__` builtin
                 such that it takes in an `import_statement` as an argument, which is
-                equivalent to an `import` statement within a script and then,
+                equivalent to an `import ...` statement within a script and then,
                 for package(particularly simulator) tool modules can be imported and used directly from a workflow.
     """
     name: str
@@ -110,9 +110,9 @@ class Package(EntryPoint):
 
             return False
 
-    def module(self):
-        import_statement = f'biosimulator_processes.processes.{module_name}'
-        simulator_module = __import__(import_statement, fromlist=[class_name])
+    def module(self, import_statement: str = None):
+        statement = import_statement or self.module_name
+        simulator_module = __import__(statement, fromlist=[class_name])
 
 
 # simulator and packages
