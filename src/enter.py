@@ -8,6 +8,7 @@ import numpy as np
 from pydantic import Field, field_validator
 
 from src import BaseModel
+from src.service import BiosimulationsRestService
 from src.verification.compare import generate_comparison_matrix
 
 
@@ -24,7 +25,15 @@ class EntryPointFile(EntryPoint):
 
 # model file entrypoints
 class OMEXArchive(EntryPointFile):
-    pass
+    """
+        Attributes:
+            file_path:`str`: Path to the OMEX archive file.
+            out_dir:`str`: Path to the dir in which the archive will be upacked.
+    """
+    out_dir: str
+
+    def get_model_file(self):
+        return BiosimulationsRestService.get_model_file()
 
 
 class ModelFile(EntryPointFile):
