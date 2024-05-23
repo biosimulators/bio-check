@@ -526,7 +526,7 @@ def run_simulator_comparison(
 def generate_comparison_matrix(
         outputs: List[np.ndarray],
         simulators: List[str],
-        method: str = 'mse',
+        method: Union[str, any] = 'mse',
         rtol: float = None,
         atol: float = None,
         ground_truth: np.ndarray = None) -> pd.DataFrame:

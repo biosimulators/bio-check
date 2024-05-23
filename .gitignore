@@ -3,3 +3,4 @@ scripts/commit.sh
 .idea/
 scripts/
 .notes
+*examples/
