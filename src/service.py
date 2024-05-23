@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 from typing import List, Dict
+from tempfile import mkdtemp
+import os
 import abc
+import requests
 
 import numpy as np
+import h5py
 
 from src import _BaseClass
 
@@ -85,20 +89,20 @@ class BiosimulationsRestService(RestService):
 
     @classmethod
     async def fetch_files(cls, query: str = None, simulation_run_id: str = None, selected_project_id: str = None) -> ArchiveFiles:
-        run_id = None
-        proj_id = None
+        run_id = simulation_run_id
+        proj_id = selected_project_id
         assert query or simulation_run_id and selected_project_id, "you must pass either a query or a simulation run id and with project name"
         if query and not simulation_run_id:
             archive_query = await cls._search_source(query)
             query_results = archive_query.project_ids
 
             options_menu = dict(zip(list(range(len(query_results))), query_results))
-            user_selection = int(input(f'Please enter your archive selection:\n{pf(options_menu)}'))
+            user_selection = int(input(f'Please enter your archive selection:\n{print(options_menu)}'))
 
             selected_project_id = options_menu[user_selection]
             run_id = archive_query.project_data[selected_project_id]['simulationRun']
 
-        simulation_run_files = cls.get_project_files(run_id, project_id)
+        simulation_run_files = cls.get_project_files(run_id, proj_id)
         return simulation_run_files
 
     @classmethod

@@ -27,14 +27,18 @@ class EntryPointFile(EntryPoint):
 # model file entrypoints
 class OMEXArchive(EntryPointFile):
     """
+    If called, simply run the omex archive against the api.
+
         Attributes:
             file_path:`str`: Path to the OMEX archive file.
             out_dir:`str`: Path to the dir in which the archive will be upacked.
+            project_id:`str`: TODO: Finish this and map it to the rest call.
     """
-    out_dir: str
+    out_dir: Optional[str] = Field(default=None)
+    project_id: Optional[str] = Field(default=None)
 
     def get_model_file(self):
-        archive =
+        return BiosimulationsRestService.get_model_file(project_id=self.project_id)
 
 
 class ModelFile(EntryPointFile):
