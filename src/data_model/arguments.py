@@ -135,16 +135,25 @@ class Package(BaseModel):
     module_name: Optional[str] = Field(default=None)
 
     def install_version(self, version: str) -> bool:
-        """Removes currently installed version of """
-        package = self.name + "==" + version
-        print('Installing ' + package)
+        """Removes currently installed version of the package indexed by this class' `name` attribute and installs the
+            `version`.
+
+            Args:
+                version:`str`: the version as specified in a given package index.
+
+            Returns:
+                `True` if installation was successful, `False` otherwise.
+        """
+        versioned_package = self.name + "==" + version
+        print('Installing ' + versioned_package)
         try:
             # remove currently installed version
-            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", package])
+            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", self.name])
 
             # install specified version
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", versioned_package])
 
+            print(f'Successfully installed {versioned_package}')
             return True
         except Exception as e:
             print(f'Installation failed:\n{e}')
