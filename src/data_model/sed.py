@@ -8,10 +8,7 @@ import requests
 from abc import abstractmethod
 from pydantic import Field, create_model
 
-from src import _BaseClass
-
-
-__all__ = ['SedDataModel']
+from src.data_model import _BaseClass
 
 
 @dataclass

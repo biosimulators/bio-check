@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pydantic import Field
 
-from src import BaseModel
+from src.data_model import BaseModel
 
 
 class PairwiseComparison(BaseModel):

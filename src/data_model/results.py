@@ -3,7 +3,7 @@ from typing import *
 import numpy as np
 from pydantic import FilePath, Field
 
-from src import BaseModel
+from src.data_model import BaseModel
 from src.data_model.arguments import Simulator
 
 

@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from pydantic import Field
 
-from src import BaseModel, _BaseClass
+from src.data_model import BaseModel, _BaseClass
 from src.service import BiosimulationsRestService
 from src.compare import generate_comparison_matrix
 

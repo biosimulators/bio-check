@@ -1,46 +1,14 @@
 from dataclasses import dataclass, asdict
 
-from pydantic import BaseModel as _BaseModel, ConfigDict
+from builder import ProcessTypes
+from bigraph_schema import TypeSystem
 
-from src.data_model.arguments import (
-    ModelFile,
-    OMEXArchive,
-    SBMLFile,
-    CellMLFile,
-    SEDMLFile,
-    SED2File,
-    SEDMArchiveFile,
-    BigraphCompositionFile,
-    TimeCourseSimulationFile,
-    Simulator,
-    DefaultSimulator,
-    Package,
-    DefaultAmici,
-    DefaultCopasi,
-    DefaultTellurium,
-    ComparisonMethod,
-    MSEComparisonMethod,
-    DefaultComparisonMethod,
-    CustomComparisonMethod
-)
-from src.data_model.results import (
-    VerificationResult,
-    Url,
-    Plot,
-    Result,
-    CSVFile,
-    HDF5File,
-    SEDMLFile,
-    SimulationRun
-)
+from src.utils import register_bigraph_module
 
 
+REGISTRATION_DATA = [('ode-comparison', 'compare.OdeComparatorStep')]
+CORE = ProcessTypes()
+TYPE_SYSTEM = TypeSystem()
 
-@dataclass
-class _BaseClass:
-    def to_dict(self):
-        return asdict(self)
+register_bigraph_module(REGISTRATION_DATA, CORE)
 
-
-class BaseModel(_BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)

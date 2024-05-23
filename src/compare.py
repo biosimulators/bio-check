@@ -6,15 +6,148 @@ license: Apache License, Version 2.0
 date: 04/2024
 """
 
-
+from tempfile import mkdtemp
+from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from typing import *
 
 import numpy as np
 import pandas as pd
+from process_bigraph import Step, pp, Composite
 
+from src import CORE
 from src.data_model.comparisons import SimulatorComparison, ComparisonMatrix
 
 
+# process-bigraph classes
+class SimulatorComparisonStep(ABC, Step):
+    config_schema = {
+        'model_entrypoint': 'string',  # either biomodel id or sbml filepath TODO: make from string.
+        'duration': 'integer',
+        'simulators': {
+            '_type': 'list[string]',
+            '_default': []}}
+
+    model_entrypoint: str
+    duration: int
+
+    def __init__(self, config=None, core=CORE):
+        super().__init__(config, core)
+        source = config['model_entrypoint']
+        assert 'BIO' in source or '/' in source, "You must enter either a biomodel id or path to an sbml model."
+
+    def inputs(self):
+        return {}
+
+    def outputs(self):
+        return {'comparison_data': 'tree[any]'}
+
+    def update(self, state):
+        results = self._run_composition()
+        output = {'comparison_data': results}
+        return output
+
+    @abstractmethod
+    def _run_composition(self, comp: Composite) -> Dict:
+        pass
+
+
+class OdeComparisonStep(SimulatorComparisonStep):
+    """TODO: Use the spec's entrypoint arguments as config attributes here!!!
+
+        1. take in a dur, model/archive, simulation, comparison_method, ground_truth, and more (optional simulators)
+        2. with the specified entrypoint, iterate over simulators and
+            load model instances from tellurium. copasi, and amici, respectively.
+        3. in constructor, create mapping of loaded simulators to their names.
+        4. Create 3 seperate methods for updating/setting: tellurium_update, copasi_update, amici_update
+        5. Call the three simulator methods in parallel for a "dur" on update.
+        6. Return just the df from the comparison step via the output ports.
+        7. Closer to the API, make a function that calls this step and uses its outputs as one of the
+            parameters to instantiate and return the `ComparisonMatrix`.
+    """
+
+    def __init__(self, config=None, core=CORE):
+        super().__init__(config, core)
+        self.model_source = self.config['model_entrypoint']
+        self.duration = self.config['duration']
+
+        model_fp = self.model_source if not self.model_source.startswith('BIO') else fetch_biomodel_sbml_file(self.model_source, save_dir=mkdtemp())
+        self.document = {
+            'copasi_simple': {
+                '_type': 'process',
+                'address': 'local:copasi',
+                'config': {'model': {'model_source': model_fp}},
+                'inputs': {'floating_species_concentrations': ['copasi_simple_floating_species_concentrations_store'],
+                           'model_parameters': ['model_parameters_store'],
+                           'time': ['time_store'],
+                           'reactions': ['reactions_store']},
+                'outputs': {'floating_species_concentrations': ['copasi_simple_floating_species_concentrations_store'],
+                            'time': ['time_store']}
+            },
+            'amici_simple': {
+                '_type': 'process',
+                'address': 'local:amici',
+                'config': {'model': {'model_source': model_fp}},
+                'inputs': {
+                    'floating_species_concentrations': ['amici_simple_floating_species_concentrations_store'],
+                    'model_parameters': ['model_parameters_store'],
+                    'time': ['time_store'],
+                    'reactions': ['reactions_store']},
+                'outputs': {
+                    'floating_species_concentrations': ['amici_simple_floating_species_concentrations_store'],
+                    'time': ['time_store']}
+            },
+            'emitter': {
+                '_type': 'step',
+                'address': 'local:ram-emitter',
+                'config': {
+                    'emit': {
+                        'copasi_simple_floating_species_concentrations': 'tree[float]',
+                        'amici_simple_floating_species_concentrations': 'tree[float]',
+                        'tellurium_simple_floating_species_concentrations': 'tree[float]',
+                        'time': 'float'
+                    }
+                },
+                'inputs': {
+                    'copasi_simple_floating_species_concentrations': ['copasi_simple_floating_species_concentrations_store'],
+                    'amici_simple_floating_species_concentrations': ['amici_simple_floating_species_concentrations_store'],
+                    'tellurium_simple_floating_species_concentrations': ['tellurium_simple_floating_species_concentrations_store'],
+                    'time': ['time_store']
+                }
+            },
+            'tellurium_simple': {
+                '_type': 'process',
+                'address': 'local:tellurium',
+                'config': {'model': {'model_source': model_fp}},
+                'inputs': {'floating_species_concentrations': ['tellurium_simple_floating_species_concentrations_store'],
+                           'model_parameters': ['model_parameters_store'],
+                           'time': ['time_store'],
+                           'reactions': ['reactions_store']},
+                'outputs': {'floating_species_concentrations': ['tellurium_simple_floating_species_concentrations_store'],
+                            'time': ['time_store']}}}
+
+    # TODO: Do we need this?
+    def inputs(self):
+        return {}
+
+    def outputs(self):
+        return {'comparison_data': 'tree[any]'}
+
+    def update(self, state):
+        comp = self._generate_composition()
+        results = self._run_composition(comp)
+        output = {'comparison_data': results}
+        return output
+
+    def _generate_composition(self) -> Composite:
+        return Composite(config={'state': self.document}, core=CORE)
+
+    def _run_composition(self, comp: Composite) -> Dict:
+        comp.run(self.duration)
+        return comp.gather_results()
+
+
+# comparison functions
 def calculate_mse(a, b) -> int:
     return np.mean((a - b) ** 2)
 
