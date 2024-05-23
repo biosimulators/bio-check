@@ -14,5 +14,18 @@ from src.enter import (
     DefaultAmici,
     DefaultCopasi,
     DefaultTellurium,
+    ComparisonMethod,
+    MSEComparisonMethod,
     DefaultComparisonMethod,
-    CustomComparisonMethod,
+    CustomComparisonMethod
+)
+from src.result import (
+    VerificationResult,
+    Url,
+    Plot,
+    Result,
+    CSVFile,
+    HDF5File,
+    SEDMLFile,
+    SimulationRun
+)

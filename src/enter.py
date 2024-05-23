@@ -177,52 +177,39 @@ class DefaultAmici(DefaultSimulator):
 
 
 # comparison method arg
-class ComparisonMethod(EntryPoint, ABC):
+class ComparisonMethod(EntryPoint):
     method_id: str
 
-    @abstractmethod
-    def run_comparison(self, arr1: np.ndarray, arr2: np.ndarray) -> bool:
-        pass
+    def run_comparison(self, **kwargs) -> pd.DataFrame:
+        """Run a pairwise comparison and generate a dataframe representation of the output. Simply wraps
+            the `src.verification.compare.generate_comparison_matrix(**kwargs)` function.
 
-
-class DefaultComparisonMethod(ComparisonMethod):
-    method_id: str = Field(default='tol')  # representing the alg based on np.close()
-    rtol: float = Field(default=1e-4)
-    atol: float = Field(default=None)
-
-
-    def run_comparison(self, arr1: np.ndarray, arr2: np.ndarray, ground_truth: np.ndarray, rtol=None, atol=None) -> dict[tuple, bool]:
-        """Implementation of Comparison Method's inherited abstract method which compares two arrays using
-             np.allclose() and rtol, atol if no `ground_truth` is provided, otherwise generate a pairwise comparison
-             which includes the comparison of `ground_truth` to arr1 and arr2
-
-             Args:
-                 arr1 (np.array): first array
-                 arr2 (np.array): second array
-                 ground_truth (optional[list[np.ndarray]]): list of ground truth values by which to compare arr1 and arr2.
-                     Defaults to `None`.
-                 **kwargs (kwargs): keyword arguments passed to Comparison Method which include: rtol: float, atol: float.
-
-            Returns:
-                a dict where the keys are the comparison edges and the values are the result of the pairwise comparison for the given edge key.
+            Keyword Args:
+                outputs – list of output arrays.
+                simulators – list of simulator names.
+                method – pass one of either: mse to perform a mean-squared error calculation or prox to perform a pair-wise proximity
+                    tolerance test using np. allclose(outputs[i], outputs[i+1]).
+                rtol – float: relative tolerance for comparison if prox is used.
+                atol – float: absolute tolerance for comparison if prox is used.
+                ground_truth – If passed, this value is compared against each simulator in simulators. Currently,
+                    this field is agnostic to any verified/ validated source, and we trust that the user has verified it. Defaults to None.
         """
-    def _run_comparison(self, arr1: np.ndarray, arr2: np.ndarray, ground_truth: np.ndarray = None, **kwargs) -> bool:
-
-        if type(arr1[0]) == np.float64:
-            max1 = max(arr1)
-            max2 = max(arr2)
-            atol = self.atol or kwargs.get('atol') or max(1e-3, max1 * 1e-5, max2 * 1e-5)
-            return np.allclose(arr1, arr2, rtol=self.rtol, atol=atol)
-        for n in range(len(arr1)):
-            if not compare_arrays(arr1[n], arr2[n]):
-                return False
-        return True
+        return generate_comparison_matrix(**kwargs, method=self.method_id)
 
 
 class MSEComparisonMethod(ComparisonMethod):
     method_id: str = Field(default='mse')
-    def run_comparison(self):
-        return generate_comparison_matrix()
+
+
+class ProximityComparisonMethod(ComparisonMethod):
+    method_id: str = Field(default='prox')  # representing the alg based on np.close()
+    rtol: float = Field(default=1e-4)
+    atol: float = Field(default=None)
+
+
+class DefaultComparisonMethod(ProximityComparisonMethod):
+    """For now, we will use this as the default comparison method."""
+    pass
 
 
 # TODO: update this more closely with the doc

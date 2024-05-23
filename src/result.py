@@ -9,12 +9,18 @@ from src.enter import Simulator
 
 class Result(BaseModel):
     name: str
-    metadata: Optional[Dict[str, Union[str, List[str]]]] = None
+    metadata: Optional[Dict[str, Union[str, List[str]]]] = Field(default=None)
+    value: Optional[Dict] = Field(default=None)
 
 
 class VerificationResult(Result):
+    """
+        Attributes:
+            simulators:`List[Simulator]`: simulators used in the verification
+            ground_truth:`Optional[np.ndarray]`: ground truth used in the comparison. Defaults to `None`.
+    """
     simulators: List[Simulator]
-    ground_truth: np.ndarray = Field(default=None)
+    ground_truth: Optional[np.ndarray] = Field(default=None)
 
 
 class Url(VerificationResult):
