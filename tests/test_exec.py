@@ -1,4 +1,5 @@
 # TODO: Test the repo contents here.
+from src.exec import main
 
 
 def test_source():

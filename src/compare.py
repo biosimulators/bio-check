@@ -12,7 +12,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from src.data_model.comparisons import SimulatorComparison
+from src.data_model.comparisons import SimulatorComparison, ComparisonMatrix
 
 
 def calculate_mse(a, b) -> int:
@@ -67,8 +67,44 @@ def generate_comparison_matrix(
         method: Union[str, any] = 'prox',
         rtol: float = None,
         atol: float = None,
-        ground_truth: np.ndarray = None
-        ) -> pd.DataFrame:
+        ground_truth: np.ndarray = None,
+        matrix_id: str = None
+        ) -> ComparisonMatrix:
+    """Generate a Mean Squared Error comparison matrix of arr1 and arr2, indexed by simulators by default,
+            or an AllClose Tolerance routine result if `method` is set to `prox`.
+
+            Args:
+                outputs: list of output arrays.
+                simulators: list of simulator names.
+                matrix_id: name/id of the comparison
+                method: pass one of either: `mse` to perform a mean-squared error calculation
+                    or `prox` to perform a pair-wise proximity tolerance test using `np.allclose(outputs[i], outputs[i+1])`.
+                rtol:`float`: relative tolerance for comparison if `prox` is used.
+                atol:`float`: absolute tolerance for comparison if `prox` is used.
+                ground_truth: If passed, this value is compared against each simulator in simulators. Currently, this
+                    field is agnostic to any verified/validated source, and we trust that the user has verified it. Defaults
+                    to `None`.
+
+            Returns:
+                ComparisonMatrix object consisting of:
+                    - `name`: the id of the matrix
+                    - `data`: Pandas dataframe representing a comparison matrix where `i` and `j` are both indexed by the
+                        simulators involved. The aforementioned simulators involved will also include the `ground_truth` value
+                        within the indices if one is passed.
+                    - `ground_truth`: Reference to the ground truth vals if used.
+    """
+    matrix_data = generate_matrix_data(outputs, simulators, method, rtol, atol, ground_truth)
+    return ComparisonMatrix(name=matrix_id, data=matrix_data, ground_truth=ground_truth)
+
+
+def generate_matrix_data(
+    outputs: List[np.ndarray],
+    simulators: List[str],
+    method: Union[str, any] = 'prox',
+    rtol: float = None,
+    atol: float = None,
+    ground_truth: np.ndarray = None
+    ) -> pd.DataFrame:
     """Generate a Mean Squared Error comparison matrix of arr1 and arr2, indexed by simulators by default,
         or an AllClose Tolerance routine result if `method` is set to `prox`.
 
