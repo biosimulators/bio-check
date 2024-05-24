@@ -66,7 +66,8 @@ def run_simulator_comparison(
     pass
 
 
-def generate_comparison_matrix(
+# used at high level
+def generate_comparison_data(
         outputs: List[np.ndarray],
         simulators: List[str],
         method: Union[str, any] = 'prox',

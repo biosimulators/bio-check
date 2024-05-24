@@ -1,0 +1,2 @@
+[console_scripts]
+depinfo = depinfo.infrastructure.application.cli:main

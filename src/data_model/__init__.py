@@ -2,7 +2,7 @@ from dataclasses import dataclass, asdict
 from pydantic import BaseModel as _BaseModel, ConfigDict
 
 
-@dataclass
+@dataclass(frozen=True)
 class _BaseClass:
     def to_dict(self):
         return asdict(self)

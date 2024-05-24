@@ -4,7 +4,7 @@ from typing import List, Optional
 from numpy import ndarray
 from pandas import DataFrame
 
-from src.compare import generate_comparison_matrix
+from src.compare import generate_comparison_data
 
 
 def main(
