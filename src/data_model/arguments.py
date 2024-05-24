@@ -202,6 +202,22 @@ class Simulator(PypiSimulator):
     """
     pass
 
+    def load_instance(self, entrypoint: str, factory: Callable):
+        """Return a library-specific instance of the given simulator tool's main
+            simulator model from the passed `factory`. For example, if this simulator
+            is "Tellurium", you would pass: `load_instance(sbml_fp, te.loadSBMLModel)` and
+            return a `roadrunner` instance.
+
+                Args:
+                    entrypoint:`str`: path to a valid SBML file.
+                    factory:`Callable`: simulator tooling(implementation)-specific method
+                        for creating a simulator instance as defined by the simulator
+                        tool documentation.
+        """
+        # TODO: for now just sbml is used...what other common model entrypoints are there ie: antimony, etc?
+        assert '/' in entrypoint, "You must pass the path to a SBML File."
+        return factory(entrypoint)
+
 
 class DefaultSimulator(PypiSimulator):
     """For now, we will default to using PyPI.
