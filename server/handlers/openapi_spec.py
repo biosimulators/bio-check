@@ -4,7 +4,7 @@ import os
 import yaml
 from fastapi.openapi.utils import get_openapi
 
-from biosimulator_processes.server.main import app
+from server.main import app
 
 
 def main():

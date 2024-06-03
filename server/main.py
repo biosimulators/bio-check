@@ -3,10 +3,10 @@ import tempfile
 import uvicorn
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from biosimulations_runutils.common.api_utils import download_file
 
 from server.handlers.io import save_omex_archive
-
+from server.handlers.compare import generate_utc_species_comparison
+from server.data_model import ArchiveUploadResponse
 
 
 app = FastAPI(title='verification-service')
@@ -24,18 +24,15 @@ app.add_middleware(
 )
 
 
-@app.post("/upload-omex")
+@app.post(
+    "/upload-omex",
+    response_model=ArchiveUploadResponse,
+    summary='Upload an OMEX archive')
 async def upload_omex(file: UploadFile = File(...)):
     contents = await file.read()
-
     save_dir = tempfile.mkdtemp()
     archive_response = download_file(contents, save_dir)
-    print(archive_response['archive'].contents)
-    return {"filename": archive_response['source']}
-
-
-
-
+    return ArchiveUploadResponse(filename=archive_response['source'])
 
 
 if __name__ == "__main__":

@@ -6,3 +6,5 @@ scripts/
 examples/
 env/
 __pycache__/*
+*.pyc
+server/handlers/__pycache__/
