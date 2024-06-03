@@ -5,3 +5,4 @@ scripts/
 .notes
 examples/
 env/
+__pycache__/*
