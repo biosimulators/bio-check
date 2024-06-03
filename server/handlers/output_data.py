@@ -38,12 +38,31 @@ def generate_biosimulator_outputs(omex_fp: str, output_root_dir: str, simulators
     return output_data
 
 
+def generate_species_output(omex_fp: str, output_root_dir: str, species_name: str, simulators: list[str] = None) -> np.ndarray:
+    outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators=simulators)
+    return _get_output_stack(outputs, species_name)
+
+
+def _get_output_stack(outputs: dict, spec_id: str):
+    output_stack = []
+    for sim_name in outputs.keys():
+        sim_data = outputs[sim_name]['data']
+        for data_index, data in enumerate(sim_data):
+            data_id = data['dataset_label']
+            if data_id == spec_id:
+                print(spec_id, data_id)
+                output_stack.append(sim_data[data_index]['data'])
+            else:
+                pass
+    return np.stack(output_stack)
+
+
 def get_species_utc_data(
         omex_fp: str,
         species_name: str,
         output_root_dir: str,
         ground_truth_source_fp: str = None,
-        simulators: list[str] = None
+        simulators: list[str] = None,
         ) -> pd.DataFrame:
     spec_index = 0
     simulator_outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators)
@@ -57,14 +76,14 @@ def get_species_utc_data(
         simulator_outputs['tellurium']['data'][spec_index]['data']
     ]
     simulator_names = list(simulator_outputs.keys())
-    simulator_names.append('ground_truth')
 
     if ground_truth_source_fp:
+        simulator_names.append('ground_truth')
         ground_truth_results = standardize_report_outputs(ground_truth_source_fp)
-        ground_truth = ground_truth_results['floating_species']['LacI protein']
+        ground_truth = ground_truth_results['floating_species'][species_name]
         outs.append(ground_truth)
 
-    return pd.DataFrame(data=np.array(outs).transpose(), columns=simulator_names)
+    return pd.DataFrame(data=np.array(outs), columns=simulator_names)
 
 
 
