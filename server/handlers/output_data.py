@@ -33,29 +33,38 @@ def generate_biosimulator_outputs(omex_fp: str, output_root_dir: str, simulators
         exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
         report_path = os.path.join(sim_output_dir, 'reports.h5')
         sim_data = read_report_outputs(report_path)
-        output_data[sim] = sim_data
+        output_data[sim] = sim_data.to_dict()
 
     return output_data
 
 
-def exec_species_comparison(omex_fp: str, species_name: str, output_root_dir: str, simulators: list[str] = None):
+def get_species_utc_data(
+        omex_fp: str,
+        species_name: str,
+        output_root_dir: str,
+        ground_truth_source_fp: str = None,
+        simulators: list[str] = None
+        ) -> pd.DataFrame:
     spec_index = 0
     simulator_outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators)
     for i, spec_name in enumerate(list(simulator_outputs['amici'].keys())):
         if species_name.lower() in spec_name.lower():
             spec_index += i
 
-    outs = [simulator_outputs['amici'].data[spec_index].data, simulator_outputs['copasi'].data[spec_index].data, simulator_outputs['tellurium'].data[spec_index].data]
+    outs = [
+        simulator_outputs['amici']['data'][spec_index]['data'],
+        simulator_outputs['copasi']['data'][spec_index]['data'],
+        simulator_outputs['tellurium']['data'][spec_index]['data']
+    ]
     simulator_names = list(simulator_outputs.keys())
     simulator_names.append('ground_truth')
 
-    ground_truth_report_fp = os.path.join(omex_source_dir, omex_name.replace('.omex', ''), 'reports.h5')
-    ground_truth_results = standardize_report_outputs(ground_truth_report_fp)
-    ground_truth = ground_truth_results['floating_species']['LacI protein']
-    outs.append(ground_truth)
-    outs_df = pd.DataFrame(data=np.array(outs).transpose(), columns=simulator_names)
+    if ground_truth_source_fp:
+        ground_truth_results = standardize_report_outputs(ground_truth_source_fp)
+        ground_truth = ground_truth_results['floating_species']['LacI protein']
+        outs.append(ground_truth)
 
-    return outs_df
+    return pd.DataFrame(data=np.array(outs).transpose(), columns=simulator_names)
 
 
 
