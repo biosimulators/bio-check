@@ -3,6 +3,20 @@ from typing import *
 import numpy as np
 import pandas as pd
 
+from server.handlers.output_data import generate_species_output
+
+
+def generate_utc_species_comparison(omex_fp, out_dir, species_name, simulators):
+    outputs = generate_species_output(omex_fp, out_dir, species_name)
+    methods = ['mse', 'prox']
+    return dict(zip(
+        methods,
+        list(map(
+            lambda m: generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m).to_dict(),
+            methods
+        ))
+    ))
+
 
 def calculate_mse(a, b) -> float:
     return np.mean((a - b) ** 2)
