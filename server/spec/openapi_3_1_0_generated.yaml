@@ -3,23 +3,30 @@ info:
   title: verification-service
   version: 0.1.0
 paths:
-  /upload-omex:
+  /utc-species-comparison:
     post:
-      summary: Upload an OMEX archive
-      operationId: upload_omex_upload_omex_post
+      summary: Compare UTC outputs for a given species name
+      operationId: utc_species_comparison_utc_species_comparison_post
+      parameters:
+      - name: species_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Species Id
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_upload_omex_upload_omex_post'
-        required: true
+              $ref: '#/components/schemas/Body_utc_species_comparison_utc_species_comparison_post'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ArchiveUploadResponse'
+                $ref: '#/components/schemas/UtcSpeciesComparison'
         '422':
           description: Validation Error
           content:
@@ -28,25 +35,25 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    ArchiveUploadResponse:
-      properties:
-        filename:
-          type: string
-          title: Filename
-      type: object
-      required:
-      - filename
-      title: ArchiveUploadResponse
-    Body_upload_omex_upload_omex_post:
+    Body_utc_species_comparison_utc_species_comparison_post:
       properties:
         file:
           type: string
           format: binary
           title: File
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+          default:
+          - amici
+          - copasi
+          - tellurium
       type: object
       required:
       - file
-      title: Body_upload_omex_upload_omex_post
+      title: Body_utc_species_comparison_utc_species_comparison_post
     HTTPValidationError:
       properties:
         detail:
@@ -56,6 +63,19 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    UtcSpeciesComparison:
+      properties:
+        mse:
+          type: object
+          title: Mse
+        proximity:
+          type: object
+          title: Proximity
+      type: object
+      required:
+      - mse
+      - proximity
+      title: UtcSpeciesComparison
     ValidationError:
       properties:
         loc:
