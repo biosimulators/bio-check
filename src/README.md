@@ -1,1 +1,0 @@
-### This library, `src` represents the spec content, for which the REST api serves as a contract for.
