@@ -1,5 +1,5 @@
 release_env
-scripts/commit.sh
+commit.sh
 .idea/
 scripts/
 .notes
