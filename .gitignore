@@ -3,5 +3,5 @@ commit.sh
 .idea/
 scripts/
 .notes
-*examples/
+examples/
 env/
