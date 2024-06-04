@@ -7,32 +7,41 @@ import numpy as np
 from process_bigraph import pp
 
 from biosimulator_processes.api.compare import generate_comparison
-from biosimulator_processes.io import read_report_outputs, standardize_report_outputs
+from biosimulator_processes.io import standardize_report_outputs
 from biosimulators_amici.core import exec_sedml_docs_in_combine_archive as exec_amici
 from biosimulators_copasi.core import exec_sedml_docs_in_combine_archive as exec_copasi
 from biosimulators_tellurium.core import exec_sedml_docs_in_combine_archive as exec_tellurium
 from biosimulators_utils.report.data_model import ReportFormat
 from biosimulators_utils.config import Config
+from server.handlers.io import make_dir, read_report_outputs
 
 
-def generate_biosimulator_outputs(omex_fp: str, output_root_dir: str, simulators: list[str] = None) -> dict:
-    if not os.path.exists(output_root_dir):
-        os.mkdir(output_root_dir)
+async def generate_biosimulator_outputs(omex_fp: str, output_root_dir: str, simulators: list[str] = None) -> dict:
+    await make_dir(output_root_dir)
 
     output_data = {}
     sims = simulators or ['amici', 'copasi', 'tellurium']
+    sim_config = Config(LOG=False)
     for sim in sims:
-        module = import_module(name=f'biosimulators_{sim}.core')
-        exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
-
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
-        if not os.path.exists(sim_output_dir):
-            os.mkdir(sim_output_dir)
+        await make_dir(sim_output_dir)
 
-        sim_config = Config(LOG=False)
-        exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+        if sim == 'amici':
+            exec_amici(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+        elif sim == 'copasi':
+            exec_copasi(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+        elif sim == 'tellurium':
+            exec_tellurium(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+
+        # module = import_module(name=f'biosimulators_{sim}.core')
+        # exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
+        # sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
+        # if not os.path.exists(sim_output_dir):
+        #     os.mkdir(sim_output_dir)
+        # sim_config = Config(LOG=False)
+        # exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
         report_path = os.path.join(sim_output_dir, 'reports.h5')
-        sim_data = read_report_outputs(report_path)
+        sim_data = await read_report_outputs(report_path)
         output_data[sim] = sim_data.to_dict()
 
     return output_data
@@ -40,7 +49,7 @@ def generate_biosimulator_outputs(omex_fp: str, output_root_dir: str, simulators
 
 def generate_species_output(omex_fp: str, output_root_dir: str, species_name: str, simulators: list[str] = None) -> np.ndarray:
     outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators=simulators)
-    return _get_output_stack(outputs, species_name)
+    return _get_output_stack(outputs, species_name), outputs
 
 
 def _get_output_stack(outputs: dict, spec_id: str):

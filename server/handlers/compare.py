@@ -3,19 +3,26 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from server.handlers.output_data import generate_species_output
+from server.handlers.output_data import generate_species_output, generate_biosimulator_outputs, _get_output_stack
 
 
 def generate_utc_species_comparison(omex_fp, out_dir, species_name, simulators):
-    outputs = generate_species_output(omex_fp, out_dir, species_name)
+    output_data = generate_biosimulator_outputs(omex_fp, out_dir, simulators)
+    outputs = _get_output_stack(output_data, species_name)
     methods = ['mse', 'prox']
-    return dict(zip(
+    results = dict(zip(
         methods,
         list(map(
             lambda m: generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m).to_dict(),
             methods
         ))
     ))
+    results['output_data'] = {}
+    for simulator_name in output_data.keys():
+        for output in output_data[simulator_name]['data']:
+            if output['dataset_label'] in species_name:
+                results['output_data'][simulator_name] = output['data'].tolist()
+    return results
 
 
 def calculate_mse(a, b) -> float:
@@ -32,7 +39,7 @@ def compare_arrays(arr1: np.ndarray, arr2: np.ndarray, atol=None, rtol=None) -> 
 
 
 def generate_species_comparison_matrix(
-    outputs: List[np.ndarray],
+    outputs: Union[np.ndarray, List[np.ndarray]],
     simulators: List[str],
     method: Union[str, any] = 'prox',
     rtol: float = None,

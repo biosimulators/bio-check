@@ -9,9 +9,12 @@ class BaseModel(_BaseModel):
 
 class ArchiveUploadResponse(BaseModel):
     filename: str
+    content: str
+    path: str
 
 
 class UtcSpeciesComparison(BaseModel):
     mse: Dict
     proximity: Dict
+    output_data: Dict
 
