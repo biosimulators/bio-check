@@ -1,6 +1,6 @@
 from typing import *
 
-from pydantic import BaseModel as _BaseModel, ConfigDict
+from pydantic import BaseModel as _BaseModel, ConfigDict, Field
 
 
 class BaseModel(_BaseModel):
@@ -16,5 +16,5 @@ class ArchiveUploadResponse(BaseModel):
 class UtcSpeciesComparison(BaseModel):
     mse: Dict
     proximity: Dict
-    output_data: Dict
+    output_data: Dict = Field(default=None)
 

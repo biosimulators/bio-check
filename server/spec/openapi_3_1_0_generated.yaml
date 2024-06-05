@@ -47,28 +47,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /exec-files:
-    post:
-      summary: Create File
-      operationId: create_file_exec_files_post
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Body_create_file_exec_files_post'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /utc-species-comparison:
     post:
       summary: Compare UTC outputs for a given species name
@@ -80,6 +58,25 @@ paths:
         schema:
           type: string
           title: Species Id
+      - name: simulators
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+          - amici
+          - copasi
+          - tellurium
+          title: Simulators
+      - name: include_outputs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Outputs
       requestBody:
         required: true
         content:
@@ -101,16 +98,6 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    Body_create_file_exec_files_post:
-      properties:
-        uploaded_file:
-          type: string
-          format: binary
-          title: Uploaded File
-      type: object
-      required:
-      - uploaded_file
-      title: Body_create_file_exec_files_post
     Body_create_file_files__post:
       properties:
         file:
@@ -137,15 +124,6 @@ components:
           type: string
           format: binary
           title: Uploaded File
-        simulators:
-          items:
-            type: string
-          type: array
-          title: Simulators
-          default:
-          - amici
-          - copasi
-          - tellurium
       type: object
       required:
       - uploaded_file
@@ -174,7 +152,6 @@ components:
       required:
       - mse
       - proximity
-      - output_data
       title: UtcSpeciesComparison
     ValidationError:
       properties:

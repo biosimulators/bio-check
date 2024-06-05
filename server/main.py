@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 import uvicorn
 from pydantic import Field
-from fastapi import FastAPI, UploadFile, File, Body, APIRouter
+from fastapi import FastAPI, UploadFile, File, Query, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse
 
@@ -47,54 +47,35 @@ async def upload_archive(uploaded_file: UploadFile = File(...)):
     return response
 
 
-@app.post("/exec-files")
-async def create_file(uploaded_file: UploadFile = File(...)):
-    contents = await uploaded_file.read()
-    print(os.getcwd())
-    save_dir = tempfile.mkdtemp()
-    extraction_dir = tempfile.mkdtemp()
-
-    omex_path = os.path.join(save_dir, uploaded_file.filename)
-    with open(omex_path, 'w+b') as file:
-        shutil.copyfileobj(uploaded_file.file, uploaded_file)
-
-    with ZipFile(omex_path, 'w') as myzip:
-        myzip.write(extraction_dir)
-
-    print(os.path.exists(omex_path))
-    print(os.listdir('.'))
-
-
-
 @app.post(
     "/utc-species-comparison",
     response_model=UtcSpeciesComparison,
     summary="Compare UTC outputs for a given species name")
 async def utc_species_comparison(
-        species_id: str,
         uploaded_file: UploadFile = File(...),
-        simulators: List[str] = Body(default=['amici', 'copasi', 'tellurium']),
+        species_id: str = Query(...),
+        simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
+        include_outputs: bool = Query(default=True)
 ) -> UtcSpeciesComparison:
-    contents = await uploaded_file.read()
-    print(os.getcwd())
+    # handle os structures
     save_dir = tempfile.mkdtemp()
     out_dir = tempfile.mkdtemp()
-
     omex_path = os.path.join(save_dir, uploaded_file.filename)
-    with open(omex_path, 'w+b') as file:
-        shutil.copyfileobj(uploaded_file.file, uploaded_file)
+    with open(omex_path, 'wb') as file:
+        contents = await uploaded_file.read()
+        file.write(contents)
 
-    print(os.path.exists(omex_path), os.path.exists(save_dir))
-    comparison = generate_utc_species_comparison(
+    # generate async comparison
+    comparison = await generate_utc_species_comparison(
         omex_fp=omex_path,
-        out_dir='tests/test_outputs',
+        out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
         species_name=species_id,
         simulators=simulators)
-    print(comparison)
+
     return UtcSpeciesComparison(
         mse=comparison['mse'],
         proximity=comparison['prox'],
-        output_data=comparison['output_data'])
+        output_data=comparison['output_data'] if include_outputs else None)
 
 
 if __name__ == "__main__":

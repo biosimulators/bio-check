@@ -5,6 +5,8 @@ scripts/
 .notes
 examples/
 env/
-__pycache__/*
+__pycache__/
 *.pyc
 server/handlers/__pycache__/
+*.egg-info/
+.env

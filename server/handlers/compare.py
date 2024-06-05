@@ -6,8 +6,8 @@ import pandas as pd
 from server.handlers.output_data import generate_species_output, generate_biosimulator_outputs, _get_output_stack
 
 
-def generate_utc_species_comparison(omex_fp, out_dir, species_name, simulators):
-    output_data = generate_biosimulator_outputs(omex_fp, out_dir, simulators)
+async def generate_utc_species_comparison(omex_fp, out_dir, species_name, simulators):
+    output_data = await generate_biosimulator_outputs(omex_fp, out_dir, simulators)
     outputs = _get_output_stack(output_data, species_name)
     methods = ['mse', 'prox']
     results = dict(zip(
