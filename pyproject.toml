@@ -21,6 +21,7 @@ biosimulators-tellurium = "^0.1.42"
 biosimulators-utils = {version = "^0.1.187", extras = ["logging"]}
 python-multipart = "^0.0.9"
 biosimulator-processes = "^0.0.31"
+pymongo = {extras = ["srv"], version = "^4.7.3"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
