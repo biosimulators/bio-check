@@ -3,54 +3,20 @@ info:
   title: verification-service
   version: 0.1.0
 paths:
-  /files/:
-    post:
-      summary: Create File
-      operationId: create_file_files__post
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Body_create_file_files__post'
-        required: true
+  /:
+    get:
+      summary: Root
+      operationId: root__get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /upload-OMEX-archive:
-    post:
-      summary: Upload Archive
-      operationId: upload_archive_upload_OMEX_archive_post
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Body_upload_archive_upload_OMEX_archive_post'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /utc-species-comparison:
+  /biosimulators-utc-species-comparison:
     post:
       summary: Compare UTC outputs for a given species name
-      operationId: utc_species_comparison_utc_species_comparison_post
+      operationId: utc_species_comparison_biosimulators_utc_species_comparison_post
       parameters:
       - name: species_id
         in: query
@@ -82,7 +48,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_utc_species_comparison_utc_species_comparison_post'
+              $ref: '#/components/schemas/Body_utc_species_comparison_biosimulators_utc_species_comparison_post'
       responses:
         '200':
           description: Successful Response
@@ -98,17 +64,7 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    Body_create_file_files__post:
-      properties:
-        file:
-          type: string
-          format: binary
-          title: File
-      type: object
-      required:
-      - file
-      title: Body_create_file_files__post
-    Body_upload_archive_upload_OMEX_archive_post:
+    Body_utc_species_comparison_biosimulators_utc_species_comparison_post:
       properties:
         uploaded_file:
           type: string
@@ -117,17 +73,7 @@ components:
       type: object
       required:
       - uploaded_file
-      title: Body_upload_archive_upload_OMEX_archive_post
-    Body_utc_species_comparison_utc_species_comparison_post:
-      properties:
-        uploaded_file:
-          type: string
-          format: binary
-          title: Uploaded File
-      type: object
-      required:
-      - uploaded_file
-      title: Body_utc_species_comparison_utc_species_comparison_post
+      title: Body_utc_species_comparison_biosimulators_utc_species_comparison_post
     HTTPValidationError:
       properties:
         detail:
@@ -146,7 +92,9 @@ components:
           type: object
           title: Proximity
         output_data:
-          type: object
+          anyOf:
+          - type: object
+          - type: 'null'
           title: Output Data
       type: object
       required:

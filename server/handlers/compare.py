@@ -3,11 +3,11 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from server.handlers.output_data import generate_species_output, generate_biosimulator_outputs, _get_output_stack
+from server.handlers.output_data import generate_species_output, generate_biosimulator_utc_outputs, _get_output_stack
 
 
 async def generate_utc_species_comparison(omex_fp, out_dir, species_name, simulators):
-    output_data = await generate_biosimulator_outputs(omex_fp, out_dir, simulators)
+    output_data = await generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
     outputs = _get_output_stack(output_data, species_name)
     methods = ['mse', 'prox']
     results = dict(zip(

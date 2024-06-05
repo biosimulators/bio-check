@@ -30,25 +30,13 @@ app.add_middleware(
 )
 
 
-@app.post("/files/")
-async def create_file(file: Annotated[bytes, File()]):
-    return {"file_size": len(file)}
-
-
-@app.post('/upload-OMEX-archive')
-async def upload_archive(uploaded_file: UploadFile = File(...)):
-    save_dir = "/tmp/stuff"
-    content = await uploaded_file.read()
-    with open(save_dir, "wb") as tozip:
-        tozip.write(content)
-    with ZipFile(uploaded_file.filename, 'w') as myzip:
-        myzip.write(save_dir)
-    response = FileResponse(path=uploaded_file.filename, filename=uploaded_file.filename)
-    return response
+@app.get("/")
+def root():
+    return {'verification-service-message': 'Hello from the Verification Service API!'}
 
 
 @app.post(
-    "/utc-species-comparison",
+    "/biosimulators-utc-species-comparison",
     response_model=UtcSpeciesComparison,
     summary="Compare UTC outputs for a given species name")
 async def utc_species_comparison(
@@ -72,10 +60,12 @@ async def utc_species_comparison(
         species_name=species_id,
         simulators=simulators)
 
+    out_data = comparison['output_data'] if include_outputs else None
+
     return UtcSpeciesComparison(
         mse=comparison['mse'],
         proximity=comparison['prox'],
-        output_data=comparison['output_data'] if include_outputs else None)
+        output_data=out_data)
 
 
 if __name__ == "__main__":
