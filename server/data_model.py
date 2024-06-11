@@ -18,3 +18,9 @@ class UtcSpeciesComparison(BaseModel):
     proximity: Dict
     output_data: Optional[Dict] = None
 
+
+class UtcComparison(BaseModel):
+    results: List[UtcSpeciesComparison]
+    id: str
+    simulators: List[str]
+

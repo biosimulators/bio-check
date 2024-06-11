@@ -13,10 +13,59 @@ paths:
           content:
             application/json:
               schema: {}
+  /utc-comparison:
+    post:
+      summary: Compare UTC outputs for each species in a given model file
+      operationId: utc_comparison_utc_comparison_post
+      parameters:
+      - name: simulators
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+          - amici
+          - copasi
+          - tellurium
+          title: Simulators
+      - name: include_outputs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Outputs
+      - name: comparison_id
+        in: query
+        required: false
+        schema:
+          type: string
+          title: Comparison Id
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_utc_comparison_utc_comparison_post'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtcComparison'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /biosimulators-utc-species-comparison:
     post:
-      summary: Compare UTC outputs for a given species name
-      operationId: utc_species_comparison_biosimulators_utc_species_comparison_post
+      summary: Compare UTC outputs from Biosimulators for a given species name
+      operationId: biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post
       parameters:
       - name: species_id
         in: query
@@ -48,7 +97,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_utc_species_comparison_biosimulators_utc_species_comparison_post'
+              $ref: '#/components/schemas/Body_biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post'
       responses:
         '200':
           description: Successful Response
@@ -64,7 +113,7 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    Body_utc_species_comparison_biosimulators_utc_species_comparison_post:
+    Body_biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post:
       properties:
         uploaded_file:
           type: string
@@ -73,7 +122,17 @@ components:
       type: object
       required:
       - uploaded_file
-      title: Body_utc_species_comparison_biosimulators_utc_species_comparison_post
+      title: Body_biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post
+    Body_utc_comparison_utc_comparison_post:
+      properties:
+        uploaded_file:
+          type: string
+          format: binary
+          title: Uploaded File
+      type: object
+      required:
+      - uploaded_file
+      title: Body_utc_comparison_utc_comparison_post
     HTTPValidationError:
       properties:
         detail:
@@ -83,6 +142,27 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    UtcComparison:
+      properties:
+        results:
+          items:
+            $ref: '#/components/schemas/UtcSpeciesComparison'
+          type: array
+          title: Results
+        id:
+          type: string
+          title: Id
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+      type: object
+      required:
+      - results
+      - id
+      - simulators
+      title: UtcComparison
     UtcSpeciesComparison:
       properties:
         mse:
