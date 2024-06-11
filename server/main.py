@@ -44,7 +44,7 @@ async def utc_comparison(
         simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
         include_outputs: bool = Query(default=True),
         comparison_id: str = Query(default=None),
-        ground_truth: List[List[float]] = Body(default=None),
+        # ground_truth: List[List[float]] = None,
         # time_course_config: Dict[str, Union[int, float]] = Body(default=None)
 ) -> UtcComparison:
     # handle os structures
@@ -83,7 +83,7 @@ async def biosimulators_utc_comparison(
         simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
         include_outputs: bool = Query(default=True),
         comparison_id: str = Query(default=None),
-        ground_truth: List[List[float]] = Body(default=None),
+        # ground_truth: List[List[float]] = None
 ) -> UtcComparison:
     save_dir = tempfile.mkdtemp()
     out_dir = tempfile.mkdtemp()
@@ -99,7 +99,7 @@ async def biosimulators_utc_comparison(
         out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
         simulators=simulators,
         comparison_id=comparison_id,
-        ground_truth=ground_truth or None)
+        ground_truth=None)
 
     spec_comparisons = []
     for spec_name, comparison_data in comparison['results'].items():
