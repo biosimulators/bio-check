@@ -167,9 +167,9 @@ files = [
 cmake-build-extension = "0.6.0"
 mpmath = "*"
 numpy = [
+    {version = ">=1.21.4", markers = "python_version >= \"3.10\" and python_version != \"3.11\" and python_version != \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
     {version = ">=1.26.2", markers = "python_version == \"3.12\""},
-    {version = ">=1.21.4", markers = "python_version >= \"3.10\" and python_version != \"3.11\" and python_version != \"3.12\""},
 ]
 pandas = ">=2.0.2"
 pyarrow = "*"
@@ -523,13 +523,13 @@ numpy = "*"
 
 [[package]]
 name = "biosimulator-processes"
-version = "0.0.32"
+version = "0.0.33"
 description = ""
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "biosimulator_processes-0.0.32-py3-none-any.whl", hash = "sha256:3211457766bf474f1d9a5b011ae3ae3215981ebe7a0786b3793cd7938f633ff3"},
-    {file = "biosimulator_processes-0.0.32.tar.gz", hash = "sha256:b67dd1d7802b50ea688c4ed1eb3ea640046c8619e05f8a717ff538689ac1134a"},
+    {file = "biosimulator_processes-0.0.33-py3-none-any.whl", hash = "sha256:16052ea1909e10a7761b2a4bdb076d42f4ef81c10bc85a588bea2de8721006fa"},
+    {file = "biosimulator_processes-0.0.33.tar.gz", hash = "sha256:45c01a89c1976cb8b69e81733e711bb1f4c9dfe0dfc069ce17e2d7821f62855d"},
 ]
 
 [package.dependencies]
@@ -2876,9 +2876,9 @@ files = [
 
 [package.dependencies]
 numpy = [
+    {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
     {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
 ]
 
 [package.extras]
@@ -3426,9 +3426,9 @@ files = [
 
 [package.dependencies]
 numpy = [
+    {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
     {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.22.4", markers = "python_version < \"3.11\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -6431,4 +6431,4 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10"
-content-hash = "094d7e7670b0789e17983cf947795b0d47ba254087341d0294e4c3775b2d3eb4"
+content-hash = "b81b122c4a4aabc12b45ef8a3383f37f27058e678aaf2042b3332f27bdc9ce23"
