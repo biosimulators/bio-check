@@ -99,7 +99,7 @@ async def biosimulators_utc_comparison(
         out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
         simulators=simulators,
         comparison_id=comparison_id,
-        ground_truth=ground_truth)
+        ground_truth=ground_truth or None)
 
     spec_comparisons = []
     for spec_name, comparison_data in comparison['results'].items():
