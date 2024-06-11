@@ -38,12 +38,13 @@ def root():
 @app.post(
     "/utc-comparison",
     response_model=UtcComparison,
-    summary="Compare UTC outputs for each species in a given model file")
+    summary="Compare UTC outputs for each species in a given model file. You may pass either a model file or OMEX archive file.")
 async def utc_comparison(
         uploaded_file: UploadFile = File(...),
         simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
         include_outputs: bool = Query(default=True),
-        comparison_id: str = Query(default=None)
+        comparison_id: str = Query(default=None),
+        # time_course_config: Dict[str, Union[int, float]] = Body(default=None)
 ) -> UtcComparison:
     # handle os structures
     save_dir = tempfile.mkdtemp()
@@ -55,7 +56,7 @@ async def utc_comparison(
 
     comparison_name = comparison_id or f'api-generated-utc-comparison-for-{simulators}'
     # generate async comparison
-    comparison = await generate_utc_comparison(
+    comparison = generate_utc_comparison(
         omex_fp=omex_path,
         simulators=simulators,
         include_outputs=include_outputs,

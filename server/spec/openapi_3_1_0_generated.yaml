@@ -15,7 +15,8 @@ paths:
               schema: {}
   /utc-comparison:
     post:
-      summary: Compare UTC outputs for each species in a given model file
+      summary: Compare UTC outputs for each species in a given model file. You may
+        pass either a model file or OMEX archive file.
       operationId: utc_comparison_utc_comparison_post
       parameters:
       - name: simulators

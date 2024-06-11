@@ -7,7 +7,7 @@ from biosimulator_processes.execute import exec_utc_comparison
 from server.handlers.output_data import generate_species_output, generate_biosimulator_utc_outputs, _get_output_stack
 
 
-async def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: str = None, include_outputs: bool = True):
+def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: str = None, include_outputs: bool = True):
     # TODO: ensure that specific simulators get selected with the list of simulators.
     return exec_utc_comparison(
         omex_fp=omex_fp,
