@@ -92,6 +92,7 @@ async def biosimulators_utc_comparison(
         contents = await uploaded_file.read()
         file.write(contents)
 
+    # TODO: parse ground truth from omex report if none is given by unzipping and extracting report file.
     comparison_id = comparison_id or 'biosimulators-utc-comparison'
     comparison = await generate_biosimulators_utc_comparison(
         omex_fp=omex_path,
