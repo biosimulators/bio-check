@@ -169,6 +169,13 @@ components:
           type: string
           format: binary
           title: Uploaded File
+        ground_truth:
+          items:
+            items:
+              type: number
+            type: array
+          type: array
+          title: Ground Truth
       type: object
       required:
       - uploaded_file
@@ -189,6 +196,13 @@ components:
           type: string
           format: binary
           title: Uploaded File
+        ground_truth:
+          items:
+            items:
+              type: number
+            type: array
+          type: array
+          title: Ground Truth
       type: object
       required:
       - uploaded_file

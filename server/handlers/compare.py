@@ -19,14 +19,14 @@ def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: 
         include_outputs=include_outputs)
 
 
-async def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species_name, simulators):
+async def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species_name, simulators, ground_truth=None):
     output_data = await generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
     outputs = _get_output_stack(output_data, species_name)
     methods = ['mse', 'prox']
     results = dict(zip(
         methods,
         list(map(
-            lambda m: generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m).to_dict(),
+            lambda m: generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth).to_dict(),
             methods
         ))
     ))
@@ -38,12 +38,12 @@ async def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, specie
     return results
 
 
-async def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparison_id):
+async def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparison_id, ground_truth=None):
     model_file = await get_sbml_model_file_from_archive(omex_fp, out_dir)
     sbml_species_names = await get_sbml_species_names(model_file)
     results = {'results': {}, 'comparison_id': comparison_id}
-    for species in sbml_species_names:
-        results['results'][species] = await generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species, simulators)
+    for i, species in enumerate(sbml_species_names):
+        results['results'][species] = await generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species, simulators, ground_truth=ground_truth[i] if ground_truth else None)
     return results
 
 
