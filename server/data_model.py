@@ -14,6 +14,7 @@ class ArchiveUploadResponse(BaseModel):
 
 
 class UtcSpeciesComparison(BaseModel):
+    species_name: str
     mse: Dict
     proximity: Dict
     output_data: Optional[Dict] = None

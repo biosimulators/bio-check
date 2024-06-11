@@ -1,9 +1,12 @@
 from typing import *
+import zipfile as zf
 
 import numpy as np
 import pandas as pd
+import libsbml
 
 from biosimulator_processes.execute import exec_utc_comparison
+from server.handlers.io import get_sbml_species_names, get_sbml_model_file_from_archive
 from server.handlers.output_data import generate_species_output, generate_biosimulator_utc_outputs, _get_output_stack
 
 
@@ -32,6 +35,15 @@ async def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, specie
         for output in output_data[simulator_name]['data']:
             if output['dataset_label'] in species_name:
                 results['output_data'][simulator_name] = output['data'].tolist()
+    return results
+
+
+async def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparison_id):
+    model_file = await get_sbml_model_file_from_archive(omex_fp, out_dir)
+    sbml_species_names = await get_sbml_species_names(model_file)
+    results = {'results': {}, 'comparison_id': comparison_id}
+    for species in sbml_species_names:
+        results['results'][species] = await generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species, simulators)
     return results
 
 
