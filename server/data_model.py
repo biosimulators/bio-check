@@ -7,6 +7,10 @@ class BaseModel(_BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
+class CustomError(BaseModel):
+    detail: str
+
+
 class ArchiveUploadResponse(BaseModel):
     filename: str
     content: str

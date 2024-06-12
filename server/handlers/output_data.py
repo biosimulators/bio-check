@@ -29,7 +29,8 @@ async def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, 
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
         await make_dir(sim_output_dir)
 
-        # if sim == 'amici':
+        # if sim == 'amici':+
+
         #     exec_amici(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
         # elif sim == 'copasi':
         #     exec_copasi(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)

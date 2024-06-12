@@ -43,11 +43,26 @@ async def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, co
     sbml_species_names = await get_sbml_species_names(model_file)
     results = {'results': {}, 'comparison_id': comparison_id}
     for i, species in enumerate(sbml_species_names):
-        results['results'][species] = await generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species, simulators, ground_truth=ground_truth[i] if ground_truth else None)
+        ground_truth_data = None
+        if ground_truth:
+            for data in ground_truth:
+                if data['dataset_label'] == species:
+                    ground_truth_data = data['data']
+        results['results'][species] = await generate_biosimulators_utc_species_comparison(
+            omex_fp=omex_fp,
+            out_dir=out_dir,
+            species_name=species,
+            simulators=simulators,
+           #  ground_truth=ground_truth[i] if isinstance(ground_truth, list or np.ndarray) else None)
+            ground_truth=ground_truth_data)
     return results
 
 
 def calculate_mse(a, b) -> float:
+    if isinstance(a, list):
+        a = np.array(a)
+    if isinstance(b, list):
+        b = np.array(b)
     return np.mean((a - b) ** 2)
 
 
@@ -91,6 +106,9 @@ def generate_species_comparison_matrix(
     # TODO: implement the ground truth
     _simulators = simulators.copy()
     _outputs = outputs.copy()
+    if isinstance(_outputs, np.ndarray):
+        _outputs = _outputs.tolist()
+
     if ground_truth is not None:
         _simulators.append('ground_truth')
         _outputs.append(ground_truth)

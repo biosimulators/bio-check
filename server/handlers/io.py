@@ -3,8 +3,19 @@ import tempfile
 
 import h5py
 import libsbml
+from fastapi import UploadFile
 from biosimulators_utils.combine.io import CombineArchiveReader
+
 from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
+
+
+async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
+    # TODO: replace this with s3 and use save_dest
+    file_path = os.path.join(save_dest, uploaded_file.filename)
+    with open(file_path, 'wb') as file:
+        contents = await uploaded_file.read()
+        file.write(contents)
+    return file_path
 
 
 async def get_sbml_species_names(fp: str) -> list[str]:
