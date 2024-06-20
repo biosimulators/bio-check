@@ -523,13 +523,13 @@ numpy = "*"
 
 [[package]]
 name = "biosimulator-processes"
-version = "0.0.35"
+version = "0.0.36"
 description = ""
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "biosimulator_processes-0.0.35-py3-none-any.whl", hash = "sha256:63e7e40411575937b98c53d03400d20e27e5e38c516cbe8a69b60c56fdd42e63"},
-    {file = "biosimulator_processes-0.0.35.tar.gz", hash = "sha256:324f73c7a2fa458165d3cebf4d112c31b35598588f25e0740e048fce84c60462"},
+    {file = "biosimulator_processes-0.0.36-py3-none-any.whl", hash = "sha256:a23c9bc160c3e2ec3327eca911fb348ccf61bae23a856f7473dae4dd3b0cb755"},
+    {file = "biosimulator_processes-0.0.36.tar.gz", hash = "sha256:afdc64568c2504bc99ad1b3662459572455dbaa24df85335c302efa2952e9fcb"},
 ]
 
 [package.dependencies]
@@ -6432,4 +6432,4 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10"
-content-hash = "1de292bf86d2177fbde6ac6e148f39bd407525b2548a09797438d8fe78457fe2"
+content-hash = "d1bdf710f15582f5875f14cc1c43437a81b9bc91d54f26535e797dcafb829afa"
