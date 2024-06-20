@@ -15,56 +15,6 @@ paths:
               schema: {}
   /utc-comparison:
     post:
-      summary: Compare UTC outputs for each species in a given model file. You may
-        pass either a model file or OMEX archive file.
-      operationId: utc-comparison
-      parameters:
-      - name: simulators
-        in: query
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
-          default:
-          - amici
-          - copasi
-          - tellurium
-          title: Simulators
-      - name: include_outputs
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-          title: Include Outputs
-      - name: comparison_id
-        in: query
-        required: false
-        schema:
-          type: string
-          title: Comparison Id
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Body_utc-comparison'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UtcComparison'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /biosimulators-utc-comparison:
-    post:
       summary: Compare UTC outputs from Biosimulators for a model from a given archive.
       operationId: biosimulators-utc-comparison
       parameters:
@@ -120,55 +70,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /biosimulators-utc-species-comparison:
-    post:
-      summary: Compare UTC outputs from Biosimulators for a given species name
-      operationId: biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post
-      parameters:
-      - name: species_id
-        in: query
-        required: true
-        schema:
-          type: string
-          title: Species Id
-      - name: simulators
-        in: query
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
-          default:
-          - amici
-          - copasi
-          - tellurium
-          title: Simulators
-      - name: include_outputs
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-          title: Include Outputs
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Body_biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UtcSpeciesComparison'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     Body_biosimulators-utc-comparison:
@@ -188,26 +89,6 @@ components:
       required:
       - uploaded_file
       title: Body_biosimulators-utc-comparison
-    Body_biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post:
-      properties:
-        uploaded_file:
-          type: string
-          format: binary
-          title: Uploaded File
-      type: object
-      required:
-      - uploaded_file
-      title: Body_biosimulators_utc_species_comparison_biosimulators_utc_species_comparison_post
-    Body_utc-comparison:
-      properties:
-        uploaded_file:
-          type: string
-          format: binary
-          title: Uploaded File
-      type: object
-      required:
-      - uploaded_file
-      title: Body_utc-comparison
     HTTPValidationError:
       properties:
         detail:

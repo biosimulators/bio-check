@@ -70,51 +70,48 @@ def root():
     return {'verification-service-message': 'Hello from the Verification Service API!'}
 
 
-@app.post(
-    "/utc-comparison",
-    response_model=UtcComparison,
-    name="Uniform Time Course Comparison.",
-    operation_id="utc-comparison",
-    summary="Compare UTC outputs for each species in a given model file. You may pass either a model file or OMEX archive file.")
-async def utc_comparison(
-        uploaded_file: UploadFile = File(...),
-        simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
-        include_outputs: bool = Query(default=True),
-        comparison_id: str = Query(default=None),
-        # ground_truth: List[List[float]] = None,
-        # time_course_config: Dict[str, Union[int, float]] = Body(default=None)
-) -> UtcComparison:
-    out_dir = tempfile.mkdtemp()
-    save_dir = tempfile.mkdtemp()
-    omex_path = await save_uploaded_file(uploaded_file, save_dir)
-
-    comparison_name = comparison_id or f'api-generated-utc-comparison-for-{simulators}'
-    # generate async comparison
-    comparison = generate_utc_comparison(
-        omex_fp=omex_path,
-        simulators=simulators,
-        include_outputs=include_outputs,
-        comparison_id=comparison_name)
-
-    spec_comparisons = []
-    for spec_name, comparison_data in comparison['results'].items():
-        species_comparison = UtcSpeciesComparison(
-            mse=comparison_data['mse'],
-            proximity=comparison_data['prox'],
-            output_data=comparison_data.get('output_data'),
-            species_name=spec_name)
-        spec_comparisons.append(species_comparison)
-
-    return UtcComparison(results=spec_comparisons, id=comparison_name, simulators=simulators)
+# @app.post(
+#     "/utc-comparison",
+#     response_model=UtcComparison,
+#     name="Uniform Time Course Comparison.",
+#     operation_id="utc-comparison",
+#     summary="Compare UTC outputs for each species in a given model file. You may pass either a model file or OMEX archive file.")
+# async def utc_comparison(
+#         uploaded_file: UploadFile = File(...),
+#         simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
+#         include_outputs: bool = Query(default=True),
+#         comparison_id: str = Query(default=None),
+#         # ground_truth: List[List[float]] = None,
+#         # time_course_config: Dict[str, Union[int, float]] = Body(default=None)
+# ) -> UtcComparison:
+#     out_dir = tempfile.mkdtemp()
+#     save_dir = tempfile.mkdtemp()
+#     omex_path = await save_uploaded_file(uploaded_file, save_dir)
+#     comparison_name = comparison_id or f'api-generated-utc-comparison-for-{simulators}'
+#     # generate async comparison
+#     comparison = generate_utc_comparison(
+#         omex_fp=omex_path,
+#         simulators=simulators,
+#         include_outputs=include_outputs,
+#         comparison_id=comparison_name)
+#     spec_comparisons = []
+#     for spec_name, comparison_data in comparison['results'].items():
+#         species_comparison = UtcSpeciesComparison(
+#             mse=comparison_data['mse'],
+#             proximity=comparison_data['prox'],
+#             output_data=comparison_data.get('output_data'),
+#             species_name=spec_name)
+#         spec_comparisons.append(species_comparison)
+#     return UtcComparison(results=spec_comparisons, id=comparison_name, simulators=simulators)
 
 
 @app.post(
-    "/biosimulators-utc-comparison",
+    "/utc-comparison",  # "/biosimulators-utc-comparison",
     response_model=UtcComparison,
     name="Biosimulator Uniform Time Course Comparison",
     operation_id="biosimulators-utc-comparison",
     summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
-async def biosimulators_utc_comparison(
+async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
         simulators: List[str] = Query(
             default=['amici', 'copasi', 'tellurium'],
@@ -174,39 +171,35 @@ async def biosimulators_utc_comparison(
         simulators=simulators)
 
 
-
-@app.post(
-    "/biosimulators-utc-species-comparison",
-    response_model=UtcSpeciesComparison,
-    summary="Compare UTC outputs from Biosimulators for a given species name")
-async def biosimulators_utc_species_comparison(
-        uploaded_file: UploadFile = File(...),
-        species_id: str = Query(...),
-        simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
-        include_outputs: bool = Query(default=True)
-) -> UtcSpeciesComparison:
-    # handle os structures
-    save_dir = tempfile.mkdtemp()
-    out_dir = tempfile.mkdtemp()
-    omex_path = os.path.join(save_dir, uploaded_file.filename)
-    with open(omex_path, 'wb') as file:
-        contents = await uploaded_file.read()
-        file.write(contents)
-
-    # generate async comparison
-    comparison = await generate_biosimulators_utc_species_comparison(
-        omex_fp=omex_path,
-        out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
-        species_name=species_id,
-        simulators=simulators)
-
-    out_data = comparison['output_data'] if include_outputs else None
-
-    return UtcSpeciesComparison(
-        mse=comparison['mse'],
-        proximity=comparison['prox'],
-        output_data=out_data,
-        species_name=species_id)
+# @app.post(
+#     "/biosimulators-utc-species-comparison",
+#     response_model=UtcSpeciesComparison,
+#     summary="Compare UTC outputs from Biosimulators for a given species name")
+# async def biosimulators_utc_species_comparison(
+#         uploaded_file: UploadFile = File(...),
+#         species_id: str = Query(...),
+#         simulators: List[str] = Query(default=['amici', 'copasi', 'tellurium']),
+#         include_outputs: bool = Query(default=True)
+# ) -> UtcSpeciesComparison:
+#     # handle os structures
+#     save_dir = tempfile.mkdtemp()
+#     out_dir = tempfile.mkdtemp()
+#     omex_path = os.path.join(save_dir, uploaded_file.filename)
+#     with open(omex_path, 'wb') as file:
+#         contents = await uploaded_file.read()
+#         file.write(contents)
+#     # generate async comparison
+#     comparison = await generate_biosimulators_utc_species_comparison(
+#         omex_fp=omex_path,
+#         out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
+#         species_name=species_id,
+#         simulators=simulators)
+#     out_data = comparison['output_data'] if include_outputs else None
+#     return UtcSpeciesComparison(
+#         mse=comparison['mse'],
+#         proximity=comparison['prox'],
+#         output_data=out_data,
+#         species_name=species_id)
 
 
 if __name__ == "__main__":
