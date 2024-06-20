@@ -35,5 +35,6 @@ class SimulationError(Exception):
         self.message = message
 
 
+# api container fastapi, mongo database, worker container
 class StochasticMethodError(BaseModel):
     message: str = "Only deterministic methods are supported."

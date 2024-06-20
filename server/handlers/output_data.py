@@ -21,7 +21,10 @@ async def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, 
 
     output_data = {}
     sims = simulators or ['amici', 'copasi', 'tellurium']
-    sim_config = Config(LOG=False, ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy.ANY)
+    sim_config = Config(
+        LOG=False,
+        ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy.ANY,
+        VERBOSE=False)
     for sim in sims:
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
         await make_dir(sim_output_dir)
