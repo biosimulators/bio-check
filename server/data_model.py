@@ -29,3 +29,11 @@ class UtcComparison(BaseModel):
     id: str
     simulators: List[str]
 
+
+class SimulationError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
+class StochasticMethodError(BaseModel):
+    message: str = "Only deterministic methods are supported."
