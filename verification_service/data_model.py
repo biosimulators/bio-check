@@ -1,4 +1,5 @@
 from typing import *
+from datetime import datetime
 
 from pydantic import BaseModel as _BaseModel, ConfigDict
 
@@ -11,6 +12,17 @@ class BaseModel(_BaseModel):
 
 # -- api models -- #
 
+class DbConnector(BaseModel):
+    client: Any
+    database_id: str
+
+
+class DbClientResponse(BaseModel):
+    message: str
+    db_type: str  # ie: 'mongo', 'postgres', etc
+    timestamp: str
+
+
 class UtcComparisonRequest(BaseModel):
     simulators: List[str]
     include_output: Optional[bool] = True
@@ -21,6 +33,10 @@ class Job(BaseModel):
     id: str
     status: str
     results: Optional[Dict] = None
+
+
+class FetchResultsResponse(BaseModel):
+    content: Any
 
 
 class PendingJob(BaseModel):

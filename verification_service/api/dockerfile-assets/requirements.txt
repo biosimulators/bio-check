@@ -6,4 +6,5 @@ tensorstore
 aiofiles
 aiobotocore
 python-multipart
-pymongo
+pymongo[srv]==3.11
+python-dotenv

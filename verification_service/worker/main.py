@@ -1,7 +1,6 @@
 import tempfile
 from typing import *
 
-import uvicorn
 from fastapi import HTTPException
 
 from verification_service.worker.compare import (
@@ -17,7 +16,7 @@ async def utc_comparison(
         include_outputs: bool = True,
         comparison_id: str = None,
         ground_truth_report_path: str = None
-        ) -> UtcComparison:
+        ) -> Union[UtcComparison, SimulationError]:
     try:
         out_dir = tempfile.mktemp()
         truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
@@ -38,10 +37,8 @@ async def utc_comparison(
                 output_data=comparison_data.get('output_data') if include_outputs else {},
                 species_name=spec_name)
             spec_comparisons.append(species_comparison)
-    except SimulationError as e:
-        raise HTTPException(status_code=400, detail=str(e.message))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return SimulationError(str(e))
 
     return UtcComparison(
         results=spec_comparisons,

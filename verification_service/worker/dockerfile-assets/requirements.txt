@@ -9,3 +9,5 @@ biosimulators-utils
 python-multipart
 pymongo
 biosimulator-processes
+pymongo[srv]==3.11
+python-dotenv

@@ -1,26 +1,39 @@
+import os
 import logging
 import uuid
+import dotenv
 from typing import *
+from datetime import datetime
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
 from starlette.middleware.cors import CORSMiddleware
-import pymongo as db
+from pymongo.mongo_client import MongoClient
 
-from verification_service.data_model import UtcComparisonRequest, UtcComparison, PendingJob, Job
+from verification_service.data_model import (
+    UtcComparisonRequest,
+    UtcComparison,
+    Job,
+    DbClientResponse,
+    FetchResultsResponse)
 from verification_service.api.handlers.io import save_uploaded_file
 from verification_service.api.handlers.log_config import setup_logging
+from verification_service.api.handlers.database import timestamp
 
 
-setup_logging()
+# --load env -- #
 
-logger = logging.getLogger(__name__)
+dotenv.load_dotenv()
 
 
-app = FastAPI(title='verification-service', version='1.0.0')
-router = APIRouter()
+# -- constraints -- #
 
-origins = [
+APP_TITLE = "verification-service"
+APP_VERSION = "0.0.1"
+
+# TODO: update this
+ORIGINS = [
+    'http://127.0.0.1:8000',
     'http://127.0.0.1:4200',
     'http://127.0.0.1:4201',
     'http://127.0.0.1:4202',
@@ -37,14 +50,56 @@ origins = [
     'https://biosimulations.org',
     'https://bio.libretexts.org',
 ]
+
+DB_TYPE = "mongo"  # ie: postgres, etc
+
+MONGO_URI = os.getenv("MONGO_DB_URI")
+
+
+# -- handle logging -- #
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
+
+# -- app components -- #
+
+router = APIRouter()
+app = FastAPI(title=APP_TITLE, version=APP_VERSION)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
-)
+    allow_headers=["*"])
 
+app.mongo_client = MongoClient(MONGO_URI)
+
+
+# -- initialization logic --
+
+@app.on_event("startup")
+def start_client() -> DbClientResponse:
+    """TODO: generalize this to work with multiple client types. Currently using Mongo."""
+    _time = timestamp()
+    try:
+        app.mongo_client.admin.command('ping')
+        msg = "Pinged your deployment. You successfully connected to MongoDB!"
+    except Exception as e:
+        msg = f"Failed to connect to MongoDB:\n{e}"
+
+    return DbClientResponse(message=msg, db_type=DB_TYPE, timestamp=_time)
+
+
+@app.on_event("shutdown")
+def stop_mongo_client() -> DbClientResponse:
+    _time = timestamp()
+    app.mongo_client.close()
+    return DbClientResponse(message=f"{DB_TYPE} successfully closed!", db_type=DB_TYPE, timestamp=_time)
+
+
+# -- endpoint logic -- #
 
 @app.get("/")
 def root():
@@ -90,25 +145,27 @@ async def utc_comparison(
         }
 
         # create job record in MongoDB
-        db.jobs.insert_one(pending_job_document)
+        app.mongo_client.jobs.insert_one(pending_job_document)
 
         return Job(id=job_id, status="PENDING")
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/fetch-results/{job_id}", response_model=UtcComparison)
-async def fetch_results(job_id: str):
-    job = db.jobs.find_one({"job_id": job_id})
+@app.get(
+    "/fetch-results/{comparison_run_id}",
+    response_model=FetchResultsResponse,
+    operation_id='fetch-results',
+    summary='Get the results of an existing uniform time course comparison.')
+async def fetch_results(comparison_run_id: str):
+    job = app.mongo_client.jobs.find_one({"job_id": comparison_run_id})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    if job['status'] == 'COMPLETED':
-        # Assuming results are stored in the job document
-        return job['results']
-    else:
-        return {"status": job['status']}
+    # assuming results are stored in the job document. TODO: what if this is not the case?
+    resp_content = job['results'] if job['status'] == 'COMPLETED' else {"status": job['status']}
+
+    return FetchResultsResponse(content=resp_content)
 
 
 if __name__ == "__main__":
