@@ -134,9 +134,9 @@ components:
       title: HTTPValidationError
     PendingJob:
       properties:
-        id:
+        job_id:
           type: string
-          title: Id
+          title: Job Id
         status:
           type: string
           title: Status
@@ -155,9 +155,14 @@ components:
         timestamp:
           type: string
           title: Timestamp
+        reports_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reports Path
       type: object
       required:
-      - id
+      - job_id
       - omex_path
       - simulators
       - comparison_id

@@ -40,17 +40,18 @@ class Job(BaseModel):
     results: Optional[Dict] = None
 
 
-class FetchResultsResponse(BaseModel):
-    content: Any
-
-
 class PendingJob(BaseModel):
-    id: str
+    job_id: str
     status: str = "PENDING"
     omex_path: str
     simulators: List[str]
     comparison_id: str
     timestamp: str
+    reports_path: Optional[str] = None
+
+
+class FetchResultsResponse(BaseModel):
+    content: Any
 
 
 # -- worker models -- #
