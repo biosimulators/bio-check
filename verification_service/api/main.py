@@ -152,7 +152,7 @@ async def utc_comparison(
             reports_path=report_fp)
 
         # TODO: remove this when using shared file store.
-        rmtree(save_dest)
+        # rmtree(save_dest)
         return PendingJob(**job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
