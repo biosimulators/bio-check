@@ -3,13 +3,13 @@ from typing import *
 from pydantic import BaseModel as _BaseModel, ConfigDict
 
 
-# -- globally-used base model --
+# -- globally-used base model -- #
 
 class BaseModel(_BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-# -- api models --
+# -- api models -- #
 
 class UtcComparisonRequest(BaseModel):
     simulators: List[str]
@@ -28,7 +28,7 @@ class PendingJob(BaseModel):
     status: str = "PENDING"
 
 
-# -- worker models --
+# -- worker models -- #
 
 class InProgressJob(Job):
     id: str
