@@ -4,7 +4,7 @@ import os
 import yaml
 from fastapi.openapi.utils import get_openapi
 
-from server.main import app
+from verification_service.worker.main import app
 
 
 def main():

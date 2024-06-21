@@ -7,6 +7,6 @@ examples/
 env/
 __pycache__/
 *.pyc
-server/handlers/__pycache__/
+verification_service/worker/handlers/__pycache__/
 *.egg-info/
 .env

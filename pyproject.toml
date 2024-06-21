@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "server"}]
+packages = [{include = "service"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10"

@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: verification-service
+  title: verification-worker
   version: 1.0.0
 paths:
   /:

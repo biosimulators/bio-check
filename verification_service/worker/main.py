@@ -1,31 +1,25 @@
 import logging
-import os
 import tempfile
 from typing import *
 
 import uvicorn
 import traceback
-from pydantic import Field
-from fastapi import FastAPI, UploadFile, File, Query, APIRouter, Body, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, Query, APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
-from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import FileResponse
 
-from server.handlers.compare import (
-    generate_biosimulators_utc_species_comparison,
-    generate_utc_comparison,
+from verification_service.worker.handlers.compare import (
     generate_biosimulators_utc_comparison)
-from server.handlers.io import save_uploaded_file, read_report_outputs
-from server.data_model import ArchiveUploadResponse, UtcSpeciesComparison, UtcComparison, CustomError, SimulationError
-from server.log_config import setup_logging
+from verification_service.worker.handlers.io import save_uploaded_file, read_report_outputs
+from verification_service.worker.data_model import UtcSpeciesComparison, UtcComparison, CustomError, SimulationError
+from verification_service.worker.log_config import setup_logging
 
 
 setup_logging()
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title='verification-service', version='1.0.0')
+app = FastAPI(title='verification-worker', version='1.0.0')
 router = APIRouter()
 
 origins = [
@@ -67,7 +61,7 @@ async def universal_exception_handler(request: Request, exc: Exception):
 
 @app.get("/")
 def root():
-    return {'verification-service-message': 'Hello from the Verification Service API!'}
+    return {'verification-worker-message': 'Hello from the Verification Service API!'}
 
 
 # @app.post(

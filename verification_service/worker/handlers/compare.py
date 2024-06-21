@@ -1,13 +1,11 @@
 from typing import *
-import zipfile as zf
 
 import numpy as np
 import pandas as pd
-import libsbml
 
 from biosimulator_processes.execute import exec_utc_comparison
-from server.handlers.io import get_sbml_species_names, get_sbml_model_file_from_archive
-from server.handlers.output_data import generate_species_output, generate_biosimulator_utc_outputs, _get_output_stack
+from verification_service.worker.handlers.io import get_sbml_species_names, get_sbml_model_file_from_archive
+from verification_service.worker.handlers.output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: str = None, include_outputs: bool = True):
