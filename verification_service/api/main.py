@@ -1,5 +1,6 @@
 import os
 import logging
+import tempfile
 import uuid
 import dotenv
 from typing import *
@@ -126,17 +127,22 @@ async def utc_comparison(
         ) -> PendingJob:
     job_id = str(uuid.uuid4())
     _time = timestamp()
+    save_dest = tempfile.mktemp()  # TODO: replace with with S3 or google storage.
     try:
-        # save uploaded file to shared storage
-        save_path = await save_uploaded_file(uploaded_file)
+        # save uploaded omex file to shared storage
+        omex_fp = await save_uploaded_file(uploaded_file, save_dest)
+
+        # save uploaded reports file to shared storage if applicable
+        report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
 
         job_doc = insert_pending_job(
             client=app.mongo_client,
             job_id=job_id,
-            omex_path=save_path,
+            omex_path=omex_fp,
             simulators=simulators,
             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
-            timestamp=_time)
+            timestamp=_time,
+            reports_path=report_fp)
 
         return PendingJob(**job_doc)
     except Exception as e:

@@ -33,7 +33,15 @@ def get_service_collection(client: MongoClient, collection_name: str) -> Collect
     return get_mongo_collection(db, collection_name)
 
 
-def insert_pending_job(client: MongoClient, job_id: str, omex_path: str, simulators: List[str], timestamp: str, comparison_id: str = None) -> Dict[str, str]:
+def insert_pending_job(
+        client: MongoClient,
+        job_id: str,
+        omex_path: str,
+        simulators: List[str],
+        timestamp: str,
+        comparison_id: str = None,
+        reports_path: str = None
+        ) -> Dict[str, str]:
     coll = get_service_collection(client, "pending_jobs")
     pending_job_doc = {
         "job_id": job_id,
@@ -42,6 +50,7 @@ def insert_pending_job(client: MongoClient, job_id: str, omex_path: str, simulat
         "simulators": simulators,
         "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
         "timestamp": timestamp,
+        "reports_path": reports_path or "null"
     }
 
     # create job record in MongoDB
