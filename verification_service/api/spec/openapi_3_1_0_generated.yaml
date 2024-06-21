@@ -20,12 +20,16 @@ paths:
       parameters:
       - name: simulators
         in: query
-        required: true
+        required: false
         schema:
           type: array
           items:
             type: string
           description: List of simulators to compare
+          default:
+          - amici
+          - copasi
+          - tellurium
           title: Simulators
         description: List of simulators to compare
       - name: include_output
