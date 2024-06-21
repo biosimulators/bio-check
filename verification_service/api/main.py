@@ -2,6 +2,8 @@ import os
 import logging
 import tempfile
 import uuid
+from shutil import rmtree
+
 import dotenv
 from typing import *
 from datetime import datetime
@@ -125,10 +127,15 @@ async def utc_comparison(
         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
         ) -> PendingJob:
-    job_id = str(uuid.uuid4())
-    _time = timestamp()
-    save_dest = tempfile.mktemp()  # TODO: replace with with S3 or google storage.
     try:
+        job_id = str(uuid.uuid4())
+        _time = timestamp()
+        save_dest = "./tmp"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
+
+        # TODO: remove this when using a shared filestore
+        if not os.path.exists(save_dest):
+            os.mkdir(save_dest)
+
         # save uploaded omex file to shared storage
         omex_fp = await save_uploaded_file(uploaded_file, save_dest)
 
@@ -144,6 +151,8 @@ async def utc_comparison(
             timestamp=_time,
             reports_path=report_fp)
 
+        # TODO: remove this when using shared file store.
+        rmtree(save_dest)
         return PendingJob(**job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
