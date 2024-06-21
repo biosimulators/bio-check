@@ -12,11 +12,12 @@ from starlette.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 
 from verification_service.data_model import (
-    UtcComparisonRequest,
+    UtcComparisonRequestParams,
     UtcComparison,
     Job,
     DbClientResponse,
-    FetchResultsResponse, PendingJob)
+    FetchResultsResponse,
+    PendingJob)
 from verification_service.api.handlers.io import save_uploaded_file
 from verification_service.api.handlers.log_config import setup_logging
 from verification_service.api.handlers.database import timestamp, insert_pending_job, fetch_comparison_job
@@ -118,7 +119,7 @@ def root():
     summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
 async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
-        comparison_params: UtcComparisonRequest = Body(..., description="Simulators to compare, whether to include output data, and descriptive id of comparison."),
+        comparison_params: UtcComparisonRequestParams = Body(..., description="Simulators to compare, whether to include output data, and descriptive id of comparison."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
         ) -> PendingJob:
     job_id = str(uuid.uuid4())

@@ -14,6 +14,7 @@ class DatabaseStore(BaseModel):
     db_type: str  # i.e: mongo etc.
     client: Any
 
+
 # -- api models -- #
 
 class DbConnector(BaseModel):
@@ -27,8 +28,8 @@ class DbClientResponse(BaseModel):
     timestamp: str
 
 
-class UtcComparisonRequest(BaseModel):
-    simulators: List[str]
+class UtcComparisonRequestParams(BaseModel):
+    simulators: List[str] = ["amici", "copasi", "tellurium"]
     include_output: Optional[bool] = True
     comparison_id: Optional[str] = None
 

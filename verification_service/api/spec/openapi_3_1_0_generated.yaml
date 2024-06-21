@@ -71,7 +71,7 @@ components:
           description: OMEX/COMBINE Archive File.
         comparison_params:
           allOf:
-          - $ref: '#/components/schemas/UtcComparisonRequest'
+          - $ref: '#/components/schemas/UtcComparisonRequestParams'
           description: Simulators to compare, whether to include output data, and
             descriptive id of comparison.
         ground_truth_report:
@@ -120,13 +120,17 @@ components:
       - id
       - status
       title: Job
-    UtcComparisonRequest:
+    UtcComparisonRequestParams:
       properties:
         simulators:
           items:
             type: string
           type: array
           title: Simulators
+          default:
+          - amici
+          - copasi
+          - tellurium
         include_output:
           anyOf:
           - type: boolean
@@ -139,9 +143,7 @@ components:
           - type: 'null'
           title: Comparison Id
       type: object
-      required:
-      - simulators
-      title: UtcComparisonRequest
+      title: UtcComparisonRequestParams
     ValidationError:
       properties:
         loc:
