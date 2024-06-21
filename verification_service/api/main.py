@@ -108,7 +108,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 @app.get("/")
 def root():
-    return {'verification-worker-message': 'Hello from the Verification Service API!'}
+    return {'verification-service-message': 'Hello from the Verification Service API!'}
 
 
 @app.post(
