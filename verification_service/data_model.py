@@ -10,6 +10,10 @@ class BaseModel(_BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
+class DatabaseStore(BaseModel):
+    db_type: str  # i.e: mongo etc.
+    client: Any
+
 # -- api models -- #
 
 class DbConnector(BaseModel):
@@ -42,6 +46,10 @@ class FetchResultsResponse(BaseModel):
 class PendingJob(BaseModel):
     id: str
     status: str = "PENDING"
+    omex_path: str
+    simulators: List[str]
+    comparison_id: str
+    timestamp: str
 
 
 # -- worker models -- #

@@ -6,7 +6,8 @@ from typing import *
 from datetime import datetime
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body
+from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 
@@ -15,11 +16,10 @@ from verification_service.data_model import (
     UtcComparison,
     Job,
     DbClientResponse,
-    FetchResultsResponse)
+    FetchResultsResponse, PendingJob)
 from verification_service.api.handlers.io import save_uploaded_file
 from verification_service.api.handlers.log_config import setup_logging
-from verification_service.api.handlers.database import timestamp
-
+from verification_service.api.handlers.database import timestamp, insert_pending_job, fetch_comparison_job
 
 # --load env -- #
 
@@ -52,6 +52,7 @@ ORIGINS = [
 ]
 
 DB_TYPE = "mongo"  # ie: postgres, etc
+DB_NAME = "service_requests"
 
 MONGO_URI = os.getenv("MONGO_DB_URI")
 
@@ -76,6 +77,10 @@ app.add_middleware(
 
 app.mongo_client = MongoClient(MONGO_URI)
 
+# Represents an ObjectId field in the database.
+# It will be represented as a `str` on the model so that it can be serialized to JSON.
+PyObjectId = Annotated[str, BeforeValidator(str)]
+
 
 # -- initialization logic --
 
@@ -88,7 +93,6 @@ def start_client() -> DbClientResponse:
         msg = "Pinged your deployment. You successfully connected to MongoDB!"
     except Exception as e:
         msg = f"Failed to connect to MongoDB:\n{e}"
-
     return DbClientResponse(message=msg, db_type=DB_TYPE, timestamp=_time)
 
 
@@ -114,40 +118,24 @@ def root():
     summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
 async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
-        # simulators: List[str] = Query(
-        #     default=['amici', 'copasi', 'tellurium'],
-        #     description="Simulators to include in the comparison."
-        # ),
-        # include_outputs: bool = Query(
-        #     default=True,
-        #     description="Whether to include the output data on which the comparison is based."
-        # ),
-        # comparison_id: str = Query(
-        #     default=None,
-        #     description="Descriptive identifier for this comparison."
-        # ),
-        comparison_params: UtcComparisonRequest = Query(..., description="Simulators to compare, whether to include output data, and descriptive id of comparison."),
-        ground_truth_report: UploadFile = File(
-            default=None,
-            description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
-        ) -> Job:
+        comparison_params: UtcComparisonRequest = Body(..., description="Simulators to compare, whether to include output data, and descriptive id of comparison."),
+        ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
+        ) -> PendingJob:
     job_id = str(uuid.uuid4())
+    _time = timestamp()
     try:
         # save uploaded file to shared storage
         save_path = await save_uploaded_file(uploaded_file)
 
-        pending_job_document = {
-            "job_id": job_id,
-            "status": "PENDING",
-            "omex_path": save_path,
-            "simulators": comparison_params.simulators,
-            "comparison_id": comparison_params.comparison_id or f"uniform-time-course-comparison-{job_id}"
-        }
+        job_doc = insert_pending_job(
+            client=app.mongo_client,
+            job_id=job_id,
+            omex_path=save_path,
+            simulators=comparison_params.simulators,
+            comparison_id=comparison_params.comparison_id or f"uniform-time-course-comparison-{job_id}",
+            timestamp=_time)
 
-        # create job record in MongoDB
-        app.mongo_client.jobs.insert_one(pending_job_document)
-
-        return Job(id=job_id, status="PENDING")
+        return PendingJob(**job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -158,13 +146,12 @@ async def utc_comparison(
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
 async def fetch_results(comparison_run_id: str):
-    job = app.mongo_client.jobs.find_one({"job_id": comparison_run_id})
+    job = fetch_comparison_job(client=app.mongo_client, job_id=comparison_run_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
     # assuming results are stored in the job document. TODO: what if this is not the case?
     resp_content = job['results'] if job['status'] == 'COMPLETED' else {"status": job['status']}
-
     return FetchResultsResponse(content=resp_content)
 
 
