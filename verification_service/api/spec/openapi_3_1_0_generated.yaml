@@ -17,12 +17,44 @@ paths:
     post:
       summary: Compare UTC outputs from Biosimulators for a model from a given archive.
       operationId: utc-comparison
+      parameters:
+      - name: simulators
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+          description: List of simulators to compare
+          title: Simulators
+        description: List of simulators to compare
+      - name: include_output
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Whether to include the output data on which the comparison
+            is based.
+          default: true
+          title: Include Output
+        description: Whether to include the output data on which the comparison is
+          based.
+      - name: comparison_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Comparison ID to use.
+          title: Comparison Id
+        description: Comparison ID to use.
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Body_utc-comparison'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -69,11 +101,6 @@ components:
           format: binary
           title: Uploaded File
           description: OMEX/COMBINE Archive File.
-        comparison_params:
-          allOf:
-          - $ref: '#/components/schemas/UtcComparisonRequestParams'
-          description: Simulators to compare, whether to include output data, and
-            descriptive id of comparison.
         ground_truth_report:
           type: string
           format: binary
@@ -83,7 +110,6 @@ components:
       type: object
       required:
       - uploaded_file
-      - comparison_params
       title: Body_utc-comparison
     FetchResultsResponse:
       properties:
@@ -133,30 +159,6 @@ components:
       - comparison_id
       - timestamp
       title: PendingJob
-    UtcComparisonRequestParams:
-      properties:
-        simulators:
-          items:
-            type: string
-          type: array
-          title: Simulators
-          default:
-          - amici
-          - copasi
-          - tellurium
-        include_output:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Include Output
-          default: true
-        comparison_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Comparison Id
-      type: object
-      title: UtcComparisonRequestParams
     ValidationError:
       properties:
         loc:

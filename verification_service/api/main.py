@@ -119,7 +119,9 @@ def root():
     summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
 async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
-        comparison_params: UtcComparisonRequestParams = Body(..., description="Simulators to compare, whether to include output data, and descriptive id of comparison."),
+        simulators: List[str] = Query(..., description="List of simulators to compare"),
+        include_output: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+        comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
         ) -> PendingJob:
     job_id = str(uuid.uuid4())
@@ -132,8 +134,8 @@ async def utc_comparison(
             client=app.mongo_client,
             job_id=job_id,
             omex_path=save_path,
-            simulators=comparison_params.simulators,
-            comparison_id=comparison_params.comparison_id or f"uniform-time-course-comparison-{job_id}",
+            simulators=simulators,
+            comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
             timestamp=_time)
 
         return PendingJob(**job_doc)
