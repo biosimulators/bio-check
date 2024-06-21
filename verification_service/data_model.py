@@ -1,10 +1,44 @@
 from typing import *
 
-from pydantic import BaseModel as _BaseModel, ConfigDict, Field
+from pydantic import BaseModel as _BaseModel, ConfigDict
 
+
+# -- globally-used base model --
 
 class BaseModel(_BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+# -- api models --
+
+class UtcComparisonRequest(BaseModel):
+    simulators: List[str]
+    include_output: Optional[bool] = True
+    comparison_id: Optional[str] = None
+
+
+class Job(BaseModel):
+    id: str
+    status: str
+    results: Optional[Dict] = None
+
+
+class PendingJob(BaseModel):
+    id: str
+    status: str = "PENDING"
+
+
+# -- worker models --
+
+class InProgressJob(Job):
+    id: str
+    status: str = "IN_PROGRESS"
+
+
+class CompleteJob(Job):
+    id: str
+    results: Dict
+    status: str = "COMPLETE"
 
 
 class CustomError(BaseModel):
@@ -38,3 +72,4 @@ class SimulationError(Exception):
 # api container fastapi, mongo database, worker container
 class StochasticMethodError(BaseModel):
     message: str = "Only deterministic methods are supported."
+

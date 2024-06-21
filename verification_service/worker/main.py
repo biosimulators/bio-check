@@ -1,67 +1,52 @@
-import logging
 import tempfile
 from typing import *
 
 import uvicorn
-import traceback
-from fastapi import FastAPI, UploadFile, File, Query, APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 
-from verification_service.worker.handlers.compare import (
+from verification_service.worker.compare import (
     generate_biosimulators_utc_comparison)
-from verification_service.worker.handlers.io import save_uploaded_file, read_report_outputs
-from verification_service.worker.data_model import UtcSpeciesComparison, UtcComparison, CustomError, SimulationError
-from verification_service.worker.log_config import setup_logging
+from verification_service.worker.io import read_report_outputs
+from verification_service.data_model import UtcSpeciesComparison, UtcComparison, SimulationError
 
 
-setup_logging()
+async def utc_comparison(
+        omex_path: str,
+        simulators: List[str],
+        save_dir: str,
+        include_outputs: bool = True,
+        comparison_id: str = None,
+        ground_truth_report_path: str = None
+        ) -> UtcComparison:
+    try:
+        out_dir = tempfile.mktemp()
+        truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
 
-logger = logging.getLogger(__name__)
+        comparison_id = comparison_id or 'biosimulators-utc-comparison'
+        comparison = await generate_biosimulators_utc_comparison(
+            omex_fp=omex_path,
+            out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
+            simulators=simulators,
+            comparison_id=comparison_id,
+            ground_truth=truth_vals)
 
-app = FastAPI(title='verification-worker', version='1.0.0')
-router = APIRouter()
+        spec_comparisons = []
+        for spec_name, comparison_data in comparison['results'].items():
+            species_comparison = UtcSpeciesComparison(
+                mse=comparison_data['mse'],
+                proximity=comparison_data['prox'],
+                output_data=comparison_data.get('output_data') if include_outputs else {},
+                species_name=spec_name)
+            spec_comparisons.append(species_comparison)
+    except SimulationError as e:
+        raise HTTPException(status_code=400, detail=str(e.message))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-origins = [
-    'http://127.0.0.1:4200',
-    'http://127.0.0.1:4201',
-    'http://127.0.0.1:4202',
-    'http://localhost:4200',
-    'http://localhost:4201',
-    'http://localhost:4202',
-    'https://biosimulators.org',
-    'https://www.biosimulators.org',
-    'https://biosimulators.dev',
-    'https://www.biosimulators.dev',
-    'https://run.biosimulations.dev',
-    'https://run.biosimulations.org',
-    'https://biosimulations.dev',
-    'https://biosimulations.org',
-    'https://bio.libretexts.org',
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.exception_handler(Exception)
-async def universal_exception_handler(request: Request, exc: Exception):
-    print(traceback.format_exc())  # This prints the full stack trace
-    error_message = str(exc) if hasattr(exc, 'message') else "An unexpected error occurred"
-
-    return JSONResponse(
-        status_code=500,
-        content=CustomError(detail=error_message).dict()
-    )
-
-
-@app.get("/")
-def root():
-    return {'verification-worker-message': 'Hello from the Verification Service API!'}
+    return UtcComparison(
+        results=spec_comparisons,
+        id=comparison_id,
+        simulators=simulators)
 
 
 # @app.post(
@@ -99,70 +84,70 @@ def root():
 #     return UtcComparison(results=spec_comparisons, id=comparison_name, simulators=simulators)
 
 
-@app.post(
-    "/utc-comparison",  # "/biosimulators-utc-comparison",
-    response_model=UtcComparison,
-    name="Biosimulator Uniform Time Course Comparison",
-    operation_id="biosimulators-utc-comparison",
-    summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
-async def utc_comparison(
-        uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
-        simulators: List[str] = Query(
-            default=['amici', 'copasi', 'tellurium'],
-            description="Simulators to include in the comparison."
-        ),
-        include_outputs: bool = Query(
-            default=True,
-            description="Whether to include the output data on which the comparison is based."
-        ),
-        comparison_id: str = Query(
-            default=None,
-            description="Descriptive identifier for this comparison."
-        ),
-        ground_truth_report: UploadFile = File(
-            default=None,
-            description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
-        ) -> UtcComparison:
-
-    try:
-        save_dir = tempfile.mkdtemp()
-        out_dir = tempfile.mkdtemp()
-        omex_path = await save_uploaded_file(uploaded_file, save_dir)
-
-        if ground_truth_report is not None:
-            report_filepath = await save_uploaded_file(ground_truth_report, save_dir)
-            ground_truth = await read_report_outputs(report_filepath)
-            truth_vals = ground_truth.to_dict()['data']
-            # d = [d.to_dict() for d in ground_truth.data if "time" not in d.dataset_label.lower()]
-            # truth_vals = [data['data'].tolist() for data in d]
-        else:
-            truth_vals = None
-
-        comparison_id = comparison_id or 'biosimulators-utc-comparison'
-        comparison = await generate_biosimulators_utc_comparison(
-            omex_fp=omex_path,
-            out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
-            simulators=simulators,
-            comparison_id=comparison_id,
-            ground_truth=truth_vals)
-
-        spec_comparisons = []
-        for spec_name, comparison_data in comparison['results'].items():
-            species_comparison = UtcSpeciesComparison(
-                mse=comparison_data['mse'],
-                proximity=comparison_data['prox'],
-                output_data=comparison_data.get('output_data') if include_outputs else {},
-                species_name=spec_name)
-            spec_comparisons.append(species_comparison)
-    except SimulationError as e:
-        raise HTTPException(status_code=400, detail=str(e.message))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return UtcComparison(
-        results=spec_comparisons,
-        id=comparison_id,
-        simulators=simulators)
+# @app.post(
+#     "/utc-comparison",  # "/biosimulators-utc-comparison",
+#     response_model=UtcComparison,
+#     name="Biosimulator Uniform Time Course Comparison",
+#     operation_id="biosimulators-utc-comparison",
+#     summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
+# async def utc_comparison(
+#         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
+#         simulators: List[str] = Query(
+#             default=['amici', 'copasi', 'tellurium'],
+#             description="Simulators to include in the comparison."
+#         ),
+#         include_outputs: bool = Query(
+#             default=True,
+#             description="Whether to include the output data on which the comparison is based."
+#         ),
+#         comparison_id: str = Query(
+#             default=None,
+#             description="Descriptive identifier for this comparison."
+#         ),
+#         ground_truth_report: UploadFile = File(
+#             default=None,
+#             description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
+#         ) -> UtcComparison:
+#
+#     try:
+#         save_dir = tempfile.mkdtemp()
+#         out_dir = tempfile.mkdtemp()
+#         omex_path = await save_uploaded_file(uploaded_file, save_dir)
+#
+#         if ground_truth_report is not None:
+#             report_filepath = await save_uploaded_file(ground_truth_report, save_dir)
+#             ground_truth = await read_report_outputs(report_filepath)
+#             truth_vals = ground_truth.to_dict()['data']
+#             # d = [d.to_dict() for d in ground_truth.data if "time" not in d.dataset_label.lower()]
+#             # truth_vals = [data['data'].tolist() for data in d]
+#         else:
+#             truth_vals = None
+#
+#         comparison_id = comparison_id or 'biosimulators-utc-comparison'
+#         comparison = await generate_biosimulators_utc_comparison(
+#             omex_fp=omex_path,
+#             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
+#             simulators=simulators,
+#             comparison_id=comparison_id,
+#             ground_truth=truth_vals)
+#
+#         spec_comparisons = []
+#         for spec_name, comparison_data in comparison['results'].items():
+#             species_comparison = UtcSpeciesComparison(
+#                 mse=comparison_data['mse'],
+#                 proximity=comparison_data['prox'],
+#                 output_data=comparison_data.get('output_data') if include_outputs else {},
+#                 species_name=spec_name)
+#             spec_comparisons.append(species_comparison)
+#     except SimulationError as e:
+#         raise HTTPException(status_code=400, detail=str(e.message))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#
+#     return UtcComparison(
+#         results=spec_comparisons,
+#         id=comparison_id,
+#         simulators=simulators)
 
 
 # @app.post(
@@ -194,7 +179,3 @@ async def utc_comparison(
 #         proximity=comparison['prox'],
 #         output_data=out_data,
 #         species_name=species_id)
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
