@@ -29,7 +29,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'
+                $ref: '#/components/schemas/PendingJob'
         '422':
           description: Validation Error
           content:
@@ -102,7 +102,7 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    Job:
+    PendingJob:
       properties:
         id:
           type: string
@@ -110,16 +110,29 @@ components:
         status:
           type: string
           title: Status
-        results:
-          anyOf:
-          - type: object
-          - type: 'null'
-          title: Results
+          default: PENDING
+        omex_path:
+          type: string
+          title: Omex Path
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+        comparison_id:
+          type: string
+          title: Comparison Id
+        timestamp:
+          type: string
+          title: Timestamp
       type: object
       required:
       - id
-      - status
-      title: Job
+      - omex_path
+      - simulators
+      - comparison_id
+      - timestamp
+      title: PendingJob
     UtcComparisonRequestParams:
       properties:
         simulators:

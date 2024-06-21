@@ -113,7 +113,7 @@ def root():
 
 @app.post(
     "/utc-comparison",  # "/biosimulators-utc-comparison",
-    response_model=Job,
+    response_model=PendingJob,
     name="Biosimulator Uniform Time Course Comparison",
     operation_id="utc-comparison",
     summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
