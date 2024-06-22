@@ -1,18 +1,30 @@
 import tempfile
+import os
+import uuid
 from typing import *
 
 from fastapi import HTTPException
+from pymongo.mongo_client import MongoClient
 
 from verification_service.worker.compare import (
     generate_biosimulators_utc_comparison)
 from verification_service.worker.io import read_report_outputs
-from verification_service.data_model import UtcSpeciesComparison, UtcComparison, SimulationError
+from verification_service.data_model import UtcSpeciesComparison, UtcComparison, SimulationError, MongoDbConnector
+
+DB_TYPE = "mongo"  # ie: postgres, etc
+DB_NAME = "service_requests"
+
+MONGO_URI = os.getenv("MONGO_DB_URI")
+mongo_client = MongoClient(MONGO_URI)
+db_connector = MongoDbConnector(client=mongo_client, database_id=DB_NAME)
+
+
+def jobid(): return str(uuid.uuid4())
 
 
 async def utc_comparison(
         omex_path: str,
         simulators: List[str],
-        save_dir: str,
         include_outputs: bool = True,
         comparison_id: str = None,
         ground_truth_report_path: str = None
@@ -45,6 +57,32 @@ async def utc_comparison(
         id=comparison_id,
         simulators=simulators)
 
+
+async def check_jobs(db_connector: MongoDbConnector):
+    jobs = [job for job in db_connector.db['pending_jobs'].find()]
+
+    jobs_to_process = []
+    while len(jobs) > 0:
+        # populate the queue of jobs with params to be processed
+        job = jobs.pop(0)
+        jobs_to_process.append(job)
+
+        # mark the job in progress before handing it off
+        in_progress_job_id = jobid()
+        in_progress_doc = db_connector.insert_in_progress_job(in_progress_job_id, job['comparison_id'])
+        print(f"Successfully marked document IN_PROGRESS:\n{in_progress_doc}")
+
+        job_result = await utc_comparison(
+            omex_path=job['omex_path'],
+            simulators=job['simulators'],
+            comparison_id=job['comparison_id'],
+        )
+
+        # rest to check
+        from asyncio import sleep
+        print(f"Sleeping for {5}...zzzzzzz...")
+        await sleep(5)
+    return {"status": "all jobs completed."}
 
 # @app.post(
 #     "/utc-comparison",

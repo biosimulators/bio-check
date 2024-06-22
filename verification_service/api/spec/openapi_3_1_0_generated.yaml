@@ -32,7 +32,7 @@ paths:
           - tellurium
           title: Simulators
         description: List of simulators to compare
-      - name: include_output
+      - name: include_outputs
         in: query
         required: false
         schema:
@@ -40,7 +40,7 @@ paths:
           description: Whether to include the output data on which the comparison
             is based.
           default: true
-          title: Include Output
+          title: Include Outputs
         description: Whether to include the output data on which the comparison is
           based.
       - name: comparison_id

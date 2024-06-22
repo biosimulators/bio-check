@@ -124,7 +124,7 @@ def root():
 async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
-        include_output: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+        include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
         ) -> PendingJob:
@@ -144,14 +144,15 @@ async def utc_comparison(
         report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
 
         pending_job_doc = db_connector.insert_job(
-            collection_name="jobs",
+            collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
             omex_path=omex_fp,
             simulators=simulators,
             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
             timestamp=_time,
-            reports_path=report_fp)
+            reports_path=report_fp,
+            include_output=include_outputs)
 
         # TODO: remove this when using shared file store.
         rmtree(save_dest)

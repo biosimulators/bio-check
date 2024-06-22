@@ -93,7 +93,8 @@ class MongoDbConnector(DbConnector):
             simulators: List[str],
             timestamp: str,
             comparison_id: str = None,
-            reports_path: str = None
+            reports_path: str = None,
+            include_outputs: bool = True,
             ) -> Dict[str, str]:
         collection_name = "pending_jobs"
         coll = self.get_collection(collection_name)
@@ -105,13 +106,14 @@ class MongoDbConnector(DbConnector):
             "simulators": simulators,
             "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
             "timestamp": _time,
-            "reports_path": reports_path or "null"}
+            "reports_path": reports_path or "null",
+            "include_outputs": include_outputs}
 
         coll.insert_one(pending_job_doc)
         return pending_job_doc  # self.insert_job(collection_name=collection_name, **pending_job_doc)
 
     def insert_in_progress_job(self, job_id: str, comparison_id: str) -> Dict[str, str]:
-        collection_name = "jobs"  # "pending_jobs"
+        collection_name = "in_progress_jobs"
         _time = self.timestamp()
         in_progress_job_doc = {
             "job_id": job_id,
