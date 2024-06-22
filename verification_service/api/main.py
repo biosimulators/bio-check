@@ -14,9 +14,9 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 
-from verification_service.data_model import (
+from verification_service.data_model.api import DbClientResponse
+from verification_service.data_model.shared import (
     MongoDbConnector,
-    DbClientResponse,
     FetchResultsResponse,
     PendingJob)
 from verification_service.api.handlers.io import save_uploaded_file

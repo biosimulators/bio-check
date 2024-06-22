@@ -1,3 +1,43 @@
+# -- globally-used base model -- #
+
+
+from typing import *
+from dataclasses import dataclass, asdict
+
+from pydantic import BaseModel as _BaseModel, ConfigDict
+
+
+class BaseModel(_BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+@dataclass
+class BaseClass:
+    def todict(self):
+        return asdict(self)
+
+
+class Job(BaseModel):
+    id: str
+    status: str
+    results: Optional[Dict] = None
+
+
+class PendingJob(BaseModel):
+    job_id: str
+    status: str = "PENDING"
+    omex_path: str
+    simulators: List[str]
+    comparison_id: str
+    timestamp: str
+    reports_path: Optional[str] = None
+    include_output: Optional[bool] = True
+
+
+class FetchResultsResponse(BaseModel):
+    content: Any
+
+
 from functools import partial
 from types import NoneType
 from typing import *
@@ -11,16 +51,7 @@ from pymongo.collection import Collection
 from pymongo.database import Database
 
 
-# -- globally-used base model -- #
 
-class BaseModel(_BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-@dataclass
-class BaseClass:
-    def todict(self):
-        return asdict(self)
 
 
 @dataclass
@@ -144,85 +175,3 @@ class MongoDbConnector(DbConnector):
                 return complete_job
             else:
                 print(f"Job not in {status}")
-
-
-# -- api models -- #
-
-class DbClientResponse(BaseModel):
-    message: str
-    db_type: str  # ie: 'mongo', 'postgres', etc
-    timestamp: str
-
-
-class UtcComparisonRequestParams(BaseModel):
-    simulators: List[str] = ["amici", "copasi", "tellurium"]
-    include_output: Optional[bool] = True
-    comparison_id: Optional[str] = None
-
-
-class Job(BaseModel):
-    id: str
-    status: str
-    results: Optional[Dict] = None
-
-
-class PendingJob(BaseModel):
-    job_id: str
-    status: str = "PENDING"
-    omex_path: str
-    simulators: List[str]
-    comparison_id: str
-    timestamp: str
-    reports_path: Optional[str] = None
-    include_output: Optional[bool] = True
-
-
-class FetchResultsResponse(BaseModel):
-    content: Any
-
-
-# -- worker models -- #
-
-class InProgressJob(Job):
-    id: str
-    status: str = "IN_PROGRESS"
-
-
-class CompleteJob(Job):
-    id: str
-    results: Dict
-    status: str = "COMPLETE"
-
-
-class CustomError(BaseModel):
-    detail: str
-
-
-class ArchiveUploadResponse(BaseModel):
-    filename: str
-    content: str
-    path: str
-
-
-class UtcSpeciesComparison(BaseModel):
-    species_name: str
-    mse: Dict
-    proximity: Dict
-    output_data: Optional[Dict] = None
-
-
-class UtcComparison(BaseModel):
-    results: List[UtcSpeciesComparison]
-    id: str
-    simulators: List[str]
-
-
-class SimulationError(Exception):
-    def __init__(self, message: str):
-        self.message = message
-
-
-# api container fastapi, mongo database, worker container
-class StochasticMethodError(BaseModel):
-    message: str = "Only deterministic methods are supported."
-

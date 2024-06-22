@@ -10,7 +10,9 @@ from pymongo.mongo_client import MongoClient
 from verification_service.worker.compare import (
     generate_biosimulators_utc_comparison)
 from verification_service.worker.io import read_report_outputs
-from verification_service.data_model import UtcSpeciesComparison, UtcComparison, SimulationError, MongoDbConnector
+from verification_service.data_model.shared import MongoDbConnector
+from verification_service.data_model.worker import UtcSpeciesComparison, UtcComparison, SimulationError
+
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
