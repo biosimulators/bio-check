@@ -174,6 +174,7 @@ class PendingJob(BaseModel):
     comparison_id: str
     timestamp: str
     reports_path: Optional[str] = None
+    include_output: Optional[bool] = True
 
 
 class FetchResultsResponse(BaseModel):

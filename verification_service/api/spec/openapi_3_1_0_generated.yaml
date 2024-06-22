@@ -160,6 +160,12 @@ components:
           - type: string
           - type: 'null'
           title: Reports Path
+        include_output:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Include Output
+          default: true
       type: object
       required:
       - job_id
