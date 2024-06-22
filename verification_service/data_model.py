@@ -70,9 +70,6 @@ class MongoDbConnector(DbConnector):
     database_id: str
     db: Database = None
 
-    def __post_init__(self):
-        pass
-
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)
 
