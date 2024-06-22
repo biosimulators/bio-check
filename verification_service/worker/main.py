@@ -91,9 +91,9 @@ async def check_jobs():
         completed_id = jobid()
         completed_doc = db_connector.insert_completed_job(
             job_id=completed_id,
-            comparison_id=comparison_id,
+            comparison_id=in_progress_job['comparison_id'],
             # results=job_result.model_dump())
-            results={"a": [1, 2, 4]})
+            results={"a": [1, 2, 4]})  # here result would be that generated in job result
 
         # rest to check
         from asyncio import sleep
