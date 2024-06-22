@@ -111,7 +111,7 @@ class MongoDbConnector(DbConnector):
         return pending_job_doc  # self.insert_job(collection_name=collection_name, **pending_job_doc)
 
     def insert_in_progress_job(self, job_id: str, comparison_id: str) -> Dict[str, str]:
-        collection_name = "pending_jobs"
+        collection_name = "jobs"  # "pending_jobs"
         _time = self.timestamp()
         in_progress_job_doc = {
             "job_id": job_id,
@@ -122,7 +122,7 @@ class MongoDbConnector(DbConnector):
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
     def insert_completed_job(self, job_id: str, comparison_id: str, results: Dict) -> Dict[str, str]:
-        collection_name = "pending_jobs"
+        collection_name = "jobs"  # "pending_jobs"
         _time = self.timestamp()
         in_progress_job_doc = {
             "job_id": job_id,
@@ -133,13 +133,15 @@ class MongoDbConnector(DbConnector):
 
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
-    def fetch_job(self, job_id: str):
-        """Check on the status and/or result of a given comparison run. This allows the user to poll status."""
-        coll = self.get_collection("completed_jobs")
-        result = coll.find_one({"job_id": job_id})
-        if isinstance(result, NoneType):
-            coll = self.get_collection("pending_jobs")
-
+    def fetch_job(self, comparison_id: str) -> Mapping[str, Any]:
+        coll = self.db['jobs']
+        status_decs = sorted(['COMPLETED', 'IN_PROGRESS', 'PENDING'])
+        for status in status_decs:
+            complete_job = coll.find_one({'status': status, 'comparison_id': comparison_id})
+            if not isinstance(complete_job, NoneType):
+                return complete_job
+            else:
+                print(f"Job not in {status}")
 
 
 # -- api models -- #

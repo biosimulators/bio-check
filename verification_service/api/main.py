@@ -165,8 +165,8 @@ async def utc_comparison(
     response_model=FetchResultsResponse,
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
-async def fetch_results(comparison_run_id: str):
-    job = db_connector.fetch_job(client=app.mongo_client, job_id=comparison_run_id)
+async def fetch_results(comparison_id: str):
+    job = db_connector.fetch_job(comparison_id=comparison_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 

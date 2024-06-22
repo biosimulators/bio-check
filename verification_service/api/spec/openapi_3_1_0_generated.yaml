@@ -77,12 +77,12 @@ paths:
       summary: Get the results of an existing uniform time course comparison.
       operationId: fetch-results
       parameters:
-      - name: comparison_run_id
-        in: path
+      - name: comparison_id
+        in: query
         required: true
         schema:
           type: string
-          title: Comparison Run Id
+          title: Comparison Id
       responses:
         '200':
           description: Successful Response
