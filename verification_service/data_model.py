@@ -1,4 +1,5 @@
 from functools import partial
+from types import NoneType
 from typing import *
 from dataclasses import dataclass, asdict
 from abc import ABC, abstractmethod
@@ -132,28 +133,16 @@ class MongoDbConnector(DbConnector):
 
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
-    def fetch_job(self, client: MongoClient, job_id: str):
+    def fetch_job(self, job_id: str):
         """Check on the status and/or result of a given comparison run. This allows the user to poll status."""
-        get_collection = partial(self.get_collection, client)
-        coll_name = "completed_jobs"
+        coll = self.get_collection("completed_jobs")
+        result = coll.find_one({"job_id": job_id})
+        if isinstance(result, NoneType):
+            coll = self.get_collection("pending_jobs")
 
-        # look for completed job first
-        coll: Collection = self.get_collection(coll_name)
-
-        if coll is None:
-            in_progress_coll = self.get_collection("in_progress_jobs")
-            if in_progress_coll is None:
-                # job is pending
-                coll = self.get_collection("pending_jobs")
-            else:
-                # job is in progress
-                coll = in_progress_coll
-
-        return coll.find_one({"job_id": job_id})
 
 
 # -- api models -- #
-
 
 class DbClientResponse(BaseModel):
     message: str

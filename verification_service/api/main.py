@@ -143,7 +143,9 @@ async def utc_comparison(
         # save uploaded reports file to shared storage if applicable
         report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
 
-        job_doc = db_connector.insert_pending_job(
+        pending_job_doc = db_connector.insert_job(
+            collection_name="jobs",
+            status="PENDING",
             job_id=job_id,
             omex_path=omex_fp,
             simulators=simulators,
@@ -153,7 +155,7 @@ async def utc_comparison(
 
         # TODO: remove this when using shared file store.
         rmtree(save_dest)
-        return PendingJob(**job_doc)
+        return PendingJob(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
