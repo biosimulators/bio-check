@@ -140,9 +140,9 @@ class MongoDbConnector(DbConnector):
         # look for completed job first
         coll: Collection = self.get_collection(coll_name)
 
-        if not coll:
+        if coll is None:
             in_progress_coll = self.get_collection("in_progress_jobs")
-            if not in_progress_coll:
+            if in_progress_coll is None:
                 # job is pending
                 coll = self.get_collection("pending_jobs")
             else:
