@@ -95,6 +95,7 @@ class MongoDbConnector(DbConnector):
             reports_path: str = None
             ) -> Dict[str, str]:
         collection_name = "pending_jobs"
+        coll = self.get_collection(collection_name)
         _time = self.timestamp()
         pending_job_doc = {
             "job_id": job_id,
@@ -105,7 +106,8 @@ class MongoDbConnector(DbConnector):
             "timestamp": _time,
             "reports_path": reports_path or "null"}
 
-        return self.insert_job(collection_name=collection_name, **pending_job_doc)
+        coll.insert_one(pending_job_doc)
+        return pending_job_doc  # self.insert_job(collection_name=collection_name, **pending_job_doc)
 
     def insert_in_progress_job(self, job_id: str, comparison_id: str) -> Dict[str, str]:
         collection_name = "pending_jobs"
@@ -136,13 +138,13 @@ class MongoDbConnector(DbConnector):
         coll_name = "completed_jobs"
 
         # look for completed job first
-        coll: Collection = get_collection(coll_name)
+        coll: Collection = self.get_collection(coll_name)
 
         if not coll:
-            in_progress_coll = get_collection("in_progress_jobs")
+            in_progress_coll = self.get_collection("in_progress_jobs")
             if not in_progress_coll:
                 # job is pending
-                coll = get_collection("pending_jobs")
+                coll = self.get_collection("pending_jobs")
             else:
                 # job is in progress
                 coll = in_progress_coll
