@@ -15,9 +15,6 @@ from starlette.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 
 from verification_service.data_model import (
-    UtcComparisonRequestParams,
-    UtcComparison,
-    Job,
     MongoDbConnector,
     DbClientResponse,
     FetchResultsResponse,
