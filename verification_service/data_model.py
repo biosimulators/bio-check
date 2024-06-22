@@ -1,7 +1,13 @@
+from functools import partial
 from typing import *
+from dataclasses import dataclass, asdict
+from abc import ABC, abstractmethod
 from datetime import datetime
 
 from pydantic import BaseModel as _BaseModel, ConfigDict
+from pymongo import MongoClient
+from pymongo.collection import Collection
+from pymongo.database import Database
 
 
 # -- globally-used base model -- #
@@ -10,16 +16,144 @@ class BaseModel(_BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-class DatabaseStore(BaseModel):
-    db_type: str  # i.e: mongo etc.
+@dataclass
+class BaseClass:
+    def todict(self):
+        return asdict(self)
+
+
+@dataclass
+class DbConnector(ABC, BaseClass):
     client: Any
+    database_id: str
+    db: Any = None
+
+    def __post_init__(self):
+        self.db = self._get_database(self.database_id)
+
+    @classmethod
+    def timestamp(cls) -> str:
+        return str(datetime.utcnow())
+
+    @abstractmethod
+    def _get_database(self, db_id: str):
+        pass
+
+    @abstractmethod
+    def get_collection(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def insert_job(self, collection_name: str):
+        pass
+
+    @abstractmethod
+    def insert_pending_job(self, **kwargs):
+        return self.insert_job(**kwargs)
+
+    @abstractmethod
+    def insert_in_progress_job(self, **kwargs):
+        return self.insert_job(**kwargs)
+
+    @abstractmethod
+    def insert_completed_job(self, **kwargs):
+        return self.insert_job(**kwargs)
+
+    @abstractmethod
+    def fetch_job(self, **kwargs):
+        pass
+
+
+@dataclass
+class MongoDbConnector(DbConnector):
+    client: MongoClient
+    database_id: str
+    db: Database = None
+
+    def __post_init__(self):
+        pass
+
+    def _get_database(self, db_id: str) -> Database:
+        return self.client.get_database(db_id)
+
+    def get_collection(self, collection_name: str) -> Union[Collection, None]:
+        try:
+            return self.db[collection_name]
+        except:
+            return None
+
+    def insert_job(self, collection_name: str, **kwargs) -> Dict[str, Any]:
+        coll = self.get_collection(collection_name)
+        job_doc = kwargs
+        coll.insert_one(job_doc)
+        return job_doc
+
+    def insert_pending_job(
+            self,
+            job_id: str,
+            omex_path: str,
+            simulators: List[str],
+            timestamp: str,
+            comparison_id: str = None,
+            reports_path: str = None
+            ) -> Dict[str, str]:
+        collection_name = "pending_jobs"
+        _time = self.timestamp()
+        pending_job_doc = {
+            "job_id": job_id,
+            "status": "PENDING",
+            "omex_path": omex_path,
+            "simulators": simulators,
+            "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
+            "timestamp": _time,
+            "reports_path": reports_path or "null"}
+
+        return self.insert_job(collection_name, **pending_job_doc)
+
+    def insert_in_progress_job(self, job_id: str, comparison_id: str) -> Dict[str, str]:
+        collection_name = "pending_jobs"
+        _time = self.timestamp()
+        in_progress_job_doc = {
+            "job_id": job_id,
+            "status": "IN_PROGRESS",
+            "timestamp": _time,
+            "comparison_id": comparison_id}
+
+        return self.insert_job(collection_name, **in_progress_job_doc)
+
+    def insert_completed_job(self, job_id: str, comparison_id: str, data: Dict) -> Dict[str, str]:
+        collection_name = "pending_jobs"
+        _time = self.timestamp()
+        in_progress_job_doc = {
+            "job_id": job_id,
+            "status": "COMPLETED",
+            "timestamp": _time,
+            "comparison_id": comparison_id,
+            "data": data}
+
+        return self.insert_job(collection_name, **in_progress_job_doc)
+
+    def fetch_job(self, client: MongoClient, job_id: str):
+        """Check on the status and/or result of a given comparison run. This allows the user to poll status."""
+        get_collection = partial(self.get_collection, client)
+        coll_name = "completed_jobs"
+
+        # look for completed job first
+        coll: Collection = get_collection(coll_name)
+
+        if not coll:
+            in_progress_coll = get_collection("in_progress_jobs")
+            if not in_progress_coll:
+                # job is pending
+                coll = get_collection("pending_jobs")
+            else:
+                # job is in progress
+                coll = in_progress_coll
+
+        return coll.find_one({"job_id": job_id})
 
 
 # -- api models -- #
-
-class DbConnector(BaseModel):
-    client: Any
-    database_id: str
 
 
 class DbClientResponse(BaseModel):

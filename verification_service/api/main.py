@@ -18,12 +18,12 @@ from verification_service.data_model import (
     UtcComparisonRequestParams,
     UtcComparison,
     Job,
+    MongoDbConnector,
     DbClientResponse,
     FetchResultsResponse,
     PendingJob)
 from verification_service.api.handlers.io import save_uploaded_file
 from verification_service.api.handlers.log_config import setup_logging
-from verification_service.api.handlers.database import timestamp, insert_pending_job, fetch_comparison_job
 
 # --load env -- #
 
@@ -79,10 +79,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"])
 
-app.mongo_client = MongoClient(MONGO_URI)
 
-# Represents an ObjectId field in the database.
-# It will be represented as a `str` on the model so that it can be serialized to JSON.
+# -- get mongo db -- #
+
+mongo_client = MongoClient(MONGO_URI)
+db_connector = MongoDbConnector(client=mongo_client, database_id="service_requests")
+app.mongo_client = db_connector.client
+
+# It will be represented as a `str` on the model so that it can be serialized to JSON. Represents an ObjectId field in the database.
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
 
@@ -91,7 +95,7 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 @app.on_event("startup")
 def start_client() -> DbClientResponse:
     """TODO: generalize this to work with multiple client types. Currently using Mongo."""
-    _time = timestamp()
+    _time = db_connector.timestamp()
     try:
         app.mongo_client.admin.command('ping')
         msg = "Pinged your deployment. You successfully connected to MongoDB!"
@@ -102,7 +106,7 @@ def start_client() -> DbClientResponse:
 
 @app.on_event("shutdown")
 def stop_mongo_client() -> DbClientResponse:
-    _time = timestamp()
+    _time = db_connector.timestamp()
     app.mongo_client.close()
     return DbClientResponse(message=f"{DB_TYPE} successfully closed!", db_type=DB_TYPE, timestamp=_time)
 
@@ -129,7 +133,7 @@ async def utc_comparison(
         ) -> PendingJob:
     try:
         job_id = str(uuid.uuid4())
-        _time = timestamp()
+        _time = db_connector.timestamp()
         save_dest = "./tmp"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
 
         # TODO: remove this when using a shared filestore
@@ -142,8 +146,7 @@ async def utc_comparison(
         # save uploaded reports file to shared storage if applicable
         report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
 
-        job_doc = insert_pending_job(
-            client=app.mongo_client,
+        job_doc = db_connector.insert_pending_job(
             job_id=job_id,
             omex_path=omex_fp,
             simulators=simulators,
@@ -152,7 +155,7 @@ async def utc_comparison(
             reports_path=report_fp)
 
         # TODO: remove this when using shared file store.
-        # rmtree(save_dest)
+        rmtree(save_dest)
         return PendingJob(**job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -164,7 +167,7 @@ async def utc_comparison(
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
 async def fetch_results(comparison_run_id: str):
-    job = fetch_comparison_job(client=app.mongo_client, job_id=comparison_run_id)
+    job = db_connector.fetch_job(client=app.mongo_client, job_id=comparison_run_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
