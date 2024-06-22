@@ -67,16 +67,24 @@ async def check_jobs(db_connector: MongoDbConnector):
         job = jobs.pop(0)
         jobs_to_process.append(job)
 
+        comparison_id = job['comparison_id']
+
         # mark the job in progress before handing it off
         in_progress_job_id = jobid()
         in_progress_doc = db_connector.insert_in_progress_job(in_progress_job_id, job['comparison_id'])
         print(f"Successfully marked document IN_PROGRESS:\n{in_progress_doc}")
 
-        job_result = await utc_comparison(
+        job_result: UtcComparison = await utc_comparison(
             omex_path=job['omex_path'],
             simulators=job['simulators'],
-            comparison_id=job['comparison_id'],
+            comparison_id=comparison_id,
         )
+
+        completed_id = jobid()
+        completed_doc = db_connector.insert_completed_job(
+            job_id=completed_id,
+            comparison_id=comparison_id,
+            results=job_result.model_dump())
 
         # rest to check
         from asyncio import sleep

@@ -123,7 +123,7 @@ class MongoDbConnector(DbConnector):
 
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
-    def insert_completed_job(self, job_id: str, comparison_id: str, results: Dict) -> Dict[str, str]:
+    def insert_completed_job(self, job_id: str, comparison_id: str, results: Any) -> Dict[str, str]:
         collection_name = "jobs"  # "pending_jobs"
         _time = self.timestamp()
         in_progress_job_doc = {
