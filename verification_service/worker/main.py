@@ -14,7 +14,6 @@ from verification_service.data_model import UtcSpeciesComparison, UtcComparison,
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
-
 MONGO_URI = os.getenv("MONGO_DB_URI")
 mongo_client = MongoClient(MONGO_URI)
 db_connector = MongoDbConnector(client=mongo_client, database_id=DB_NAME)
@@ -59,7 +58,7 @@ async def utc_comparison(
         simulators=simulators)
 
 
-async def check_jobs(db_connector: MongoDbConnector):
+async def check_jobs():
     jobs = [job for job in db_connector.db['pending_jobs'].find()]
 
     jobs_to_process = []
