@@ -1,6 +1,7 @@
 import tempfile
 import os
 import uuid
+from types import NoneType
 from typing import *
 
 from fastapi import HTTPException
@@ -69,22 +70,31 @@ async def check_jobs(db_connector: MongoDbConnector):
 
         comparison_id = job['comparison_id']
 
-        # mark the job in progress before handing it off
-        in_progress_job_id = jobid()
-        in_progress_doc = db_connector.insert_in_progress_job(in_progress_job_id, job['comparison_id'])
-        print(f"Successfully marked document IN_PROGRESS:\n{in_progress_doc}")
+        # check if in progress and mark the job in progress before handing it off if not
 
-        job_result: UtcComparison = await utc_comparison(
-            omex_path=job['omex_path'],
-            simulators=job['simulators'],
-            comparison_id=comparison_id,
-        )
+        in_progress_coll = db_connector.get_collection("in_progress_jobs")
+        in_progress_job = in_progress_coll.find_one({'comparison_id': comparison_id})
+
+        if isinstance(in_progress_job, NoneType):
+            in_progress_job_id = jobid()
+            in_progress_doc = db_connector.insert_in_progress_job(in_progress_job_id, job['comparison_id'])
+            print(f"Successfully marked document IN_PROGRESS:\n{in_progress_doc}")
+
+            # TODO: Make this work with storage.
+            # job_result: UtcComparison = await utc_comparison(
+            #     omex_path=job['omex_path'],
+            #     simulators=job['simulators'],
+            #     comparison_id=comparison_id,
+            # )
+        else:
+            print(f"In progress job already exists: {in_progress_job}")
 
         completed_id = jobid()
         completed_doc = db_connector.insert_completed_job(
             job_id=completed_id,
             comparison_id=comparison_id,
-            results=job_result.model_dump())
+            # results=job_result.model_dump())
+            results={"a": [1, 2, 4]})
 
         # rest to check
         from asyncio import sleep
