@@ -108,7 +108,7 @@ class MongoDbConnector(DbConnector):
             "timestamp": _time,
             "reports_path": reports_path or "null"}
 
-        return self.insert_job(collection_name, **pending_job_doc)
+        return self.insert_job(collection_name=collection_name, **pending_job_doc)
 
     def insert_in_progress_job(self, job_id: str, comparison_id: str) -> Dict[str, str]:
         collection_name = "pending_jobs"
@@ -119,7 +119,7 @@ class MongoDbConnector(DbConnector):
             "timestamp": _time,
             "comparison_id": comparison_id}
 
-        return self.insert_job(collection_name, **in_progress_job_doc)
+        return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
     def insert_completed_job(self, job_id: str, comparison_id: str, results: Dict) -> Dict[str, str]:
         collection_name = "pending_jobs"
@@ -131,7 +131,7 @@ class MongoDbConnector(DbConnector):
             "comparison_id": comparison_id,
             "results": results}
 
-        return self.insert_job(collection_name, **in_progress_job_doc)
+        return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
     def fetch_job(self, client: MongoClient, job_id: str):
         """Check on the status and/or result of a given comparison run. This allows the user to poll status."""
