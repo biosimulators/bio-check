@@ -11,7 +11,8 @@ import pandas as pd
 from biosimulator_processes.execute import exec_utc_comparison
 
 from verification_service import unique_id
-from verification_service.data_model.shared import BaseClass, MongoDbConnector
+from verification_service.data_model.shared import BaseClass
+from verification_service.storage.database import MongoDbConnector
 from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison, cascading_load_arrows
 from verification_service.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from verification_service.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
@@ -155,14 +156,14 @@ class Worker(BaseClass):
 
         return pd.DataFrame(mse_matrix, index=_simulators, columns=_simulators)
 
-    def calculate_mse(a, b) -> float:
+    def calculate_mse(self, a, b) -> float:
         if isinstance(a, list):
             a = np.array(a)
         if isinstance(b, list):
             b = np.array(b)
         return np.mean((a - b) ** 2)
 
-    def compare_arrays(arr1: np.ndarray, arr2: np.ndarray, atol=None, rtol=None) -> bool:
+    def compare_arrays(self, arr1: np.ndarray, arr2: np.ndarray, atol=None, rtol=None) -> bool:
         """Original methodology copied from biosimulations runutils."""
         max1 = max(arr1)
         max2 = max(arr2)
