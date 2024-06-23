@@ -1,0 +1,11 @@
+bases:
+  - ../../base
+
+namespace: test
+
+patches:
+  - replicas.yaml
+
+configMapGenerator:
+  - name: verificationServiceKustomMap
+    env: config.properties
