@@ -129,7 +129,7 @@ def utc_comparison(
         out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
         simulators=simulators,
         comparison_id=comparison_id,
-        ground_truth=truth_vals)
+        ground_truth=truth_vals.to_dict())
     spec_comparisons = []
     for spec_name, comparison_data in comparison['results'].items():
         species_comparison = UtcSpeciesComparison(
@@ -180,8 +180,7 @@ def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparis
     for i, species in enumerate(sbml_species_names):
         ground_truth_data = None
         if ground_truth:
-            for data in ground_truth:
-                data = data.model_dump()
+            for data in ground_truth['data']:
                 if data['dataset_label'] == species:
                     ground_truth_data = data['data']
         results['results'][species] = generate_biosimulators_utc_species_comparison(
