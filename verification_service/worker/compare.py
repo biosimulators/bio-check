@@ -181,6 +181,7 @@ def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparis
         ground_truth_data = None
         if ground_truth:
             for data in ground_truth:
+                data = data.model_dump()
                 if data['dataset_label'] == species:
                     ground_truth_data = data['data']
         results['results'][species] = generate_biosimulators_utc_species_comparison(

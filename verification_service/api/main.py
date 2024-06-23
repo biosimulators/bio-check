@@ -152,7 +152,7 @@ async def utc_comparison(
             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
             timestamp=_time,
             ground_truth_report_path=report_fp,
-            include_output=include_outputs)
+            include_outputs=include_outputs)
 
         # TODO: remove this when using shared file store.
         # rmtree(save_dest)
