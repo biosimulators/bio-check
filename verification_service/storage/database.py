@@ -99,7 +99,7 @@ class MongoDbConnector(DatabaseConnector):
             simulators: List[str],
             timestamp: str,
             comparison_id: str = None,
-            ground_truth_reports_path: str = None,
+            ground_truth_report_path: str = None,
             include_outputs: bool = True,
             ) -> Union[Dict[str, str], Mapping[str, Any]]:
         # get params
@@ -117,7 +117,7 @@ class MongoDbConnector(DatabaseConnector):
                 "simulators": simulators,
                 "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
                 "timestamp": _time,
-                "ground_truth_report_path": ground_truth_reports_path,
+                "ground_truth_report_path": ground_truth_report_path,
                 "include_outputs": include_outputs}
             coll.insert_one(pending_job_doc)
             return pending_job_doc
