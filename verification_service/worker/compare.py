@@ -64,7 +64,7 @@ class Supervisor(BaseClass):
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         return dict(zip(
             coll_names,
-            [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names])
+            [[job for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names])
         )
 
     def initialize(self):
