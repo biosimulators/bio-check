@@ -1,5 +1,5 @@
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import NoneType
 from typing import *
 
@@ -35,6 +35,8 @@ class Supervisor(BaseClass):
     jobs: Optional[Dict] = None  # comparison ids  TODO: change this?
     job_queue: Optional[Dict[str, str]] = None  # returns the status of the job check
     check_timer: Optional[float] = 5.0
+    workers: Optional[List] = field(default_factory=list)
+    __preferred_queue_index: int = 0
 
     def __post_init__(self):
         # get dict of all jobs indexed by comparison ids
@@ -60,28 +62,42 @@ class Supervisor(BaseClass):
 
     def _check_jobs(self) -> Dict[str, str]:
         jobs_to_complete = self.jobs['pending_jobs']
-        in_progress_jobs = self.jobs['in_progress_jobs']
-        for job in jobs_to_complete:
-            # get the next job in the queue, aka 0th
-            job_id = jobs_to_complete.pop(0)
-            job_doc = self.db_connector.db.pending_jobs.find_one({'job_id': job_id})
-            job_comparison_id = job_doc['comparison_id']
 
-            worker_id = ""
-            # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
+        if len(jobs_to_complete):
+            in_progress_jobs = self.jobs['in_progress_jobs']
+            preferred_queue_index = self.__preferred_queue_index  # TODO: How can we make this more robust/dynamic?
 
-            if isinstance(self.db_connector.db.in_progress_jobs.find_one({'comparison_id':}), NoneType):
-                in_progress_id = unique_id()
-                worker_id += unique_id()
-                self.db_connector.insert_in_progress_job(job_id=in_progress_id, worker_id=worker_id, comparison_id=job_comparison_id)
+            for job in jobs_to_complete:
+                # get the next job in the queue, aka 0th
+                job_id = jobs_to_complete.pop(preferred_queue_index)
+                job_doc = self.db_connector.db.pending_jobs.find_one({'job_id': job_id})
+                job_comparison_id = job_doc['comparison_id']
+                unique_id_query = {'comparison_id': job_comparison_id}
+                in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or {}
+
+                # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
+                if isinstance(in_progress_job, NoneType):
+                    in_progress_job_id = unique_id()
+                    worker_id = unique_id()
+                    id_kwargs = ['job_id', 'worker_id']
+                    in_prog_kwargs = dict(zip(
+                        id_kwargs,
+                        list(map(lambda k: unique_id(), id_kwargs))
+                    ))
+                    self.db_connector.insert_in_progress_job(**in_prog_kwargs, comparison_id=job_comparison_id)
+                    self._refresh_jobs()
+
+                # pop in-progress job from internal queue and use it parameterize the worker
+                in_prog_id = in_progress_jobs.pop(preferred_queue_index)
+                in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
+                workers_id = in_progress_doc['worker_id']
+                worker = Worker(job_params=job_doc, worker_id=workers_id)  # worker executes job upon instantiation
+
+                # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
+                completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
                 self._refresh_jobs()
 
-            # call the worker and pop the inprogress from the queue
-
-            in_progress_job = self.db_connector.db.in_progress_jobs.find_one({'comparison_id': job_comparison_id})
-
-
-
+            return self.jobs.copy()
 
     def __check_jobs(self) -> Dict[str, str]:
         try:
