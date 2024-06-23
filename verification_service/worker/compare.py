@@ -36,14 +36,16 @@ class Supervisor(BaseClass):
     job_queue: Dict[str, str] = None  # returns the status of the job check
     check_timer: float = 5.0
 
-    async def __post_init__(self):
+    def __post_init__(self):
         # get dict of all jobs indexed by comparison ids
-        id_key = 'comparison_id'
+        id_key = 'job_id'
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         self.jobs = dict(zip(
             coll_names,
             [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names]))
+        self.job_queue = {}
 
+    async def initialize(self):
         # activate job queue
         self.job_queue = await self._check_jobs()
 

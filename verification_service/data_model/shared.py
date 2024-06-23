@@ -122,22 +122,28 @@ class MongoDbConnector(DbConnector):
             comparison_id: str = None,
             reports_path: str = None,
             include_outputs: bool = True,
-            ) -> Dict[str, str]:
+            ) -> Union[Dict[str, str], Mapping[str, Any]]:
+        # get params
         collection_name = "pending_jobs"
         coll = self.get_collection(collection_name)
         _time = self.timestamp()
-        pending_job_doc = {
-            "job_id": job_id,
-            "status": "PENDING",
-            "omex_path": omex_path,
-            "simulators": simulators,
-            "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
-            "timestamp": _time,
-            "ground_truth_report_path": reports_path,
-            "include_outputs": include_outputs}
 
-        coll.insert_one(pending_job_doc)
-        return pending_job_doc  # self.insert_job(collection_name=collection_name, **pending_job_doc)
+        # check if query already exists
+        job_query = coll.find_one({"job_id": job_id})
+        if isinstance(job_query, NoneType):
+            pending_job_doc = {
+                "job_id": job_id,
+                "status": "PENDING",
+                "omex_path": omex_path,
+                "simulators": simulators,
+                "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
+                "timestamp": _time,
+                "ground_truth_report_path": reports_path,
+                "include_outputs": include_outputs}
+            coll.insert_one(pending_job_doc)
+            return pending_job_doc
+        else:
+            return job_query
 
     def insert_in_progress_job(self, job_id: str, comparison_id: str, worker_id: str) -> Dict[str, str]:
         collection_name = "in_progress_jobs"
