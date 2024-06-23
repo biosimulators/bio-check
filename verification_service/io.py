@@ -50,6 +50,10 @@ def make_dir(fp: str):
         os.mkdir(fp)
 
 
+async def read_report_outputs_async(report_file_path: str) -> BiosimulationsRunOutputData:
+    return read_report_outputs(report_file_path)
+
+
 def read_report_outputs(report_file_path) -> BiosimulationsRunOutputData:
     """Read the outputs from all species in the given report file from biosimulations output.
         Args:

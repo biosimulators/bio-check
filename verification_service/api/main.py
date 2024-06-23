@@ -143,7 +143,7 @@ async def utc_comparison(
         # save uploaded reports file to shared storage if applicable
         report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
 
-        pending_job_doc = db_connector.insert_job(
+        pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,

@@ -107,13 +107,16 @@ class MongoDbConnector(DbConnector):
         except:
             return None
 
+    async def insert_job_async(self, collection_name: str, **kwargs) -> Dict[str, Any]:
+        return self.insert_job(collection_name, **kwargs)
+
     def insert_job(self, collection_name: str, **kwargs) -> Dict[str, Any]:
         coll = self.get_collection(collection_name)
         job_doc = kwargs
         coll.insert_one(job_doc)
         return job_doc
 
-    def insert_pending_job(
+    async def insert_pending_job(
             self,
             job_id: str,
             omex_path: str,

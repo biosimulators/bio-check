@@ -24,7 +24,7 @@ class Worker(BaseClass):
     def __post_init__(self):
         """pop job_id, status, timestamp"""
         params = self.job_params.copy()
-        map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp'])
+        list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
         result = utc_comparison(**params)
         self.job_result = result.model_dump()
 
