@@ -19,7 +19,7 @@ from verification_service.data_model.shared import (
     MongoDbConnector,
     FetchResultsResponse,
     PendingJob)
-from verification_service.api.handlers.io import save_uploaded_file
+from verification_service.io import save_uploaded_file
 from verification_service.api.handlers.log_config import setup_logging
 
 # --load env -- #

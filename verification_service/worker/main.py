@@ -1,16 +1,13 @@
-import tempfile
 import os
 import uuid
 from types import NoneType
 from typing import *
 
-from fastapi import HTTPException
 from pymongo.mongo_client import MongoClient
 
-from verification_service.worker.compare import generate_biosimulators_utc_comparison, utc_comparison
-from verification_service.worker.io import read_report_outputs
+from verification_service.worker.compare import utc_comparison
 from verification_service.data_model.shared import MongoDbConnector
-from verification_service.data_model.worker import UtcSpeciesComparison, UtcComparison, SimulationError
+from verification_service.data_model.worker import UtcComparison, SimulationError
 
 
 DB_TYPE = "mongo"  # ie: postgres, etc
