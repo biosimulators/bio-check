@@ -1,11 +1,51 @@
+import tempfile
 from typing import *
 
 import numpy as np
 import pandas as pd
 
 from biosimulator_processes.execute import exec_utc_comparison
-from verification_service.worker.io import get_sbml_species_names, get_sbml_model_file_from_archive
+
+from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
+from verification_service.worker.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from verification_service.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
+
+
+async def utc_comparison(
+        omex_path: str,
+        simulators: List[str],
+        include_outputs: bool = True,
+        comparison_id: str = None,
+        ground_truth_report_path: str = None
+        ) -> Union[UtcComparison, SimulationError]:
+    """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
+    try:
+        out_dir = tempfile.mktemp()
+        truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
+
+        comparison_id = comparison_id or 'biosimulators-utc-comparison'
+        comparison = await generate_biosimulators_utc_comparison(
+            omex_fp=omex_path,
+            out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
+            simulators=simulators,
+            comparison_id=comparison_id,
+            ground_truth=truth_vals)
+
+        spec_comparisons = []
+        for spec_name, comparison_data in comparison['results'].items():
+            species_comparison = UtcSpeciesComparison(
+                mse=comparison_data['mse'],
+                proximity=comparison_data['prox'],
+                output_data=comparison_data.get('output_data') if include_outputs else {},
+                species_name=spec_name)
+            spec_comparisons.append(species_comparison)
+    except Exception as e:
+        return SimulationError(str(e))
+
+    return UtcComparison(
+        results=spec_comparisons,
+        id=comparison_id,
+        simulators=simulators)
 
 
 def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: str = None, include_outputs: bool = True):

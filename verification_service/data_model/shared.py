@@ -1,11 +1,19 @@
-# -- globally-used base model -- #
+# -- globally-shared models -- #
 
 
+from types import NoneType
 from typing import *
 from dataclasses import dataclass, asdict
+from abc import ABC, abstractmethod
+from datetime import datetime
 
 from pydantic import BaseModel as _BaseModel, ConfigDict
+from pymongo import MongoClient
+from pymongo.collection import Collection
+from pymongo.database import Database
 
+
+# -- base models --
 
 class BaseModel(_BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -16,6 +24,8 @@ class BaseClass:
     def todict(self):
         return asdict(self)
 
+
+# -- jobs --
 
 class Job(BaseModel):
     id: str
@@ -38,21 +48,7 @@ class FetchResultsResponse(BaseModel):
     content: Any
 
 
-from functools import partial
-from types import NoneType
-from typing import *
-from dataclasses import dataclass, asdict
-from abc import ABC, abstractmethod
-from datetime import datetime
-
-from pydantic import BaseModel as _BaseModel, ConfigDict
-from pymongo import MongoClient
-from pymongo.collection import Collection
-from pymongo.database import Database
-
-
-
-
+# -- db connectors --
 
 @dataclass
 class DbConnector(ABC, BaseClass):
@@ -129,15 +125,6 @@ class MongoDbConnector(DbConnector):
             ) -> Dict[str, str]:
         collection_name = "pending_jobs"
         coll = self.get_collection(collection_name)
-        """
-        omex_path: str,
-                         simulators: list[str],
-                         include_outputs: bool = True,
-                         comparison_id: str | None = None,
-                         ground_truth_report_path: str | None = None
-                         
-                        
-        """
         _time = self.timestamp()
         pending_job_doc = {
             "job_id": job_id,

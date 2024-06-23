@@ -7,8 +7,7 @@ from typing import *
 from fastapi import HTTPException
 from pymongo.mongo_client import MongoClient
 
-from verification_service.worker.compare import (
-    generate_biosimulators_utc_comparison)
+from verification_service.worker.compare import generate_biosimulators_utc_comparison, utc_comparison
 from verification_service.worker.io import read_report_outputs
 from verification_service.data_model.shared import MongoDbConnector
 from verification_service.data_model.worker import UtcSpeciesComparison, UtcComparison, SimulationError
@@ -24,7 +23,7 @@ db_connector = MongoDbConnector(client=mongo_client, database_id=DB_NAME)
 def jobid(): return str(uuid.uuid4())
 
 
-async def utc_comparison(
+async def exec_utc_comparison(
         omex_path: str,
         simulators: List[str],
         include_outputs: bool = True,
@@ -32,33 +31,14 @@ async def utc_comparison(
         ground_truth_report_path: str = None
         ) -> Union[UtcComparison, SimulationError]:
     """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
-    try:
-        out_dir = tempfile.mktemp()
-        truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
-
-        comparison_id = comparison_id or 'biosimulators-utc-comparison'
-        comparison = await generate_biosimulators_utc_comparison(
-            omex_fp=omex_path,
-            out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
-            simulators=simulators,
-            comparison_id=comparison_id,
-            ground_truth=truth_vals)
-
-        spec_comparisons = []
-        for spec_name, comparison_data in comparison['results'].items():
-            species_comparison = UtcSpeciesComparison(
-                mse=comparison_data['mse'],
-                proximity=comparison_data['prox'],
-                output_data=comparison_data.get('output_data') if include_outputs else {},
-                species_name=spec_name)
-            spec_comparisons.append(species_comparison)
-    except Exception as e:
-        return SimulationError(str(e))
-
-    return UtcComparison(
-        results=spec_comparisons,
-        id=comparison_id,
-        simulators=simulators)
+    result = await utc_comparison(
+        omex_path=omex_path,
+        simulators=simulators,
+        include_outputs=include_outputs,
+        comparison_id=comparison_id,
+        ground_truth_report_path=ground_truth_report_path
+    )
+    return result
 
 
 async def check_jobs():
