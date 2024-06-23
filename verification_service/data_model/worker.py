@@ -7,17 +7,16 @@ from dataclasses import dataclass
 from types import NoneType
 from typing import *
 
+from verification_service import unique_id
 from verification_service.data_model.shared import BaseClass, BaseModel, DbConnector, MongoDbConnector, Job
 from verification_service.worker.main import utc_comparison
-
-
-def jobid(): return str(uuid.uuid4())
 
 
 @dataclass
 class Worker(BaseModel):
     job_params: Dict  # input arguments
     job_result: Dict = None  # output result (utc_comparison.to_dict())
+    worker_id: str = unique_id()
 
     async def __post_init__(self):
         result = await utc_comparison(**self.job_params)
@@ -59,25 +58,32 @@ class Supervisor(BaseClass):
                 in_progress_coll = self.db_connector.get_collection("in_progress_jobs")
                 in_progress_job = in_progress_coll.find_one({'comparison_id': comparison_id})
 
+                # in progress job does not yet exist for the given pending job
                 if isinstance(in_progress_job, NoneType):
-                    in_progress_job_id = jobid()
-                    in_progress_doc = self.db_connector.insert_in_progress_job(in_progress_job_id, pending_job['comparison_id'])
+                    # summon worker
+                    worker = await self.call_worker(pending_job)
+
+                    # create and store an in-progress job
+                    in_progress_job_id = unique_id()
+                    in_progress_doc = self.db_connector.insert_in_progress_job(
+                        job_id=in_progress_job_id,
+                        comparison_id=comparison_id,
+                        worker_id=worker.id
+                    )
+
+                    completed_id = unique_id()
+                    completed_doc = self.db_connector.insert_completed_job(
+                        job_id=completed_id,
+                        comparison_id=comparison_id,
+                        results=worker.job_result
+                    )
+
+                    # sleep with fancy logging :)
+                    print(f"Sleeping for {self.check_timer}")
+                    await cascading_load_arrows(self.check_timer)
                     print(f"Successfully marked comparison IN_PROGRESS:\n{in_progress_doc['comparison_id']}\n")
                 else:
-                    print(f"Comparison already in progress: {in_progress_job['comparison_id']}\n")
-
-                # generate worker result and create a new completed job
-                worker = await self.call_worker(pending_job)
-                completed_id = jobid()
-                completed_doc = self.db_connector.insert_completed_job(
-                    job_id=completed_id,
-                    comparison_id=in_progress_job['comparison_id'],
-                    results=worker.job_result
-                )
-
-                # sleep with fancy logging :)
-                print(f"Sleeping for {self.check_timer}")
-                await cascading_load_arrows(self.check_timer)
+                    print(f"Comparison already in progress and is probably also complete: {in_progress_job['comparison_id']}\n")
 
             # job is finished and successfully complete
             status = "all jobs completed."
@@ -91,6 +97,7 @@ class Supervisor(BaseClass):
         # 2. Get an unassigned PENDING job.
         # 3. Mark #2 as IN_PROGRESS using the same comparison_id from #2
         # 4. Use #2 to give to worker as job_params
+        # 4a. Associate #3 (in progress) with a worker
         # 5. Worker returns worker.job_result to the supervisor
         # 6. The supervisor (being the one with db access) then creates a new COMPLETED job doc with the output of #5.
         # 7. The supervisor stores the doc from #6.

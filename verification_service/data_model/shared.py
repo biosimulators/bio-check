@@ -143,14 +143,15 @@ class MongoDbConnector(DbConnector):
         coll.insert_one(pending_job_doc)
         return pending_job_doc  # self.insert_job(collection_name=collection_name, **pending_job_doc)
 
-    def insert_in_progress_job(self, job_id: str, comparison_id: str) -> Dict[str, str]:
+    def insert_in_progress_job(self, job_id: str, comparison_id: str, worker_id: str) -> Dict[str, str]:
         collection_name = "in_progress_jobs"
         _time = self.timestamp()
         in_progress_job_doc = {
             "job_id": job_id,
             "status": "IN_PROGRESS",
             "timestamp": _time,
-            "comparison_id": comparison_id}
+            "comparison_id": comparison_id,
+            "worker_id": worker_id}
 
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
