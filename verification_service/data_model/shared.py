@@ -38,7 +38,7 @@ class PendingJob(Job):
     omex_path: str
     simulators: List[str]
     timestamp: str
-    reports_path: Optional[str] = None
+    ground_truth_report_path: Optional[str] = None
     include_output: Optional[bool] = True
 
 
