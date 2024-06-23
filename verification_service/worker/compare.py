@@ -16,25 +16,25 @@ from verification_service.worker.output_data import generate_biosimulator_utc_ou
 
 
 @dataclass
-class Worker(BaseModel):
+class Worker(BaseClass):
     job_params: Dict  # input arguments
-    job_result: Dict = None  # output result (utc_comparison.to_dict())
-    worker_id: str = unique_id()
+    job_result: Optional[Dict] = None  # output result (utc_comparison.to_dict())
+    worker_id: Optional[str] = unique_id()
 
-    async def __post_init__(self):
+    def __post_init__(self):
         """pop job_id, status, timestamp"""
         params = self.job_params.copy()
         map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp'])
-        result = await utc_comparison(**params)
+        result = utc_comparison(**params)
         self.job_result = result.model_dump()
 
 
 @dataclass
 class Supervisor(BaseClass):
     db_connector: MongoDbConnector  # TODO: Enable generic class
-    jobs: Dict = None  # comparison ids  TODO: change this?
-    job_queue: Dict[str, str] = None  # returns the status of the job check
-    check_timer: float = 5.0
+    jobs: Optional[Dict] = None  # comparison ids  TODO: change this?
+    job_queue: Optional[Dict[str, str]] = None  # returns the status of the job check
+    check_timer: Optional[float] = 5.0
 
     def __post_init__(self):
         # get dict of all jobs indexed by comparison ids
@@ -45,19 +45,19 @@ class Supervisor(BaseClass):
             [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names]))
         self.job_queue = {}
 
-    async def initialize(self):
+    def initialize(self):
         # activate job queue
-        self.job_queue = await self._check_jobs()
+        self.job_queue = self._check_jobs()
 
-    async def _check_jobs(self) -> Dict[str, str]:
+    def _check_jobs(self) -> Dict[str, str]:
         try:
             # jobs = [job for job in self.db_connector.db['pending_jobs'].find()]
-            jobs_to_complete = self.jobs['pending_jobs']
+            jobs_to_complete = self.jobs['pending_jobs'].copy()
 
             while len(jobs_to_complete) > 0:
                 # populate the queue of jobs with params to be processed
-                pending_comparison_id = jobs_to_complete.pop(0)
-                pending_job = self.db_connector.db.pending_jobs.find_one({'comparison_id': pending_comparison_id})
+                pending_job_id = jobs_to_complete.pop(0)
+                pending_job = self.db_connector.db.pending_jobs.find_one({'job_id': pending_job_id})
 
                 comparison_id = pending_job['comparison_id']
 
@@ -69,14 +69,14 @@ class Supervisor(BaseClass):
                 # in progress job does not yet exist for the given pending job
                 if isinstance(in_progress_job, NoneType):
                     # summon worker
-                    worker = await self.call_worker(pending_job)
+                    worker = self.call_worker(pending_job)
 
                     # create and store an in-progress job
                     in_progress_job_id = unique_id()
                     in_progress_doc = self.db_connector.insert_in_progress_job(
                         job_id=in_progress_job_id,
                         comparison_id=comparison_id,
-                        worker_id=worker.id
+                        worker_id=worker.worker_id
                     )
 
                     completed_id = unique_id()
@@ -88,7 +88,7 @@ class Supervisor(BaseClass):
 
                     # sleep with fancy logging :)
                     print(f"Sleeping for {self.check_timer}")
-                    await cascading_load_arrows(self.check_timer)
+                    cascading_load_arrows(self.check_timer)
                     print(f"Successfully marked comparison IN_PROGRESS:\n{in_progress_doc['comparison_id']}\n")
                 else:
                     print(f"Comparison already in progress and is probably also complete: {in_progress_job['comparison_id']}\n")
@@ -100,7 +100,7 @@ class Supervisor(BaseClass):
 
         return {"status": status}
 
-    async def call_worker(self, job_params: Dict):
+    def call_worker(self, job_params: Dict):
         # 1. Run check_jobs()
         # 2. Get an unassigned PENDING job.
         # 3. Mark #2 as IN_PROGRESS using the same comparison_id from #2
@@ -110,10 +110,10 @@ class Supervisor(BaseClass):
         # 6. The supervisor (being the one with db access) then creates a new COMPLETED job doc with the output of #5.
         # 7. The supervisor stores the doc from #6.
         # 8. The return value of this is some sort of message(json?)
-        return await Worker(job_params=job_params)
+        return Worker(job_params=job_params)
 
 
-async def utc_comparison(
+def utc_comparison(
         omex_path: str,
         simulators: List[str],
         include_outputs: bool = True,
@@ -121,28 +121,23 @@ async def utc_comparison(
         ground_truth_report_path: str = None
         ) -> Union[UtcComparison, SimulationError]:
     """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
-    try:
-        out_dir = tempfile.mktemp()
-        truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
-
-        comparison_id = comparison_id or 'biosimulators-utc-comparison'
-        comparison = await generate_biosimulators_utc_comparison(
-            omex_fp=omex_path,
-            out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
-            simulators=simulators,
-            comparison_id=comparison_id,
-            ground_truth=truth_vals)
-
-        spec_comparisons = []
-        for spec_name, comparison_data in comparison['results'].items():
-            species_comparison = UtcSpeciesComparison(
-                mse=comparison_data['mse'],
-                proximity=comparison_data['prox'],
-                output_data=comparison_data.get('output_data') if include_outputs else {},
-                species_name=spec_name)
-            spec_comparisons.append(species_comparison)
-    except Exception as e:
-        return SimulationError(str(e))
+    out_dir = tempfile.mktemp()
+    truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
+    comparison_id = comparison_id or 'biosimulators-utc-comparison'
+    comparison = generate_biosimulators_utc_comparison(
+        omex_fp=omex_path,
+        out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
+        simulators=simulators,
+        comparison_id=comparison_id,
+        ground_truth=truth_vals)
+    spec_comparisons = []
+    for spec_name, comparison_data in comparison['results'].items():
+        species_comparison = UtcSpeciesComparison(
+            mse=comparison_data['mse'],
+            proximity=comparison_data['prox'],
+            output_data=comparison_data.get('output_data') if include_outputs else {},
+            species_name=spec_name)
+        spec_comparisons.append(species_comparison)
 
     return UtcComparison(
         results=spec_comparisons,
@@ -159,8 +154,8 @@ def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: 
         include_outputs=include_outputs)
 
 
-async def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species_name, simulators, ground_truth=None):
-    output_data = await generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
+def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species_name, simulators, ground_truth=None):
+    output_data = generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
     outputs = _get_output_stack(output_data, species_name)
     methods = ['mse', 'prox']
     results = dict(zip(
@@ -178,9 +173,9 @@ async def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, specie
     return results
 
 
-async def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparison_id, ground_truth=None):
-    model_file = await get_sbml_model_file_from_archive(omex_fp, out_dir)
-    sbml_species_names = await get_sbml_species_names(model_file)
+def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, comparison_id, ground_truth=None):
+    model_file = get_sbml_model_file_from_archive(omex_fp, out_dir)
+    sbml_species_names = get_sbml_species_names(model_file)
     results = {'results': {}, 'comparison_id': comparison_id}
     for i, species in enumerate(sbml_species_names):
         ground_truth_data = None
@@ -188,7 +183,7 @@ async def generate_biosimulators_utc_comparison(omex_fp, out_dir, simulators, co
             for data in ground_truth:
                 if data['dataset_label'] == species:
                     ground_truth_data = data['data']
-        results['results'][species] = await generate_biosimulators_utc_species_comparison(
+        results['results'][species] = generate_biosimulators_utc_species_comparison(
             omex_fp=omex_fp,
             out_dir=out_dir,
             species_name=species,

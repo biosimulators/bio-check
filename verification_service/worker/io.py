@@ -18,19 +18,19 @@ async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
     return file_path
 
 
-async def get_sbml_species_names(fp: str) -> list[str]:
+def get_sbml_species_names(fp: str) -> list[str]:
     sbml_reader = libsbml.SBMLReader()
     sbml_doc = sbml_reader.readSBML(fp)
     model: libsbml.Model = sbml_doc.getModel()
     return [s.getName() for s in model.getListOfSpecies()]
 
 
-async def unpack_omex(archive_fp: str, save_dir: str):
+def unpack_omex(archive_fp: str, save_dir: str):
     return CombineArchiveReader().run(archive_fp, save_dir)
 
 
-async def get_sbml_model_file_from_archive(archive_fp: str, save_dir: str):
-    arch = await unpack_omex(archive_fp, save_dir)
+def get_sbml_model_file_from_archive(archive_fp: str, save_dir: str):
+    arch = unpack_omex(archive_fp, save_dir)
     for content in arch.contents:
         loc = content.location
         if loc.endswith('.xml') and 'manifest' not in loc.lower():
@@ -45,12 +45,12 @@ def save_omex_archive(contents: bytes, save_dir: str):
     return {'source': archive_path, 'archive': unpack_omex(archive_path, save_dir), 'save_dir': save_dir}
 
 
-async def make_dir(fp: str):
+def make_dir(fp: str):
     if not os.path.exists(fp):
         os.mkdir(fp)
 
 
-async def read_report_outputs(report_file_path) -> BiosimulationsRunOutputData:
+def read_report_outputs(report_file_path) -> BiosimulationsRunOutputData:
     """Read the outputs from all species in the given report file from biosimulations output.
         Args:
             report_file_path (str): The path to the simulation.sedml/report.h5 HDF5 file.

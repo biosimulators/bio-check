@@ -12,11 +12,11 @@ from biosimulator_processes.io import standardize_report_outputs
 from verification_service.worker.io import make_dir, read_report_outputs
 
 
-async def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:
+def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:
     """Generate the outputs of the standard UTC simulators Copasi, Tellurium, and Amici from the
         biosimulators interface (exec_sedml_docs_in_combine_archive).
     """
-    await make_dir(output_root_dir)
+    make_dir(output_root_dir)
 
     output_data = {}
     sims = simulators or ['amici', 'copasi', 'tellurium']
@@ -26,7 +26,7 @@ async def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, 
         VERBOSE=False)
     for sim in sims:
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
-        await make_dir(sim_output_dir)
+        make_dir(sim_output_dir)
 
         module = import_module(name=f'biosimulators_{sim}.core')
         exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
@@ -38,7 +38,7 @@ async def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, 
         exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
 
         report_path = os.path.join(sim_output_dir, 'reports.h5')
-        sim_data = await read_report_outputs(report_path)
+        sim_data = read_report_outputs(report_path)
         data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else {}
         output_data[sim] = data
 

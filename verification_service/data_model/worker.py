@@ -1,7 +1,7 @@
 # -- worker models -- #
 
 
-from asyncio import sleep
+from time import sleep
 from typing import *
 
 from verification_service.data_model.shared import BaseModel, Job
@@ -52,7 +52,7 @@ class StochasticMethodError(BaseModel):
     message: str = "Only deterministic methods are supported."
 
 
-async def cascading_load_arrows(timer):
+def cascading_load_arrows(timer):
     check_timer = timer
     ell = ""
     bars = ""
@@ -61,7 +61,7 @@ async def cascading_load_arrows(timer):
     log_interval = check_timer / n_ellipses
     for n in range(n_ellipses):
         single_interval = log_interval / 3
-        await sleep(single_interval)
+        sleep(single_interval)
         bars += "="
         disp = bars + ">"
         if n == n_ellipses - 1:
