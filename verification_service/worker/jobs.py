@@ -240,10 +240,10 @@ class Supervisor(BaseClass):
                 cascading_load_arrows(self.queue_timer)
                 # sleep(self.queue_timer)
 
-    def _job_exists(self, collection_name: str, comparison_id: str):
-        unique_id_query = {'comparison_id': comparison_id}
-        job = self.db_connector.db[collection_name].find_one(unique_id_query) or None
-        return not isinstance(job, NoneType)
+    def _job_exists(self, **kwargs):
+        unique_id_query = {'comparison_id': kwargs['comparison_id']}
+        job = self.db_connector.db[kwargs['collection_name']].find_one(unique_id_query) or None
+        return job is not None
 
     def check_jobs(self) -> Dict[str, str]:
         jobs_to_complete = self.jobs['pending_jobs']
@@ -255,15 +255,14 @@ class Supervisor(BaseClass):
 
             for job in jobs_to_complete:
                 # get the next job in the queue based on the preferred_queue_index
-                job_id = jobs_to_complete.pop(preferred_queue_index)
-                job_doc = self.db_connector.db.pending_jobs.find_one({'job_id': job_id})
+                job_doc = jobs_to_complete.pop(preferred_queue_index)
                 job_comparison_id = job_doc['comparison_id']
                 unique_id_query = {'comparison_id': job_comparison_id}
                 in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
 
                 job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
                 # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
-                if not job_exists('in_progress_jobs'):
+                if not job_exists(collection_name='in_progress_jobs'):
                     in_progress_job_id = unique_id()
                     worker_id = unique_id()
                     id_kwargs = ['job_id', 'worker_id']
@@ -275,7 +274,7 @@ class Supervisor(BaseClass):
                     self._refresh_jobs()
 
                 # check to see if for some reason the completed job is already there and call worker exec if not
-                if not job_exists('completed_jobs'):
+                if not job_exists(collection_name='completed_jobs'):
                     # pop in-progress job from internal queue and use it parameterize the worker
                     in_prog_id = in_progress_jobs.pop(preferred_queue_index)
                     in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
