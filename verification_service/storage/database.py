@@ -149,11 +149,15 @@ class MongoDbConnector(DatabaseConnector):
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
     def fetch_job(self, comparison_id: str) -> Mapping[str, Any]:
-        coll = self.db['jobs']
-        status_decs = sorted(['COMPLETED', 'IN_PROGRESS', 'PENDING'])
-        for status in status_decs:
-            complete_job = coll.find_one({'status': status, 'comparison_id': comparison_id})
+        # try each collection, starting with completed_jobs
+        collections = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+        for i, collection in enumerate(collections):
+            coll = self.get_collection(collection)
+            complete_job = coll.find_one({'comparison_id': comparison_id})
             if not isinstance(complete_job, NoneType):
                 return complete_job
             else:
-                print(f"Job not in {status}")
+                next_i = i + 1 if i < len(collections) else i
+                next_msg = collections[next_i] if next_i < len(collections) else "None"
+                # TODO: Log this instead
+                print(f"Job not found in {collection}. Now searching {collections[i + 1]}")
