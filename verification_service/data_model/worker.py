@@ -27,50 +27,64 @@ class Worker(BaseModel):
 @dataclass
 class Supervisor(BaseClass):
     db_connector: MongoDbConnector  # TODO: Enable generic class
-    jobs: Dict = None
+    jobs: Dict = None  # comparison ids  TODO: change this?
+    job_queue: Dict[str, str] = None  # returns the status of the job check
+    check_timer: float = 5.0
 
-    def __post_init__(self):
-        id_key = 'job_id'
+    async def __post_init__(self):
+        # get dict of all jobs indexed by comparison ids
+        id_key = 'comparison_id'
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         self.jobs = dict(zip(
             coll_names,
             [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names]))
 
-    async def check_jobs(self, sleep_timer: int = 5):
-        jobs = [job for job in self.db_connector.db['pending_jobs'].find()]
+        # activate job queue
+        self.job_queue = await self._check_jobs()
 
-        jobs_to_process = []
-        while len(jobs) > 0:
-            # populate the queue of jobs with params to be processed
-            pending_job = jobs.pop(0)
-            jobs_to_process.append(pending_job)
+    async def _check_jobs(self) -> Dict[str, str]:
+        try:
+            # jobs = [job for job in self.db_connector.db['pending_jobs'].find()]
+            jobs_to_complete = self.jobs['pending_jobs']
 
-            comparison_id = pending_job['comparison_id']
+            while len(jobs_to_complete) > 0:
+                # populate the queue of jobs with params to be processed
+                pending_comparison_id = jobs_to_complete.pop(0)
+                pending_job = self.db_connector.db.pending_jobs.find_one({'comparison_id': pending_comparison_id})
 
-            # check if in progress and mark the job in progress before handing it off if not
+                comparison_id = pending_job['comparison_id']
 
-            in_progress_coll = self.db_connector.get_collection("in_progress_jobs")
-            in_progress_job = in_progress_coll.find_one({'comparison_id': comparison_id})
+                # check if in progress and mark the job in progress before handing it off if not
 
-            if isinstance(in_progress_job, NoneType):
-                in_progress_job_id = jobid()
-                in_progress_doc = self.db_connector.insert_in_progress_job(in_progress_job_id, pending_job['comparison_id'])
-                print(f"Successfully marked comparison IN_PROGRESS:\n{in_progress_doc['comparison_id']}")
-            else:
-                print(f"Comparison already in progress: {in_progress_job['comparison_id']}")
+                in_progress_coll = self.db_connector.get_collection("in_progress_jobs")
+                in_progress_job = in_progress_coll.find_one({'comparison_id': comparison_id})
 
-            # generate worker result and create a new completed job
-            worker = await self.call_worker(pending_job)
-            completed_id = jobid()
-            completed_doc = self.db_connector.insert_completed_job(
-                job_id=completed_id,
-                comparison_id=in_progress_job['comparison_id'],
-                results=worker.job_result
-            )
+                if isinstance(in_progress_job, NoneType):
+                    in_progress_job_id = jobid()
+                    in_progress_doc = self.db_connector.insert_in_progress_job(in_progress_job_id, pending_job['comparison_id'])
+                    print(f"Successfully marked comparison IN_PROGRESS:\n{in_progress_doc['comparison_id']}\n")
+                else:
+                    print(f"Comparison already in progress: {in_progress_job['comparison_id']}\n")
 
-            print(f"Sleeping for {sleep_timer}...zzzzzzz...")
-            await sleep(5)
-        return {"status": "all jobs completed."}
+                # generate worker result and create a new completed job
+                worker = await self.call_worker(pending_job)
+                completed_id = jobid()
+                completed_doc = self.db_connector.insert_completed_job(
+                    job_id=completed_id,
+                    comparison_id=in_progress_job['comparison_id'],
+                    results=worker.job_result
+                )
+
+                # sleep with fancy logging :)
+                print(f"Sleeping for {self.check_timer}")
+                await cascading_load_arrows(self.check_timer)
+
+            # job is finished and successfully complete
+            status = "all jobs completed."
+        except Exception as e:
+            status = f"something went wrong:\n{e}"
+
+        return {"status": status}
 
     async def call_worker(self, job_params: Dict):
         # 1. Run check_jobs()
@@ -126,3 +140,21 @@ class SimulationError(Exception):
 # api container fastapi, mongo database, worker container
 class StochasticMethodError(BaseModel):
     message: str = "Only deterministic methods are supported."
+
+
+async def cascading_load_arrows(timer):
+    check_timer = timer
+    ell = ""
+    bars = ""
+    msg = "|"
+    n_ellipses = timer
+    log_interval = check_timer / n_ellipses
+    for n in range(n_ellipses):
+        single_interval = log_interval / 3
+        await sleep(single_interval)
+        bars += "="
+        disp = bars + ">"
+        if n == n_ellipses - 1:
+            disp += "|"
+        print(disp)
+
