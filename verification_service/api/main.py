@@ -172,7 +172,10 @@ async def fetch_results(comparison_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
 
     # assuming results are stored in the job document. TODO: what if this is not the case?
-    resp_content = job['results'] if job['status'] == 'COMPLETED' else {"status": job['status']}
+    job_id = job["job_id"]
+    resp_content = {"job_id": job_id}
+    key = "results" if job['status'] == 'COMPLETED' else "status"
+    resp_content[key] = job[key]
     return FetchResultsResponse(content=resp_content)
 
 
