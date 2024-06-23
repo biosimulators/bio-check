@@ -16,10 +16,10 @@ from pymongo.mongo_client import MongoClient
 
 from verification_service.data_model.api import DbClientResponse
 from verification_service.data_model.shared import (
-    MongoDbConnector,
     FetchResultsResponse,
     PendingJob)
 from verification_service.io import save_uploaded_file
+from verification_service.storage.database import MongoDbConnector
 from verification_service.api.handlers.log_config import setup_logging
 
 # --load env -- #

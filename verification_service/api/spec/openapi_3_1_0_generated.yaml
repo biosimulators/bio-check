@@ -140,7 +140,12 @@ components:
         status:
           type: string
           title: Status
-          default: PENDING
+        timestamp:
+          type: string
+          title: Timestamp
+        comparison_id:
+          type: string
+          title: Comparison Id
         omex_path:
           type: string
           title: Omex Path
@@ -149,12 +154,6 @@ components:
             type: string
           type: array
           title: Simulators
-        comparison_id:
-          type: string
-          title: Comparison Id
-        timestamp:
-          type: string
-          title: Timestamp
         reports_path:
           anyOf:
           - type: string
@@ -169,10 +168,11 @@ components:
       type: object
       required:
       - job_id
+      - status
+      - timestamp
+      - comparison_id
       - omex_path
       - simulators
-      - comparison_id
-      - timestamp
       title: PendingJob
     ValidationError:
       properties:

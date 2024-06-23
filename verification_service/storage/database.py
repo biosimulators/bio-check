@@ -7,6 +7,7 @@ from datetime import datetime
 from types import NoneType
 from typing import Mapping, Any, Dict, Union, List, Collection
 
+from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -61,7 +62,12 @@ class DatabaseConnector(ABC, BaseClass):
 class MongoDbConnector(DatabaseConnector):
     client: MongoClient
     database_id: str
-    db: Database = None
+
+    def __post_init__(self):
+        self.db = self._get_database(self.database_id)
+        self.pending_jobs = self.db['pending_jobs']
+        self.in_progress_jobs = self.db['in_progress_jobs']
+        self.completed_jobs = self.db['completed_jobs']
 
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)
@@ -71,6 +77,11 @@ class MongoDbConnector(DatabaseConnector):
             return self.db[collection_name]
         except:
             return None
+
+    def get_job(self, collection_name: str, query: dict):
+        coll = self.get_collection(collection_name)
+        job = coll.find_one(query)
+        return job
 
     async def insert_job_async(self, collection_name: str, **kwargs) -> Dict[str, Any]:
         return self.insert_job(collection_name, **kwargs)

@@ -230,6 +230,8 @@ class Supervisor(BaseClass):
             [[job for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names])
         )
 
+
+
     def initialize(self):
         # activate job queue
         run = True
@@ -256,10 +258,10 @@ class Supervisor(BaseClass):
             for job in jobs_to_complete:
                 # get the next job in the queue based on the preferred_queue_index
                 job_id = jobs_to_complete.pop(preferred_queue_index)
-                job_doc = self.db_connector.db.pending_jobs.find_one({'job_id': job_id})
+                job_doc = self.db_connector.pending_jobs.find_one({'job_id': job_id})
                 job_comparison_id = job_doc['comparison_id']
                 unique_id_query = {'comparison_id': job_comparison_id}
-                in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
+                in_progress_job = self.db_connector.db['in_progress_jobs'].find_one(unique_id_query) or None
 
                 job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
                 # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
@@ -278,7 +280,7 @@ class Supervisor(BaseClass):
                 if not job_exists('completed_jobs'):
                     # pop in-progress job from internal queue and use it parameterize the worker
                     in_prog_id = in_progress_jobs.pop(preferred_queue_index)
-                    in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
+                    in_progress_doc = self.db_connector.in_progress_jobs.find_one({'job_id': in_prog_id})
                     workers_id = in_progress_doc['worker_id']
                     worker = self.call_worker(job_params=job_doc, worker_id=workers_id)
 
