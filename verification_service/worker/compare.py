@@ -52,7 +52,7 @@ class Supervisor(BaseClass):
     def _check_jobs(self) -> Dict[str, str]:
         try:
             # jobs = [job for job in self.db_connector.db['pending_jobs'].find()]
-            jobs_to_complete = self.jobs['pending_jobs'].copy()
+            jobs_to_complete = self.jobs['pending_jobs']
 
             while len(jobs_to_complete) > 0:
                 # populate the queue of jobs with params to be processed
@@ -129,7 +129,7 @@ def utc_comparison(
         out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
         simulators=simulators,
         comparison_id=comparison_id,
-        ground_truth=truth_vals.to_dict())
+        ground_truth=truth_vals.to_dict() if not isinstance(truth_vals, NoneType) else truth_vals)
     spec_comparisons = []
     for spec_name, comparison_data in comparison['results'].items():
         species_comparison = UtcSpeciesComparison(
