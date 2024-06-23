@@ -1,5 +1,7 @@
 import tempfile
 from dataclasses import dataclass, field
+from functools import partial
+from time import sleep
 from types import NoneType
 from typing import *
 
@@ -21,7 +23,7 @@ class Worker(BaseClass):
     job_result: Optional[Dict] = None  # output result (utc_comparison.to_dict())
     worker_id: Optional[str] = unique_id()
 
-    def __post_init__(self):
+    def execute_job(self):
         """pop job_id, status, timestamp"""
         params = self.job_params.copy()
         list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
@@ -31,19 +33,32 @@ class Worker(BaseClass):
 
 @dataclass
 class Supervisor(BaseClass):
+    """
+    # 1. Run check_jobs()
+    # 2. Get an unassigned PENDING job.
+    # 3. Mark #2 as IN_PROGRESS using the same comparison_id from #2
+    # 4. Use #2 to give to worker as job_params
+    # 4a. Associate #3 (in progress) with a worker
+    # 5. Worker returns worker.job_result to the supervisor
+    # 6. The supervisor (being the one with db access) then creates a new COMPLETED job doc with the output of #5.
+    # 7. The supervisor stores the doc from #6.
+    # 8. The return value of this is some sort of message(json?)
+    """
     db_connector: MongoDbConnector  # TODO: Enable generic class
     jobs: Optional[Dict] = None  # comparison ids  TODO: change this?
-    job_queue: Optional[Dict[str, str]] = None  # returns the status of the job check
-    check_timer: Optional[float] = 5.0
-    workers: Optional[List] = field(default_factory=list)
-    __preferred_queue_index: int = 0
+    queue_timer: Optional[float] = 5.0  # used for job check loop
 
     def __post_init__(self):
-        # get dict of all jobs indexed by comparison ids
+        # get dict of all jobs indexed by job ids
         id_key = 'job_id'
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
-        self._refresh_jobs()
+        self.workers = []
         self.job_queue = {}
+        self.preferred_queue_index = 0
+        self._refresh_jobs()
+
+    def _refresh_jobs(self):
+        self.jobs = self.get_jobs()
 
     def get_jobs(self, id_key: str = 'job_id'):
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
@@ -55,17 +70,19 @@ class Supervisor(BaseClass):
     def initialize(self):
         # activate job queue
         while True:
-            self.job_queue = self._check_jobs()
+            self.__setattr__('job_queue', self.check_jobs())
+            if not len(self.job_queue['pending_jobs']):
+                break
+            else:
+                cascading_load_arrows(self.queue_timer)
+                # sleep(self.queue_timer)
 
-    def _refresh_jobs(self):
-        self.jobs = self.get_jobs()
-
-    def _check_jobs(self) -> Dict[str, str]:
+    def check_jobs(self) -> Dict[str, str]:
         jobs_to_complete = self.jobs['pending_jobs']
 
         if len(jobs_to_complete):
             in_progress_jobs = self.jobs['in_progress_jobs']
-            preferred_queue_index = self.__preferred_queue_index  # TODO: How can we make this more robust/dynamic?
+            preferred_queue_index = self.preferred_queue_index  # TODO: How can we make this more robust/dynamic?
 
             for job in jobs_to_complete:
                 # get the next job in the queue, aka 0th
@@ -91,76 +108,22 @@ class Supervisor(BaseClass):
                 in_prog_id = in_progress_jobs.pop(preferred_queue_index)
                 in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
                 workers_id = in_progress_doc['worker_id']
-                worker = Worker(job_params=job_doc, worker_id=workers_id)  # worker executes job upon instantiation
+                worker = self.call_worker(job_params=job_doc, worker_id=workers_id)
+
+                # add the worker to the list of workers (for threadsafety)
+                self.workers.insert(preferred_queue_index, worker)
 
                 # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
                 completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
+
+                # release the worker from being busy and refresh jobs
+                self.workers.pop(preferred_queue_index)
                 self._refresh_jobs()
 
             return self.jobs.copy()
 
-    def __check_jobs(self) -> Dict[str, str]:
-        try:
-            # jobs = [job for job in self.db_connector.db['pending_jobs'].find()]
-            jobs_to_complete = self.jobs['pending_jobs']
-
-            while len(jobs_to_complete) > 0:
-                # populate the queue of jobs with params to be processed
-                pending_job_id = jobs_to_complete.pop(0)
-                pending_job = self.db_connector.db.pending_jobs.find_one({'job_id': pending_job_id})
-
-                comparison_id = pending_job['comparison_id']
-
-                # check if in progress and mark the job in progress before handing it off if not
-
-                in_progress_coll = self.db_connector.get_collection("in_progress_jobs")
-                in_progress_job = in_progress_coll.find_one({'comparison_id': comparison_id})
-
-                # in progress job does not yet exist for the given pending job
-                if isinstance(in_progress_job, NoneType):
-                    # summon worker
-                    worker = self.call_worker(pending_job)
-
-                    # create and store an in-progress job
-                    in_progress_job_id = unique_id()
-                    in_progress_doc = self.db_connector.insert_in_progress_job(
-                        job_id=in_progress_job_id,
-                        comparison_id=comparison_id,
-                        worker_id=worker.worker_id
-                    )
-
-                    completed_id = unique_id()
-                    completed_doc = self.db_connector.insert_completed_job(
-                        job_id=completed_id,
-                        comparison_id=comparison_id,
-                        results=worker.job_result
-                    )
-
-                    # sleep with fancy logging :)
-                    print(f"Sleeping for {self.check_timer}")
-                    cascading_load_arrows(self.check_timer)
-                    print(f"Successfully marked comparison IN_PROGRESS:\n{in_progress_doc['comparison_id']}\n")
-                else:
-                    print(f"Comparison already in progress and is probably also complete: {in_progress_job['comparison_id']}\n")
-
-            # job is finished and successfully complete
-            status = "all jobs completed."
-        except Exception as e:
-            status = f"something went wrong:\n{e}"
-
-        return {"status": status}
-
-    def call_worker(self, job_params: Dict):
-        # 1. Run check_jobs()
-        # 2. Get an unassigned PENDING job.
-        # 3. Mark #2 as IN_PROGRESS using the same comparison_id from #2
-        # 4. Use #2 to give to worker as job_params
-        # 4a. Associate #3 (in progress) with a worker
-        # 5. Worker returns worker.job_result to the supervisor
-        # 6. The supervisor (being the one with db access) then creates a new COMPLETED job doc with the output of #5.
-        # 7. The supervisor stores the doc from #6.
-        # 8. The return value of this is some sort of message(json?)
-        return Worker(job_params=job_params)
+    def call_worker(self, job_params: Dict, worker_id: Optional[str] = None) -> Worker:
+        return Worker(job_params=job_params, worker_id=worker_id)
 
 
 def utc_comparison(
