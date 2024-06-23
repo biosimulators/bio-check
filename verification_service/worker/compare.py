@@ -77,23 +77,30 @@ class Supervisor(BaseClass):
                 cascading_load_arrows(self.queue_timer)
                 # sleep(self.queue_timer)
 
+    def _job_exists(self, collection_name: str, comparison_id: str):
+        unique_id_query = {'comparison_id': comparison_id}
+        job = self.db_connector.db[collection_name].find_one(unique_id_query) or None
+        return not isinstance(job, NoneType)
+
     def check_jobs(self) -> Dict[str, str]:
         jobs_to_complete = self.jobs['pending_jobs']
 
+        # case: uncompleted/pending jobs exist
         if len(jobs_to_complete):
             in_progress_jobs = self.jobs['in_progress_jobs']
             preferred_queue_index = self.preferred_queue_index  # TODO: How can we make this more robust/dynamic?
 
             for job in jobs_to_complete:
-                # get the next job in the queue, aka 0th
+                # get the next job in the queue based on the preferred_queue_index
                 job_id = jobs_to_complete.pop(preferred_queue_index)
                 job_doc = self.db_connector.db.pending_jobs.find_one({'job_id': job_id})
                 job_comparison_id = job_doc['comparison_id']
                 unique_id_query = {'comparison_id': job_comparison_id}
-                in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or {}
+                in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
 
+                job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
                 # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
-                if isinstance(in_progress_job, NoneType):
+                if not job_exists('in_progress_jobs'):
                     in_progress_job_id = unique_id()
                     worker_id = unique_id()
                     id_kwargs = ['job_id', 'worker_id']
@@ -104,21 +111,23 @@ class Supervisor(BaseClass):
                     self.db_connector.insert_in_progress_job(**in_prog_kwargs, comparison_id=job_comparison_id)
                     self._refresh_jobs()
 
-                # pop in-progress job from internal queue and use it parameterize the worker
-                in_prog_id = in_progress_jobs.pop(preferred_queue_index)
-                in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
-                workers_id = in_progress_doc['worker_id']
-                worker = self.call_worker(job_params=job_doc, worker_id=workers_id)
+                # check to see if for some reason the completed job is already there and call worker exec if not
+                if not job_exists('completed_jobs'):
+                    # pop in-progress job from internal queue and use it parameterize the worker
+                    in_prog_id = in_progress_jobs.pop(preferred_queue_index)
+                    in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
+                    workers_id = in_progress_doc['worker_id']
+                    worker = self.call_worker(job_params=job_doc, worker_id=workers_id)
 
-                # add the worker to the list of workers (for threadsafety)
-                self.workers.insert(preferred_queue_index, worker)
+                    # add the worker to the list of workers (for threadsafety)
+                    self.workers.insert(preferred_queue_index, worker)
 
-                # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
-                completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
+                    # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
+                    completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
 
-                # release the worker from being busy and refresh jobs
-                self.workers.pop(preferred_queue_index)
-                self._refresh_jobs()
+                    # release the worker from being busy and refresh jobs
+                    self.workers.pop(preferred_queue_index)
+                    self._refresh_jobs()
 
             return self.jobs.copy()
 
