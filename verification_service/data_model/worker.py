@@ -4,23 +4,41 @@ from dataclasses import dataclass
 from typing import *
 
 from verification_service.data_model.shared import BaseClass, BaseModel, DbConnector, Job
+from verification_service.worker.main import utc_comparison
 
 
 @dataclass
-class Worker(BaseClass):
+class Worker(BaseModel):
+    job_params: Dict  # input arguments
+    job_result: Dict = None  # output result (utc_comparison.to_dict())
+
+    async def __post_init__(self):
+        result = await utc_comparison(**self.job_params)
+        self.job_result = result.model_dump()
+
+
+@dataclass
+class Supervisor(BaseClass):
     db_connector: DbConnector
-    pending_job_ids: List[str] = None
-    in_progress_job_ids: List[str] = None
-    completed_job_ids: List[str] = None
+    jobs: Dict = None
 
     def __post_init__(self):
         id_key = 'job_id'
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
-        job_ids = dict(zip(
+        self.jobs = dict(zip(
             coll_names,
-            [[job[id_key] for job in self.db_connector[coll_name].find()] for coll_name in coll_names]
-        ))
-        self.completed_job_ids = [job[id_key] for job in self.db_connector.db['completed_jobs'].find()]
+            [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names]))
+
+    def call_worker(self, job_params: Dict):
+        # 1. Run check_jobs()
+        # 2. Get an unassigned PENDING job.
+        # 3. Mark #2 as IN_PROGRESS using the same comparison_id from #2
+        # 4. Use #2 to give to worker as job_params
+        # 5. Worker returns worker.job_result to the supervisor
+        # 6. The supervisor (being the one with db access) then creates a new COMPLETED job doc with the output of #5.
+        # 7. The supervisor stores the doc from #6.
+        # 8. The return value of this is some sort of message(json?)
+        return Worker(job_params=job_params)
 
 
 class InProgressJob(Job):
