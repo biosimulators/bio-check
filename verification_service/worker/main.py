@@ -31,6 +31,7 @@ async def utc_comparison(
         comparison_id: str = None,
         ground_truth_report_path: str = None
         ) -> Union[UtcComparison, SimulationError]:
+    """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
     try:
         out_dir = tempfile.mktemp()
         truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
