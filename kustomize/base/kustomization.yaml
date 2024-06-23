@@ -1,0 +1,19 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+
+commonLabels:
+  app: verificationServiceKustomApp
+
+commonAnnotations:
+  app: verificationServiceKustomAnnotations
+
+namePrefix:
+  kustom-
+
+nameSuffix:
+  - v1
+
+configMapGenerator:
+  - name: verificationServiceKustomMap
+    env: config.properties
