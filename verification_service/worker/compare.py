@@ -40,16 +40,50 @@ class Supervisor(BaseClass):
         # get dict of all jobs indexed by comparison ids
         id_key = 'job_id'
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
-        self.jobs = dict(zip(
-            coll_names,
-            [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names]))
+        self._refresh_jobs()
         self.job_queue = {}
+
+    def get_jobs(self, id_key: str = 'job_id'):
+        coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+        return dict(zip(
+            coll_names,
+            [[job[id_key] for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names])
+        )
 
     def initialize(self):
         # activate job queue
-        self.job_queue = self._check_jobs()
+        while True:
+            self.job_queue = self._check_jobs()
+
+    def _refresh_jobs(self):
+        self.jobs = self.get_jobs()
 
     def _check_jobs(self) -> Dict[str, str]:
+        jobs_to_complete = self.jobs['pending_jobs']
+        in_progress_jobs = self.jobs['in_progress_jobs']
+        for job in jobs_to_complete:
+            # get the next job in the queue, aka 0th
+            job_id = jobs_to_complete.pop(0)
+            job_doc = self.db_connector.db.pending_jobs.find_one({'job_id': job_id})
+            job_comparison_id = job_doc['comparison_id']
+
+            worker_id = ""
+            # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
+
+            if isinstance(self.db_connector.db.in_progress_jobs.find_one({'comparison_id':}), NoneType):
+                in_progress_id = unique_id()
+                worker_id += unique_id()
+                self.db_connector.insert_in_progress_job(job_id=in_progress_id, worker_id=worker_id, comparison_id=job_comparison_id)
+                self._refresh_jobs()
+
+            # call the worker and pop the inprogress from the queue
+
+            in_progress_job = self.db_connector.db.in_progress_jobs.find_one({'comparison_id': job_comparison_id})
+
+
+
+
+    def __check_jobs(self) -> Dict[str, str]:
         try:
             # jobs = [job for job in self.db_connector.db['pending_jobs'].find()]
             jobs_to_complete = self.jobs['pending_jobs']
