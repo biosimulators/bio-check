@@ -137,7 +137,7 @@ class MongoDbConnector(DbConnector):
             "simulators": simulators,
             "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
             "timestamp": _time,
-            "reports_path": reports_path or "null",
+            "ground_truth_report_path": reports_path,
             "include_outputs": include_outputs}
 
         coll.insert_one(pending_job_doc)
