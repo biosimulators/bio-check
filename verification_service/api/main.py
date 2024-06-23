@@ -131,7 +131,7 @@ async def utc_comparison(
     try:
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
-        save_dest = "./tmp"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
+        save_dest = "../tmp"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
 
         # TODO: remove this when using a shared filestore
         if not os.path.exists(save_dest):
