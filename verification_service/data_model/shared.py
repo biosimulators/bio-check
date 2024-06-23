@@ -129,6 +129,15 @@ class MongoDbConnector(DbConnector):
             ) -> Dict[str, str]:
         collection_name = "pending_jobs"
         coll = self.get_collection(collection_name)
+        """
+        omex_path: str,
+                         simulators: list[str],
+                         include_outputs: bool = True,
+                         comparison_id: str | None = None,
+                         ground_truth_report_path: str | None = None
+                         
+                        
+        """
         _time = self.timestamp()
         pending_job_doc = {
             "job_id": job_id,

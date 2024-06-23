@@ -19,7 +19,10 @@ class Worker(BaseModel):
     worker_id: str = unique_id()
 
     async def __post_init__(self):
-        result = await utc_comparison(**self.job_params)
+        """pop job_id, status, timestamp"""
+        params = self.job_params.copy()
+        map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp'])
+        result = await utc_comparison(**params)
         self.job_result = result.model_dump()
 
 
