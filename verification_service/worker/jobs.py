@@ -222,6 +222,9 @@ class Supervisor(BaseClass):
 
     def _refresh_jobs(self):
         self.jobs = self.get_jobs()
+        self.pending_jobs = self.jobs['pending_jobs']
+        self.in_progress_jobs = self.jobs['in_progress_jobs']
+        self.completed_jobs = self.jobs['completed_jobs']
 
     def get_jobs(self, id_key: str = 'job_id'):
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
