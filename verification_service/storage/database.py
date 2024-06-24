@@ -73,21 +73,21 @@ class MongoDbConnector(DatabaseConnector):
 
     def __post_init__(self):
         self.db = self._get_database(self.database_id)
-        self.pending_jobs = self.db['pending_jobs']
+        self.pending_jobs = [j for j in self.db['pending_jobs'].find()]
         self.in_progress_jobs = self.db['in_progress_jobs']
         self.completed_jobs = self.db['completed_jobs']
 
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)
 
-    def read(self, *args, **kwargs):
+    def read(self, collection_name: str, **kwargs):
         """Args:
-            collection name: str
-            query: dict (as in mongodb query)
+            collection_name: str
+            kwargs: (as in mongodb query)
         """
-        collection_name, query = args
         coll = self.get_collection(collection_name)
-        return coll.find_one(query, **kwargs)
+        result = coll.find_one(kwargs)
+        return result
 
     def write(self, coll_name: str, **kwargs):
         """
@@ -147,7 +147,9 @@ class MongoDbConnector(DatabaseConnector):
                 "timestamp": _time,
                 "ground_truth_report_path": ground_truth_report_path,
                 "include_outputs": include_outputs}
-            coll.insert_one(pending_job_doc)
+            # coll.insert_one(pending_job_doc)
+            self.write(collection_name, **pending_job_doc)
+
             return pending_job_doc
         else:
             return job_query
