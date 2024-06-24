@@ -116,15 +116,15 @@ def root():
 @app.post(
     "/utc-comparison",  # "/biosimulators-utc-comparison",
     response_model=PendingJob,
-    name="Biosimulator Uniform Time Course Comparison",
+    name="Uniform Time Course Comparison",
     operation_id="utc-comparison",
-    summary="Compare UTC outputs from Biosimulators for a model from a given archive.")
+    summary="Compare UTC outputs from for a deterministic SBML model within a given archive.")
 async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
-        ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the so-called ground-truth to be included in the comparison.")
+        ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison.")
         ) -> PendingJob:
     try:
         job_id = str(uuid.uuid4())

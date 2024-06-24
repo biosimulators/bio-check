@@ -12,13 +12,27 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from verification_service.data_model.shared import BaseClass
+from verification_service import unique_id
+from verification_service.data_model.shared import BaseClass, MultipleConnectorError
 
 
 @dataclass
 class DatabaseConnector(ABC, BaseClass):
     """Abstract class that is both serializable and interacts with the database (of any type). """
-    def __init__(self, connection_uri: str, database_id: str):
+    _instances = {}
+
+    def __new__(cls, connection_uri: str, database_id: str, connector_id: str = None):
+        connector_id = connector_id or unique_id()
+        if (connection_uri, database_id, connector_id) not in cls._instances:
+            instance = super().__new__(cls)
+            cls._instances[(connection_uri, database_id, connector_id)] = instance
+        else:
+            if cls._instances.get((connection_uri, database_id, connector_id)) is not None:
+                raise MultipleConnectorError('An instance of this class is already connected to the database.')
+
+        return cls._instances[(connection_uri, database_id, connector_id)]
+
+    def __init__(self, connection_uri: str, database_id: str, connector_id: str):
         self.database_id = database_id
         self.client = self._get_client(connection_uri)
         self.db = self._get_database(self.database_id)
@@ -70,8 +84,8 @@ class DatabaseConnector(ABC, BaseClass):
 
 @dataclass
 class MongoDbConnector(DatabaseConnector):
-    def __init__(self, connection_uri: str, database_id: str):
-        super().__init__(connection_uri, database_id)
+    def __init__(self, connection_uri: str, database_id: str, connector_id: str = None):
+        super().__init__(connection_uri, database_id, connector_id)
         self.pending_jobs = [j for j in self.db['pending_jobs'].find()]
         self.in_progress_jobs = self.db['in_progress_jobs']
         self.completed_jobs = self.db['completed_jobs']
@@ -82,16 +96,16 @@ class MongoDbConnector(DatabaseConnector):
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)
 
-    def read(self, collection_name: str, **kwargs):
+    async def read(self, collection_name: str, **kwargs):
         """Args:
             collection_name: str
             kwargs: (as in mongodb query)
         """
         coll = self.get_collection(collection_name)
-        result = coll.find_one(kwargs)
+        result = await coll.find_one(kwargs)
         return result
 
-    def write(self, coll_name: str, **kwargs):
+    async def write(self, coll_name: str, **kwargs):
         """
             Args:
                 coll_name: str: collection name in mongodb
@@ -121,7 +135,30 @@ class MongoDbConnector(DatabaseConnector):
         coll.insert_one(job_doc)
         return job_doc
 
+    async def _job_exists(self, comparison_id: str, collection_name: str) -> bool:
+        return self.__job_exists(comparison_id, collection_name)
+
+    def __job_exists(self, comparison_id: str, collection_name: str) -> bool:
+        coll = self.get_collection(collection_name)
+        result = coll.find_one({'comparison_id': comparison_id}) is not None
+        return result
+
     async def insert_pending_job(
+            self,
+            omex_path: str,
+            simulators: List[str],
+            comparison_id: str = None,
+            ground_truth_report_path: str = None,
+            include_outputs: bool = True,
+    ) -> Union[Dict[str, str], Mapping[str, Any]]:
+        pending_coll = self.get_collection("pending_jobs")
+
+
+        specs_coll = self.get_collection("request_specs")
+        results_coll = self.get_collection("results")
+
+
+    async def _insert_pending_job(
             self,
             job_id: str,
             omex_path: str,
@@ -138,9 +175,9 @@ class MongoDbConnector(DatabaseConnector):
 
         # check if query already exists
         # job_query = coll.find_one({"job_id": job_id})
-        job_query = self.read(collection_name, job_id=job_id)
+        job_query = await self.read(collection_name, job_id=job_id)
         if isinstance(job_query, NoneType):
-            pending_job_doc = {
+            pending_job_spec = {
                 "job_id": job_id,
                 "status": "PENDING",
                 "omex_path": omex_path,
@@ -148,11 +185,14 @@ class MongoDbConnector(DatabaseConnector):
                 "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
                 "timestamp": _time,
                 "ground_truth_report_path": ground_truth_report_path,
-                "include_outputs": include_outputs}
-            # coll.insert_one(pending_job_doc)
-            self.write(collection_name, **pending_job_doc)
+                "include_outputs": include_outputs
+            }
 
-            return pending_job_doc
+            # coll.insert_one(pending_job_doc)
+            pending_resp = await self.write(collection_name, **pending_job_spec)
+            specs_resp = await self.write("request_specs", **pending_job_spec)
+
+            return pending_job_spec
         else:
             return job_query
 

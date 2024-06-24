@@ -21,6 +21,11 @@ class BaseClass:
         return asdict(self)
 
 
+class MultipleConnectorError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
 # -- jobs --
 
 class Job(BaseModel):
