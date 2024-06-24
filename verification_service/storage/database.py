@@ -30,6 +30,14 @@ class DatabaseConnector(ABC, BaseClass):
         return str(datetime.utcnow())
 
     @abstractmethod
+    def read(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def write(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
     def _get_database(self, db_id: str):
         pass
 
@@ -71,6 +79,25 @@ class MongoDbConnector(DatabaseConnector):
 
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)
+
+    def read(self, *args, **kwargs):
+        """Args:
+            collection name: str
+            query: dict (as in mongodb query)
+        """
+        collection_name, query = args
+        coll = self.get_collection(collection_name)
+        return coll.find_one(query, **kwargs)
+
+    def write(self, coll_name: str, **kwargs):
+        """
+            Args:
+                coll_name: str: collection name in mongodb
+                **kwargs: mongo db `insert_one` query defining the document where the key is as in the key of the document.
+        """
+        coll = self.get_collection(coll_name)
+        result = coll.insert_one(kwargs)
+        return result
 
     def get_collection(self, collection_name: str) -> Collection[Mapping[str, Any] | Any] | None:
         try:
