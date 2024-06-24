@@ -131,11 +131,12 @@ class MongoDbConnector(DatabaseConnector):
             ) -> Union[Dict[str, str], Mapping[str, Any]]:
         # get params
         collection_name = "pending_jobs"
-        coll = self.get_collection(collection_name)
+        # coll = self.get_collection(collection_name)
         _time = self.timestamp()
 
         # check if query already exists
-        job_query = coll.find_one({"job_id": job_id})
+        # job_query = coll.find_one({"job_id": job_id})
+        job_query = self.read(collection_name, job_id=job_id)
         if isinstance(job_query, NoneType):
             pending_job_doc = {
                 "job_id": job_id,
