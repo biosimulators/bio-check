@@ -14,6 +14,7 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 
+from verification_service import MONGO_URI
 from verification_service.data_model.api import DbClientResponse
 from verification_service.data_model.shared import (
     FetchResultsResponse,
@@ -55,8 +56,6 @@ ORIGINS = [
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 
-MONGO_URI = os.getenv("MONGO_DB_URI")
-
 
 # -- handle logging -- #
 
@@ -79,8 +78,7 @@ app.add_middleware(
 
 # -- get mongo db -- #
 
-mongo_client = MongoClient(MONGO_URI)
-db_connector = MongoDbConnector(client=mongo_client, database_id="service_requests")
+db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id="service_requests")
 app.mongo_client = db_connector.client
 
 # It will be represented as a `str` on the model so that it can be serialized to JSON. Represents an ObjectId field in the database.

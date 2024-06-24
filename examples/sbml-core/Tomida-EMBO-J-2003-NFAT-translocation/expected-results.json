@@ -1,0 +1,45 @@
+{
+  "name": "Tomida et al. EMBO Journal 2003: Calcium-induced NFAT translocation",
+  "filename": "Tomida-EMBO-J-2003-NFAT-translocation.omex",
+  "taskRequirements": [{
+    "modelFormat": "format_2585",
+    "modelFormatFeatures": [],
+    "simulationAlgorithm": "KISAO_0000560"
+  }],
+  "skippedSimulators": [],
+  "expectedReports": [{
+    "id": "BIOMD0000000678_sim.sedml/report",
+    "dataSets": [
+      {"id": "data_set_time", "label": "Time (min)"},
+      {"id": "data_set_NFAT_dephosphorylated", "label": "Dephosphorylated NFAT"},
+      {"id": "data_set_NFAT_phosphorylated", "label": "Phosphorylated NFAT"},
+      {"id": "data_set_NFAT_transported", "label": "Transported NFAT"},
+      {"id": "data_set_stimulus", "label": "Stimulus"}
+    ],
+    "points": [1001],
+    "values": [{
+      "id": "data_set_time",
+      "label": "Time (min)",
+      "value": {
+        "0": 0.0,
+        "1000": 80
+      }
+    }]
+  }],
+  "expectedPlots": [{
+    "id": "BIOMD0000000678_sim.sedml/Figure_3c"
+  }],
+  "runtimeFailureAlertType": "exception",
+  "author": "Taichiro Tomida, Kenzo Hirose, Azusa Takizawa, Futoshi Shibasaki & Masamitsu Iino",
+  "identifiers": [{
+      "namespace": "biomodels.db",
+      "id": "BIOMD0000000678",
+      "url": "https://identifiers.org/biomodels.db/BIOMD0000000678"
+    },
+    {
+      "namespace": "doi",
+      "id": "10.1093/emboj/cdg381",
+      "url": "https://doi.org/10.1093/emboj/cdg381"
+    }
+  ]
+}

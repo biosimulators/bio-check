@@ -1,0 +1,45 @@
+{
+  "name": "Caravagna et al. Journal of Theoretical Biology 2010: Tumor-suppressive oscillations",
+  "filename": "Caravagna-J-Theor-Biol-2010-tumor-suppressive-oscillations.omex",
+  "taskRequirements": [{
+    "modelFormat": "format_2585",
+    "modelFormatFeatures": [],
+    "simulationAlgorithm": "KISAO_0000019"
+  }],
+  "skippedSimulators": [],
+  "expectedReports": [{
+    "id": "BIOMD0000000912_sim.sedml/report",
+    "dataSets": [
+      {"id": "data_set_time", "label": "time"}, 
+      {"id": "data_set_T", "label": "T"},
+      {"id": "data_set_E", "label": "E"},
+      {"id": "data_set_I", "label": "I"}
+    ],
+    "points": [5001],
+    "values": [{
+      "id": "data_set_time",
+      "label": "time",
+      "value": {
+        "0": 0.0,
+        "1": 0.2,
+        "2": 0.4,
+        "999": 199.8,
+        "1000": 200
+      }
+    }]
+  }],
+  "expectedPlots": [{
+    "id": "BIOMD0000000912_sim.sedml/Figure_1_bottom_left"
+  }],
+  "runtimeFailureAlertType": "exception",
+  "author": "Giulio Caravagna, Alberto d'Onofrio, Paolo Milazzo, Roberto Barbuti",
+  "identifiers": [{
+    "namespace": "biomodels.db",
+    "id": "BIOMD0000000912",
+    "url": "https://identifiers.org/biomodels.db/BIOMD0000000912"
+  }, {
+    "namespace": "doi",
+    "id": "10.1016/j.jtbi.2010.05.013",
+    "url": "https://doi.org/10.1016/j.jtbi.2010.05.013"
+  }]
+}

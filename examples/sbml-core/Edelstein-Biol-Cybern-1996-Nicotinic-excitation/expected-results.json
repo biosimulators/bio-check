@@ -1,0 +1,53 @@
+{
+  "name": "Edelstein et al. Biological Cybernetics 1996: Nicotinic excitatory post-synaptic potential",
+  "filename": "Edelstein-Biol-Cybern-1996-Nicotinic-excitation.omex",
+  "taskRequirements": [{
+    "modelFormat": "format_2585",
+    "modelFormatFeatures": [],
+    "simulationAlgorithm": "KISAO_0000088"
+  }],
+  "skippedSimulators": [],
+  "expectedReports": [{
+    "id": "BIOMD0000000002_sim.sedml/report",
+    "dataSets": [
+      {"id": "data_set_time", "label": "Time (dimensionless)"},
+      {"id": "data_set_L", "label": "ACh"},
+      {"id": "data_set_A", "label": "Active"},
+      {"id": "data_set_AL", "label": "Active ACh"},
+      {"id": "data_set_ALL", "label": "Active ACh2"},
+      {"id": "data_set_B", "label": "Basal"},
+      {"id": "data_set_BL", "label": "Basal ACh"},
+      {"id": "data_set_BLL", "label": "Basal ACh2"},
+      {"id": "data_set_D", "label": "Desensitised"},
+      {"id": "data_set_DL", "label": "Desensitised ACh"},
+      {"id": "data_set_DLL", "label": "Desensitised ACh2"},
+      {"id": "data_set_I", "label": "Intermediate"},
+      {"id": "data_set_IL", "label": "Intermediate ACh"},
+      {"id": "data_set_ILL", "label": "Intermediate ACh2"}
+    ],
+    "points": [1001],
+    "values": [{
+      "id": "data_set_time",
+      "label": "Time (dimensionless)",
+      "value": {
+        "0": 0.0,
+        "1": 0.1,
+        "1000": 100.0
+      }
+    }]
+  }],
+  "expectedPlots": [{
+    "id": "BIOMD0000000002_sim.sedml/Figure_4b"
+  }],
+  "runtimeFailureAlertType": "exception",
+  "author": "Stuart J. Edelstein, Olivier Schaad, Eric Henry, Daniel Bertrand & Jean-Pierre Changeux",
+  "identifiers": [{
+    "namespace": "biomodels.db",
+    "id": "BIOMD0000000002",
+    "url": "https://identifiers.org/biomodels.db/BIOMD0000000002"
+  }, {
+    "namespace": "doi",
+    "id": "10.1007/s004220050302",
+    "url": "https://doi.org/10.1007/s004220050302"
+  }]
+}

@@ -22,7 +22,7 @@ import pandas as pd
 
 from biosimulator_processes.execute import exec_utc_comparison
 
-from verification_service import unique_id
+from verification_service import unique_id, MONGO_URI
 from verification_service.data_model.shared import BaseClass
 from verification_service.storage.database import MongoDbConnector
 from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison, cascading_load_arrows
@@ -32,9 +32,8 @@ from verification_service.worker.output_data import generate_biosimulator_utc_ou
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
-MONGO_URI = os.getenv("MONGO_DB_URI")
 mongo_client = MongoClient(MONGO_URI)
-db_connector = MongoDbConnector(client=mongo_client, database_id=DB_NAME)
+db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
@@ -225,6 +224,9 @@ class Supervisor(BaseClass):
         self.pending_jobs = self.jobs['pending_jobs']
         self.in_progress_jobs = self.jobs['in_progress_jobs']
         self.completed_jobs = self.jobs['completed_jobs']
+
+    def refresh_jobs(self):
+        return self._refresh_jobs()
 
     def get_jobs(self, id_key: str = 'job_id'):
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']

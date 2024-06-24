@@ -1,0 +1,50 @@
+{
+  "name": "Szymańska & Zylicz. Journal of Theoretical Biology 2009: heat shock protein synthesis in response to temperature change",
+  "filename": "Szymanska-J-Theor-Biol-2009-HSP-synthesis.omex",
+  "taskRequirements": [{
+    "modelFormat": "format_2585",
+    "modelFormatFeatures": [],
+    "simulationAlgorithm": "KISAO_0000496"
+  }],
+  "skippedSimulators": [],
+  "expectedReports": [{
+    "id": "BIOMD0000000896_sim.sedml/report",
+    "dataSets": [
+      {"id": "data_set_time", "label": "time"}, 
+      {"id": "data_set_Hsp70", "label": "Hsp70"},
+      {"id": "data_set_HSF", "label": "HSF"},
+      {"id": "data_set_S", "label": "S"},
+      {"id": "data_set_Hsp70_HSF", "label": "Hsp70_HSF"},
+      {"id": "data_set_Hsp70_S", "label": "Hsp70_S"},
+      {"id": "data_set_HSF_3", "label": "HSF_3"},
+      {"id": "data_set_HSE", "label": "HSE"},
+      {"id": "data_set_HSF_3_HSE", "label": "HSF_3_HSE"},
+      {"id": "data_set_mRNA", "label": "mRNA"}
+    ],
+    "points": [4001],
+    "values": [{
+      "id": "data_set_time",
+      "label": "time",
+      "value": {
+        "0": 0.0,
+        "4000": 1000
+      }
+    }]
+  }],
+  "expectedPlots": [{
+    "id": "BIOMD0000000896_sim.sedml/Figure_3"
+  }],
+  "runtimeFailureAlertType": "exception",
+  "author": "Zuzanna Szymańskaa & Maciej Zylicz",
+  "identifiers": [{
+      "namespace": "biomodels.db",
+      "id": "BIOMD0000000896",
+      "url": "https://identifiers.org/biomodels.db/BIOMD0000000896"
+    },
+    {
+      "namespace": "doi",
+      "id": "10.1016/j.jtbi.2009.03.021",
+      "url": "https://doi.org/10.1016/j.jtbi.2009.03.021"
+    }
+  ]
+}

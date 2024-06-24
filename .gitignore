@@ -3,7 +3,6 @@ commit.sh
 .idea/
 scripts/
 .notes
-examples/
 env/
 __pycache__/
 *.pyc

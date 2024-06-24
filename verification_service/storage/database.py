@@ -18,11 +18,9 @@ from verification_service.data_model.shared import BaseClass
 @dataclass
 class DatabaseConnector(ABC, BaseClass):
     """Abstract class that is both serializable and interacts with the database (of any type). """
-    client: Any
-    database_id: str
-    db: Any = None
-
-    def __post_init__(self):
+    def __init__(self, connection_uri: str, database_id: str):
+        self.database_id = database_id
+        self.client = self._get_client(connection_uri)
         self.db = self._get_database(self.database_id)
 
     @classmethod
@@ -30,15 +28,19 @@ class DatabaseConnector(ABC, BaseClass):
         return str(datetime.utcnow())
 
     @abstractmethod
+    def _get_client(self, *args):
+        pass
+
+    @abstractmethod
+    def _get_database(self, db_id: str):
+        pass
+
+    @abstractmethod
     def read(self, *args, **kwargs):
         pass
 
     @abstractmethod
     def write(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def _get_database(self, db_id: str):
         pass
 
     @abstractmethod
@@ -68,14 +70,14 @@ class DatabaseConnector(ABC, BaseClass):
 
 @dataclass
 class MongoDbConnector(DatabaseConnector):
-    client: MongoClient
-    database_id: str
-
-    def __post_init__(self):
-        self.db = self._get_database(self.database_id)
+    def __init__(self, connection_uri: str, database_id: str):
+        super().__init__(connection_uri, database_id)
         self.pending_jobs = [j for j in self.db['pending_jobs'].find()]
         self.in_progress_jobs = self.db['in_progress_jobs']
         self.completed_jobs = self.db['completed_jobs']
+
+    def _get_client(self, *args):
+        return MongoClient(args[0])
 
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)

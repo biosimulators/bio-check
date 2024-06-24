@@ -1,0 +1,262 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 600,
+  "height": 200,
+  "padding": 0,
+
+  "signals": [
+    {
+      "name": "legendWidth",
+      "value": -155
+    },
+    {
+      "name": "legendPadding",
+      "value": 20
+    },
+    {
+      "name": "axesHeight",
+      "value": -40
+    },
+    {
+      "name": "chartWidth",
+      "update": "max(10, width + legendWidth - legendPadding)"
+    },
+    {
+      "name": "chartHeight",
+      "update": "max(10, height + axesHeight)"
+    },
+    {
+      "name": "chartWidthRange",
+      "update": "[0, chartWidth]"
+    },
+    {
+      "name": "chartHeightRange",
+      "update": "[0, chartHeight]"
+    },
+    {
+      "name": "clear", "value": true,
+      "on": [
+        {
+          "events": "mouseup[!event.item]",
+          "update": "true",
+          "force": true
+        }
+      ]
+    },
+    {
+      "name": "shift", "value": false,
+      "on": [
+        {
+          "events": "@legendSymbol:click, @legendLabel:click",
+          "update": "event.shiftKey",
+          "force":  true
+        }
+      ]
+    },
+    {
+      "name": "clicked", "value": null,
+      "on": [
+        {
+          "events": "@legendSymbol:click, @legendLabel:click",
+          "update": "{value: datum.value}",
+          "force":  true
+        }
+      ]
+    }
+  ],
+
+  "data": [
+    {
+      "name": "rawTimeSpeciesConcentrations",
+      "sedmlUri": ["BIOMD0000000002_sim.sedml", "report"],
+      "values": [
+        {
+          "label": "Time (dimensionless)",
+          "values": [
+            0,
+            0.1,
+            0.2,
+            0.30000000000000004,
+            0.4,
+            0.5
+          ]
+        },
+        {
+          "label": "ACh",
+          "values": [
+            0.000009999999999999999,
+            0.000008428551267842631,
+            0.000008224949996315645,
+            0.00000814432407384582,
+            0.00000811222611072247,
+            0.000008099303111743507
+          ]
+        }
+      ]
+    },
+    {
+      "name": "timeSpeciesConcentrations",
+      "source": "rawTimeSpeciesConcentrations",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.id == 'data_set_time' || indexof(['data_set_B', 'data_set_BL', 'data_set_ALL', 'data_set_ILL', 'data_set_DLL'], datum.id) >= 0"
+        },
+        {
+          "type": "cross",
+          "as": ["Time", "SpeciesLabelValues"],
+          "filter": "datum.Time.id == 'data_set_time' && datum.SpeciesLabelValues.id != 'data_set_time'"    
+        },
+        {
+          "type": "formula",
+          "expr": "datum.Time.values",
+          "as": "Time"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.SpeciesLabelValues.label",
+          "as": "SpeciesLabel"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.SpeciesLabelValues.values",
+          "as": "SpeciesConcentration"
+        },
+        {
+          "type": "flatten",
+          "fields": ["Time", "SpeciesConcentration"]
+        },
+        {
+          "type": "filter",
+          "expr": "datum.Time > 0"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.SpeciesConcentration * 1e9",
+          "as": "SpeciesConcentration"
+        }
+      ]
+    },
+    {
+      "name": "selected",
+      "on": [
+        {"trigger": "clear", "remove": true},
+        {"trigger": "!shift", "remove": true},
+        {"trigger": "!shift && clicked", "insert": "clicked"},
+        {"trigger": "shift && clicked", "toggle": "clicked"}
+      ]
+    }
+  ],
+
+  "scales": [
+    {
+      "name": "TimeScale",
+      "type": "log",
+      "range": {"signal": "chartWidthRange"},
+      "domain": {"data": "timeSpeciesConcentrations", "field": "Time"}
+    },
+    {
+      "name": "SpeciesConcentrationScale",
+      "type": "linear",
+      "range": {"signal": "chartHeightRange"},
+      "nice": true,
+      "zero": false,
+      "domain": {
+        "data": "timeSpeciesConcentrations", 
+        "field": "SpeciesConcentration"
+      },
+      "reverse": true
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "range": "category",
+      "domain": {"data": "timeSpeciesConcentrations", "field": "SpeciesLabel"}
+    }
+  ],
+
+  "axes": [
+    {
+      "orient": "bottom", 
+      "offset": {"signal": "axesHeight"},
+      "scale": "TimeScale", 
+      "title": "Time (dimensionless)"
+    },
+    {
+      "orient": "left", 
+      "scale": "SpeciesConcentrationScale",
+      "title": "Concentration (nM)"
+    }
+  ],
+
+  "marks": [
+    {
+      "type": "group",
+      "from": {
+        "facet": {
+          "name": "series",
+          "data": "timeSpeciesConcentrations",
+          "groupby": "SpeciesLabel"
+        }
+      },
+      "marks": [
+        {
+          "type": "line",
+          "from": {"data": "series"},
+          "encode": {
+            "enter": {
+              "x": {"scale": "TimeScale", "field": "Time"},
+              "y": {"scale": "SpeciesConcentrationScale", "field": "SpeciesConcentration"},
+              "stroke": {"scale": "color", "field": "SpeciesLabel"},
+              "strokeWidth": {"value": 2},
+              "tooltip": {"field": "SpeciesLabel"}
+            },
+            "update": {
+              "strokeOpacity": [                
+                {"test": "(!length(data('selected')) || indata('selected', 'value', datum.SpeciesLabel))", "value": 1 },
+                {"value": 0.15}
+              ]
+            },
+            "hover": {
+              "strokeOpacity": {"value": 0.5}
+            }
+          }
+        }
+      ]
+    }
+  ],
+
+  "legends": [
+    {
+      "stroke": "color",
+      "title": "Species",
+      "orient": "right",
+      "offset": {"signal": "legendWidth"},
+      "encode": {
+        "symbols": {
+          "name": "legendSymbol",
+          "interactive": true,
+          "update": {
+            "fill": {"value": "transparent"},
+            "strokeWidth": {"value": 2},
+            "opacity": [
+              {"test": "!length(data('selected')) || indata('selected', 'value', datum.value)", "value": 0.7},
+              {"value": 0.15}
+            ],
+            "size": {"value": 64}
+          }
+        },
+        "labels": {
+          "name": "legendLabel",
+          "interactive": true,
+          "update": {
+            "opacity": [
+              {"test": "!length(data('selected')) || indata('selected', 'value', datum.value)", "value": 1},
+              {"value": 0.25}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
