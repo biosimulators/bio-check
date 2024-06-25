@@ -25,7 +25,7 @@ from biosimulator_processes.execute import exec_utc_comparison
 from verification_service import unique_id, MONGO_URI
 from verification_service.data_model.shared import BaseClass, MultipleConnectorError
 from verification_service.storage.database import MongoDbConnector
-from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison, cascading_load_arrows
+from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
 from verification_service.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from verification_service.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
@@ -168,7 +168,7 @@ class Worker(BaseClass):
                 output_i = _outputs[i]
                 output_j = _outputs[j]
                 method_type = method.lower()
-                result = self.calculate_mse(output_i, output_j) if method_type == 'mse' else compare_arrays(arr1=output_i, arr2=output_j, rtol=rtol, atol=atol)
+                result = self.calculate_mse(output_i, output_j) if method_type == 'mse' else self.compare_arrays(arr1=output_i, arr2=output_j, rtol=rtol, atol=atol)
 
                 mse_matrix[i, j] = result
                 if i != j:
@@ -233,16 +233,6 @@ class Supervisor(BaseClass):
             coll_names,
             [[job for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names])
         )
-
-    def initialize(self):
-        # activate job queue
-        while True:
-            self.__setattr__('job_queue', self.check_jobs())
-            if not len(self.job_queue['pending_jobs']):
-                break
-            else:
-                cascading_load_arrows(self.queue_timer)
-                # sleep(self.queue_timer)
 
     def _job_exists(self, **kwargs):
         unique_id_query = {'comparison_id': kwargs['comparison_id']}
