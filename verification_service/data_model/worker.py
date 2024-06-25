@@ -52,19 +52,3 @@ class StochasticMethodError(BaseModel):
     message: str = "Only deterministic methods are supported."
 
 
-def cascading_load_arrows(timer):
-    check_timer = timer
-    ell = ""
-    bars = ""
-    msg = "|"
-    n_ellipses = timer
-    log_interval = check_timer / n_ellipses
-    for n in range(n_ellipses):
-        single_interval = log_interval / 3
-        sleep(single_interval)
-        bars += "="
-        disp = bars + ">"
-        if n == n_ellipses - 1:
-            disp += "|"
-        print(disp)
-
