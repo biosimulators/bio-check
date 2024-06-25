@@ -7,6 +7,8 @@ WORKDIR /src
 
 COPY requirements.txt .
 
+RUN cd ..
+
 COPY . .
 
 EXPOSE 3001
@@ -17,5 +19,5 @@ RUN pip install --upgrade pip \
 RUN echo "This is src: "
 RUN ls -al
 
-CMD ["python3", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
 
