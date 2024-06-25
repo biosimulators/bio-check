@@ -1,4 +1,4 @@
-FROM python:3.10-slim-buster
+FROM ubuntu:22.04
 
 LABEL authors="alexanderpatrie"
 
@@ -8,10 +8,12 @@ COPY verification_service ./verification_service
 COPY dockerfile-assets ./dockerfile-assets
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10  \
     ca-certificates \
+    python3-pip  \
+    python3-dev \
     build-essential  \
     libncurses5  \
-    bash \
     cmake  \
     make  \
     libx11-dev  \
@@ -25,6 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tar  \
     libgl1-mesa-glx  \
     libice6  \
+    libpython3.10  \
     libsm6 \
     wget  \
     && rm -rf /var/lib/apt/lists/* \
@@ -33,9 +36,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoclean \
     && pip install --no-cache-dir -r ./dockerfile-assets/requirements-base.txt
 
-CMD ["bash"]
+# 1.
+# docker system prune -a -f && \
+
+# 2.
+# sudo docker build -t spacebearamadeus/verification-service-base . && \
+# sudo docker build -t spacebearamadeus/verification-service-api ./verification_service/api && \
+
+# 3.
+# docker run -d -p 8000:3001 spacebearamadeus/verification-service-api
+            # OR
+# docker run -it -p 8000:3001 spacebearamadeus/verification-service-api
 
 # docker system prune -a -f && \
 # sudo docker build -t spacebearamadeus/verification-service-base . && \
-# sudo docker build -t spacebearamadeus/verification-service-api ./verification_service/api && \
-# docker run -d -p 8000:3001 spacebearamadeus/verification-service-api
+# sudo docker build -t spacebearamadeus/verification-service-api ./verification_service/api

@@ -1,20 +1,16 @@
 [tool.poetry]
-name = "verification-api"
+name = "verification-service"
 version = "0.0.1"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "api"}, {include = "storage"}, {include = "worker"}]
+packages = [{include = "verification_service"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
 fastapi = "^0.111.0"
 pyyaml = "^6.0.1"
-pydantic-settings = "^2.3.0"
 httpx = "^0.27.0"
-tensorstore = "^0.1.60"
-aiofiles = "^23.2.1"
-aiobotocore = "^2.13.0"
 biosimulators-copasi = "^0.1.35"
 biosimulators-amici = "^0.1.24"
 biosimulators-tellurium = "^0.1.42"
@@ -22,6 +18,10 @@ biosimulators-utils = {version = "^0.1.187", extras = ["logging"]}
 python-multipart = "^0.0.9"
 pymongo = {extras = ["srv"], version = "^4.7.3"}
 biosimulator-processes = "^0.0.36"
+pydantic-settings = "^2.4.3"
+tensorstore = "^0.1.63"
+aiofiles = "^24.1.0"
+aiobotocore = "^2.13.1"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

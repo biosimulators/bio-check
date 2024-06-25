@@ -1,0 +1,21 @@
+name: verification-service
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10
+  - fastapi=0.111.0
+  - pyyaml=6.0.1
+  - httpx=0.27.0
+  - aiofiles=24.1.0
+  - pymongo=4.7.3
+  - python-multipart=0.0.9
+  - pip:
+    - pydantic-settings==2.4.3
+    - tensorstore==0.1.63
+    - aiobotocore==2.13.1
+    - biosimulators-copasi==0.1.35
+    - biosimulators-amici==0.1.24
+    - biosimulators-tellurium==0.1.42
+    - biosimulators-utils[logging]==0.1.187
+    - biosimulator-processes==0.0.36
