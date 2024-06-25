@@ -320,7 +320,7 @@ class Supervisor(BaseClass):
 
                     # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
                     completed_exists = _job_exists(collection_name='completed_jobs')
-                    self._handle_completed_job(completed_exists, job_comparison_id, self.db_connector, job_doc)
+                    self._handle_completed_job(completed_exists, job_comparison_id, job_doc)
 
                     # remove the job from queue
                     print(f'Job queue length: {len(job_queue)}')
