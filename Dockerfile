@@ -1,24 +1,39 @@
 FROM python:3.10-slim-buster
-# FROM ghcr.io/biosimulators/biosimulators:latest
+
 LABEL authors="alexanderpatrie"
 
 WORKDIR /src
 
-RUN apt-get update -y \
-    && apt-get install --no-install-recommends -y \
-        wget \
-        build-essential \
-        cmake \
-        swig \
-        libbz2-dev
-
 COPY verification_service ./verification_service
-
 COPY dockerfile-assets ./dockerfile-assets
 
-RUN pip install --no-cache-dir -r ./dockerfile-assets/requirements-base.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    build-essential  \
+    libncurses5  \
+    bash \
+    cmake  \
+    make  \
+    libx11-dev  \
+    libc6-dev  \
+    libx11-6  \
+    libc6  \
+    gcc  \
+    swig \
+    pkg-config  \
+    curl  \
+    tar  \
+    libgl1-mesa-glx  \
+    libice6  \
+    libsm6 \
+    wget  \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip \
+    && apt-get clean \
+    && apt-get autoclean \
+    && pip install --no-cache-dir -r ./dockerfile-assets/requirements-base.txt
 
-# RUN pip install --upgrade pip
+CMD ["bash"]
 
 # docker system prune -a -f && \
 # sudo docker build -t spacebearamadeus/verification-service-base . && \

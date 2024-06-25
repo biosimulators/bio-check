@@ -2,7 +2,7 @@
 
 
 # FROM python:3.11-slim-buster
-FROM docker.io/spacebearamadeus/verification-service-base
+FROM docker.io/spacebearamadeus/verification-service-base:latest
 
 EXPOSE 3001
 

@@ -8,3 +8,4 @@ aiobotocore
 pymongo[srv]==3.11
 python-dotenv
 uvicorn
+biosimulators-utils[logging]
