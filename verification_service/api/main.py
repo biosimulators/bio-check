@@ -6,13 +6,11 @@ from shutil import rmtree
 
 import dotenv
 from typing import *
-from datetime import datetime
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
-from pymongo.mongo_client import MongoClient
 
 from verification_service import MONGO_URI
 from verification_service.data_model.api import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission

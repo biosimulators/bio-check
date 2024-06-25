@@ -220,12 +220,12 @@ class Supervisor(BaseClass):
         self.job_queue = {}
         self.preferred_queue_index = 0
         self._refresh_jobs()
-        self.pending_jobs = self.jobs['pending_jobs']
-        self.in_progress_jobs = self.jobs['in_progress_jobs']
-        self.completed_jobs = self.jobs['completed_jobs']
 
     def _refresh_jobs(self):
         self.jobs = self.get_jobs()
+        self.pending_jobs = self.jobs['pending_jobs']
+        self.in_progress_jobs = self.jobs['in_progress_jobs']
+        self.completed_jobs = self.jobs['completed_jobs']
 
     async def refresh_jobs_async(self):
         return self._refresh_jobs()
@@ -288,51 +288,48 @@ class Supervisor(BaseClass):
         return True
 
     async def check_jobs(self, max_retries=5, delay=5) -> int:
+        """Returns non-zero if max retries reached, zero otherwise."""
         job_queue = self.pending_jobs
-        if len(job_queue) > 0:
-            print('Pending jobs exist!')
-
         n_tries = 0
         n_retries = 0
-        while True:
+
+        if len(job_queue):
             # count tries
             n_tries += 1
             if n_tries == max_retries + 1:
                 print(f'Max retries {max_retries} reached!')
-                break
+                return 1
 
-            # if x is greater than 1 then it is a retry
+            # if n_tries is greater than 1 then it is a retry
             if n_tries > 1:
                 print(f'{n_retries} is a retry. Running sim again.')
                 n_retries += 1
 
-            if len(job_queue) > 0:
-                print('There are pending jobs.')
-                for i, job in enumerate(job_queue):
-                    # get the next job in the queue based on the preferred_queue_index
-                    job_doc = job_queue.pop(self.preferred_queue_index)
-                    job_comparison_id = job_doc['comparison_id']
-                    unique_id_query = {'comparison_id': job_comparison_id}
-                    in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
+            print('There are pending jobs.')
+            for i, job in enumerate(job_queue):
+                # get the next job in the queue based on the preferred_queue_index
+                job_doc = job_queue.pop(self.preferred_queue_index)
+                job_comparison_id = job_doc['comparison_id']
+                unique_id_query = {'comparison_id': job_comparison_id}
+                in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
+                _job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
+                # check for in progress job with same comparison id and make a new one if not
+                in_progress_exists = _job_exists(collection_name='in_progress_jobs')
+                self._handle_in_progress_job(in_progress_job, job_comparison_id)
+                # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
+                completed_exists = _job_exists(collection_name='completed_jobs')
+                self._handle_completed_job(completed_exists, job_comparison_id, job_doc)
+                # remove the job from queue
+                print(f'Job queue length: {len(job_queue)}')
+                # if len(job_queue):
+                #     job_queue.pop(0)
 
-                    _job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
-
-                    # check for in progress job with same comparison id and make a new one if not
-                    in_progress_exists = _job_exists(collection_name='in_progress_jobs')
-                    self._handle_in_progress_job(in_progress_job, job_comparison_id)
-
-                    # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
-                    completed_exists = _job_exists(collection_name='completed_jobs')
-                    self._handle_completed_job(completed_exists, job_comparison_id, job_doc)
-
-                    # remove the job from queue
-                    print(f'Job queue length: {len(job_queue)}')
-                    if len(job_queue):
-                        job_queue.pop(0)
             # sleep
             print(f'Sleeping for {delay} seconds...')
             await load_arrows(delay)
             print()
+            await self.refresh_jobs_async()
+            job_queue = self.pending_jobs
 
         return 0
 
