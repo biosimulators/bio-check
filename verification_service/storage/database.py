@@ -19,19 +19,6 @@ from verification_service.data_model.shared import BaseClass, MultipleConnectorE
 @dataclass
 class DatabaseConnector(ABC, BaseClass):
     """Abstract class that is both serializable and interacts with the database (of any type). """
-    _instances = {}
-
-    def __new__(cls, connection_uri: str, database_id: str, connector_id: str = None):
-        connector_id = connector_id or unique_id()
-        if (connection_uri, database_id, connector_id) not in cls._instances:
-            instance = super().__new__(cls)
-            cls._instances[(connection_uri, database_id, connector_id)] = instance
-        else:
-            if cls._instances.get((connection_uri, database_id, connector_id)) is not None:
-                raise MultipleConnectorError('An instance of this class is already connected to the database.')
-
-        return cls._instances[(connection_uri, database_id, connector_id)]
-
     def __init__(self, connection_uri: str, database_id: str, connector_id: str):
         self.database_id = database_id
         self.client = self._get_client(connection_uri)

@@ -23,7 +23,7 @@ import pandas as pd
 from biosimulator_processes.execute import exec_utc_comparison
 
 from verification_service import unique_id, MONGO_URI
-from verification_service.data_model.shared import BaseClass
+from verification_service.data_model.shared import BaseClass, MultipleConnectorError
 from verification_service.storage.database import MongoDbConnector
 from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison, cascading_load_arrows
 from verification_service.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
@@ -207,28 +207,27 @@ class Supervisor(BaseClass):
     # 8. The return value of this is some sort of message(json?)
     """
     db_connector: MongoDbConnector  # TODO: Enable generic class
-    jobs: Optional[Dict] = None  # comparison ids  TODO: change this?
     queue_timer: Optional[float] = 5.0  # used for job check loop
+    _supervisor_id: Optional[str] = unique_id()
+    _instances = {}
 
     def __post_init__(self):
         # get dict of all jobs indexed by job ids
-        id_key = 'job_id'
-        coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         self.workers = []
         self.job_queue = {}
         self.preferred_queue_index = 0
         self._refresh_jobs()
-
-    def _refresh_jobs(self):
-        self.jobs = self.get_jobs()
         self.pending_jobs = self.jobs['pending_jobs']
         self.in_progress_jobs = self.jobs['in_progress_jobs']
         self.completed_jobs = self.jobs['completed_jobs']
 
-    def refresh_jobs(self):
+    def _refresh_jobs(self):
+        self.jobs = self.get_jobs()
+
+    async def refresh_jobs_async(self):
         return self._refresh_jobs()
 
-    def get_jobs(self, id_key: str = 'job_id'):
+    def get_jobs(self):
         coll_names = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         return dict(zip(
             coll_names,
@@ -249,54 +248,6 @@ class Supervisor(BaseClass):
         unique_id_query = {'comparison_id': kwargs['comparison_id']}
         job = self.db_connector.db[kwargs['collection_name']].find_one(unique_id_query) or None
         return job is not None
-
-    def check_jobs(self) -> Dict[str, str]:
-        jobs_to_complete = self.jobs['pending_jobs']
-
-        # case: uncompleted/pending jobs exist
-        if len(jobs_to_complete):
-            in_progress_jobs = self.jobs['in_progress_jobs']
-            preferred_queue_index = self.preferred_queue_index  # TODO: How can we make this more robust/dynamic?
-
-            for job in jobs_to_complete:
-                # get the next job in the queue based on the preferred_queue_index
-                job_doc = jobs_to_complete.pop(preferred_queue_index)
-                job_comparison_id = job_doc['comparison_id']
-                unique_id_query = {'comparison_id': job_comparison_id}
-                in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
-
-                job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
-                # case: the job (which has a unique comparison_id) has not been picked up and thus no in-progress job for the given comparison id yet exists
-                if not job_exists(collection_name='in_progress_jobs'):
-                    in_progress_job_id = unique_id()
-                    worker_id = unique_id()
-                    id_kwargs = ['job_id', 'worker_id']
-                    in_prog_kwargs = dict(zip(
-                        id_kwargs,
-                        list(map(lambda k: unique_id(), id_kwargs))
-                    ))
-                    self.db_connector.insert_in_progress_job(**in_prog_kwargs, comparison_id=job_comparison_id)
-                    self._refresh_jobs()
-
-                # check to see if for some reason the completed job is already there and call worker exec if not
-                if not job_exists(collection_name='completed_jobs'):
-                    # pop in-progress job from internal queue and use it parameterize the worker
-                    in_prog_id = in_progress_jobs.pop(preferred_queue_index)
-                    in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
-                    workers_id = in_progress_doc['worker_id']
-                    worker = self.call_worker(job_params=job_doc, worker_id=workers_id)
-
-                    # add the worker to the list of workers (for threadsafety)
-                    self.workers.insert(preferred_queue_index, worker)
-
-                    # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
-                    completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
-
-                    # release the worker from being busy and refresh jobs
-                    self.workers.pop(preferred_queue_index)
-                    self._refresh_jobs()
-
-            return self.jobs.copy()
 
     def call_worker(self, job_params: Dict, worker_id: Optional[str] = None) -> Worker:
         return Worker(job_params=job_params, worker_id=worker_id)
