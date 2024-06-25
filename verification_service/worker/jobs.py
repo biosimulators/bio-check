@@ -22,7 +22,7 @@ import pandas as pd
 
 from biosimulator_processes.execute import exec_utc_comparison
 
-from verification_service import unique_id, MONGO_URI
+from verification_service import unique_id, MONGO_URI, load_arrows
 from verification_service.data_model.shared import BaseClass, MultipleConnectorError
 from verification_service.storage.database import MongoDbConnector
 from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
@@ -233,6 +233,105 @@ class Supervisor(BaseClass):
             coll_names,
             [[job for job in self.db_connector.db[coll_name].find()] for coll_name in coll_names])
         )
+
+    # re-create loop here
+
+    def _handle_in_progress_job(self, job_exists: bool, job_comparison_id: str):
+        if not job_exists:
+            print(f"In progress job does not yet exist for {job_comparison_id}")
+            in_progress_job_id = unique_id()
+            worker_id = unique_id()
+            id_kwargs = ['job_id', 'worker_id']
+            in_prog_kwargs = dict(zip(
+                id_kwargs,
+                list(map(lambda k: unique_id(), id_kwargs))
+            ))
+            in_prog_kwargs['comparison_id'] = job_comparison_id
+
+            self.db_connector.insert_in_progress_job(**in_prog_kwargs)
+            print(f"Successfully created new progress job for {job_comparison_id}")
+            # await supervisor.async_refresh_jobs()
+        else:
+            print(f'In Progress Job for {job_comparison_id} already exists. Now checking if it has been completed.')
+
+        return True
+
+    def _handle_completed_job(self, job_exists: bool, job_comparison_id: str, job_doc):
+        if not job_exists:
+            print(f"Completed job does not yet exist for {job_comparison_id}")
+            # pop in-progress job from internal queue and use it parameterize the worker
+            in_prog_id = [job for job in self.db_connector.in_progress_jobs.find()].pop(self.preferred_queue_index)['job_id']
+
+            # double-check and verify doc
+            in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
+
+            # generate new worker
+            workers_id = in_progress_doc['worker_id']
+            worker = self.call_worker(job_params=job_doc, worker_id=workers_id)
+
+            # add the worker to the list of workers (for threadsafety)
+            self.workers.insert(self.preferred_queue_index, worker.worker_id)
+
+            # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
+            completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
+
+            # release the worker from being busy and refresh jobs
+            self.workers.pop(self.preferred_queue_index)
+            print(f"Successfully created new completed job for {job_comparison_id}")
+            # await supervisor.async_refresh_jobs()
+        else:
+            print(f'Completed Job for {job_comparison_id} already exists. Done with that job.')
+
+        return True
+
+    async def check_jobs(self, max_retries=5, delay=5) -> int:
+        job_queue = self.pending_jobs
+        if len(job_queue) > 0:
+            print('Pending jobs exist!')
+
+        n_tries = 0
+        n_retries = 0
+        while True:
+            # count tries
+            n_tries += 1
+            if n_tries == max_retries + 1:
+                print(f'Max retries {max_retries} reached!')
+                break
+
+            # if x is greater than 1 then it is a retry
+            if n_tries > 1:
+                print(f'{n_retries} is a retry. Running sim again.')
+                n_retries += 1
+
+            if len(job_queue) > 0:
+                print('There are pending jobs.')
+                for i, job in enumerate(job_queue):
+                    # get the next job in the queue based on the preferred_queue_index
+                    job_doc = job_queue.pop(self.preferred_queue_index)
+                    job_comparison_id = job_doc['comparison_id']
+                    unique_id_query = {'comparison_id': job_comparison_id}
+                    in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
+
+                    _job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
+
+                    # check for in progress job with same comparison id and make a new one if not
+                    in_progress_exists = _job_exists(collection_name='in_progress_jobs')
+                    self._handle_in_progress_job(in_progress_job, job_comparison_id)
+
+                    # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
+                    completed_exists = _job_exists(collection_name='completed_jobs')
+                    self._handle_completed_job(completed_exists, job_comparison_id, self.db_connector, job_doc)
+
+                    # remove the job from queue
+                    print(f'Job queue length: {len(job_queue)}')
+                    if len(job_queue):
+                        job_queue.pop(0)
+            # sleep
+            print(f'Sleeping for {delay} seconds...')
+            await load_arrows(delay)
+            print()
+
+        return 0
 
     def _job_exists(self, **kwargs):
         unique_id_query = {'comparison_id': kwargs['comparison_id']}
