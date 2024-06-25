@@ -2,9 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /src
 
-COPY requirements.txt .
+COPY ../../dockerfile-assets/requirements-worker.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-api.txt
 
 COPY verification_service/worker .
 
