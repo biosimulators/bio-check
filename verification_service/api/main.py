@@ -15,10 +15,7 @@ from starlette.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 
 from verification_service import MONGO_URI
-from verification_service.data_model.api import DbClientResponse
-from verification_service.data_model.shared import (
-    FetchResultsResponse,
-    PendingJob)
+from verification_service.data_model.api import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
 from verification_service.io import save_uploaded_file
 from verification_service.storage.database import MongoDbConnector
 from verification_service.api.handlers.log_config import setup_logging
@@ -115,7 +112,7 @@ def root():
 
 @app.post(
     "/utc-comparison",  # "/biosimulators-utc-comparison",
-    response_model=PendingJob,
+    response_model=UtcComparisonSubmission,
     name="Uniform Time Course Comparison",
     operation_id="utc-comparison",
     summary="Compare UTC outputs from for a deterministic SBML model within a given archive.")
@@ -125,7 +122,7 @@ async def utc_comparison(
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison.")
-        ) -> PendingJob:
+        ) -> UtcComparisonSubmission:
     try:
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
@@ -154,14 +151,14 @@ async def utc_comparison(
 
         # TODO: remove this when using shared file store.
         # rmtree(save_dest)
-        return PendingJob(**pending_job_doc)
+        return UtcComparisonSubmission(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get(
     "/fetch-results/{comparison_run_id}",
-    response_model=FetchResultsResponse,
+    response_model=UtcComparisonResult,
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
 async def fetch_results(comparison_id: str):
@@ -174,7 +171,7 @@ async def fetch_results(comparison_id: str):
     resp_content = {"job_id": job_id}
     key = "results" if job['status'] == 'COMPLETED' else "status"
     resp_content[key] = job[key]
-    return FetchResultsResponse(content=resp_content)
+    return UtcComparisonResult(content=resp_content)
 
 
 if __name__ == "__main__":

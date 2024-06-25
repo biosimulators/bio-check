@@ -15,7 +15,8 @@ paths:
               schema: {}
   /utc-comparison:
     post:
-      summary: Compare UTC outputs from Biosimulators for a model from a given archive.
+      summary: Compare UTC outputs from for a deterministic SBML model within a given
+        archive.
       operationId: utc-comparison
       parameters:
       - name: simulators
@@ -65,7 +66,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingJob'
+                $ref: '#/components/schemas/UtcComparisonSubmission'
         '422':
           description: Validation Error
           content:
@@ -89,7 +90,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FetchResultsResponse'
+                $ref: '#/components/schemas/UtcComparisonResult'
         '422':
           description: Validation Error
           content:
@@ -109,20 +110,12 @@ components:
           type: string
           format: binary
           title: Ground Truth Report
-          description: reports.h5 file defining the so-called ground-truth to be included
+          description: reports.h5 file defining the 'ground-truth' to be included
             in the comparison.
       type: object
       required:
       - uploaded_file
       title: Body_utc-comparison
-    FetchResultsResponse:
-      properties:
-        content:
-          title: Content
-      type: object
-      required:
-      - content
-      title: FetchResultsResponse
     HTTPValidationError:
       properties:
         detail:
@@ -132,7 +125,15 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    PendingJob:
+    UtcComparisonResult:
+      properties:
+        content:
+          title: Content
+      type: object
+      required:
+      - content
+      title: UtcComparisonResult
+    UtcComparisonSubmission:
       properties:
         job_id:
           type: string
@@ -173,7 +174,7 @@ components:
       - comparison_id
       - omex_path
       - simulators
-      title: PendingJob
+      title: UtcComparisonSubmission
     ValidationError:
       properties:
         loc:

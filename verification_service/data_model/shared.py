@@ -35,18 +35,6 @@ class Job(BaseModel):
     comparison_id: str
 
 
-class PendingJob(Job):
-    job_id: str
-    status: str
-    timestamp: str
-    comparison_id: str
-    omex_path: str
-    simulators: List[str]
-    timestamp: str
-    ground_truth_report_path: Optional[str] = None
-    include_output: Optional[bool] = True
-
-
 class InProgressJob(Job):
     job_id: str
     status: str
@@ -61,9 +49,5 @@ class CompletedJob(Job):
     timestamp: str
     comparison_id: str
     results: Dict
-
-
-class FetchResultsResponse(BaseModel):
-    content: Any
 
 
