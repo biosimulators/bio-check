@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: api
+  name: api
+spec:
+  selector:
+    matchLabels:
+      app: api
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      # securityContext:
+      #   runAsUser: 10001
+      #   runAsGroup: 10000
+      #   fsGroup: 10000
+      containers:
+        - name: api
+          image: ghcr.io/biosimulators/verification-service-api  # push to ghcr.io/biosimulators
+          imagePullPolicy: "Always"
+          resources:
+            requests:
+              memory: "400Mi"
+              cpu: "200m"
+            limits:
+              memory: "2000Mi"
+#              cpu: "500m"
+          envFrom:
+            - configMapRef:
+                name: api-config
+            - configMapRef:
+                name: shared-config
+#          command: [ "/bin/sh", "-c", "env; cat /run/secrets/api-secrets/dbpswd" ]
+          env:
+            - name: MONGO_DB_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: mongo-password
+            - name: MONGO_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: mongo-username
+
+          #   - name: jmspswdfile
+          #     value: "/run/secrets/api-secrets/jmspswd"
+          #   - name: dbpswdfile
+          #     value: "/run/secrets/api-secrets/dbpswd"
+          #   - name: vcellapi_privatekeyfile
+          #     value: "/run/secrets/jwt-secret/apiprivkey"
+          #   - name: vcellapi_publickeyfile
+          #     value: "/run/secrets/jwt-secret/apipubkey"
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - name: api-secrets
+              mountPath: /run/secrets/api-secrets
+
+            # - name: nfs-primary-pvc  TODO: revisit this.
+            #   mountPath: /n5DataDir
+            #   subPath: n5
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: ghcr-secret
+      volumes:
+        - name: api-secrets
+          secret:
+            items:
+              - key: mongo-password
+                path: mongo-password
+              - key: mongo-username
+                path: mongo-username
+            secretName: api-secrets
+        # - name: jwt-secret
+        #   secret:
+        #     items:
+        #       - key: apiprivkey
+        #         path: apiprivkey
+        #       - key: apipubkey
+        #         path: apipubkey
+        #     secretName: jwt-secret
+        # - name: nfs-primary-pvc
+        #   persistentVolumeClaim:
+        #     claimName: nfs-primary-pvc
+        # - name: nfs-archive-pvc
+        #   persistentVolumeClaim:
+        #     claimName: nfs-archive-pvc
+#        - name: nfs-secondary-pvc
+#          persistentVolumeClaim:
+#            claimName: nfs-secondary-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: api
+  name: api
+spec:
+  ports:
+    - name: "3001"
+      port: 3001
+      targetPort: 3001
+  selector:
+    app: api

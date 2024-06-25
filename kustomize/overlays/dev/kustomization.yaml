@@ -1,11 +1,30 @@
-bases:
-  - ../../base
+# create kustimization.yaml file
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 
 namespace: dev
 
-patches:
-  - replicas.yaml
+images:
+- name: ghcr.io/biosimulators/verification-service-api
+  newTag: 0.0.1
+- name: ghcr.io/biosimulators/verification-service-worker
+  newTag: 0.0.1
+- name: mongo
+  newTag: 8.0-rc
 
-configMapGenerator:
-  - name: verificationServiceKustomMap
-    env: config.properties
+replicas:
+- count: 1
+  name: api
+- count: 1
+  name: worker
+- count: 1
+  name: mongodb
+
+resources:
+- api-secrets.yaml
+- mongodb-pvc.yaml
+- secret-ghcr.yaml
+- verification-service-ingress.yaml
+- ../../config/dev
+- ../../base
+

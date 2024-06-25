@@ -1,19 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
-  - deployment.yaml
-  - service.yaml
-
-commonLabels:
-  app: verificationServiceKustomApp
-
-commonAnnotations:
-  app: verificationServiceKustomAnnotations
-
-namePrefix:
-  kustom-
-
-nameSuffix:
-  - v1
-
-configMapGenerator:
-  - name: verificationServiceKustomMap
-    env: config.properties
+  - api.yaml
+  - worker.yaml
+  - mongodb.yaml
