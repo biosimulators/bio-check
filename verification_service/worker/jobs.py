@@ -44,7 +44,10 @@ class Worker(BaseClass):
     job_result: Optional[Dict] = None  # output result (utc_comparison.to_dict())
     worker_id: Optional[str] = unique_id()
 
-    def execute_job(self):
+    def __post_init__(self):
+        return self._execute_job()
+
+    def _execute_job(self):
         """pop job_id, status, timestamp"""
         params = self.job_params.copy()
         list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
