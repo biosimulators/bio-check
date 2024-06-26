@@ -1,10 +1,12 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 # When to use this script: IF CHANGES TO SECRETS HAVE BEEN MADE, run the dev_secrets script to regenerate (ie: Mongo Username, mongo password, and/or mongodb connection uri)
 
 
 current_dir=$(pwd)
 deployment="$1"  # ie: dev, prod, etc
 _wait="$2"  # -w : whether to wait for the tunnel process to complete. Defaults to nothing.
+
+set -e
 
 if [ -z "$deployment" ]; then
   echo "You must pass one of these three values as a runtime argument for environment to which changes will be applied: dev, prod, test"
@@ -22,7 +24,6 @@ function create_sealed_secrets {
 
   # Return to the original directory
   cd "$origin" || { echo "Failed to change directory to $origin"; exit 1; }
-  cd kustomize
 }
 
 function apply_overlays {
