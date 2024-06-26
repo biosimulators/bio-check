@@ -16,15 +16,8 @@ if [ "$version" == "$current" ]; then
   exit 1
 fi
 
-echo "Enter your Github User-Name: "
-read -r usr_name
-
-if docker login ghcr.io -u "$usr_name"; then
-  echo "Successfully logged in to GHCR!"
-else
-  echo "Could not validate credentials."
-  exit 1
-fi
+# login to github
+./gh_login.sh
 
 # yes | docker system prune
 
