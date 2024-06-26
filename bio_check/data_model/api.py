@@ -1,7 +1,7 @@
 # -- api models -- #
 from typing import List, Optional, Dict, Any
 
-from verification_service.data_model.shared import BaseModel, Job
+from bio_check.data_model.shared import BaseModel, Job
 
 
 class PendingJob(Job):

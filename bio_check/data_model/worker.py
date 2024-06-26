@@ -4,7 +4,7 @@
 from time import sleep
 from typing import *
 
-from verification_service.data_model.shared import BaseModel, Job
+from bio_check.data_model.shared import BaseModel, Job
 
 
 class InProgressJob(Job):

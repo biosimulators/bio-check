@@ -20,7 +20,7 @@ spec:
       #   fsGroup: 10000
       containers:
         - name: worker
-          image: ghcr.io/biosimulators/verification-service-worker  # push to ghcr.io/biosimulators
+          image: ghcr.io/biosimulators/bio-check-worker  # push to ghcr.io/biosimulators
           imagePullPolicy: "Always"
           resources:
             requests:

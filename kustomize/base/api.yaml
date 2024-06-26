@@ -20,7 +20,7 @@ spec:
       #   fsGroup: 10000
       containers:
         - name: api
-          image: ghcr.io/biosimulators/verification-service-api  # push to ghcr.io/biosimulators
+          image: ghcr.io/biosimulators/bio-check-api  # push to ghcr.io/biosimulators
           imagePullPolicy: "Always"
           resources:
             requests:

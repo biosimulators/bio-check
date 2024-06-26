@@ -12,11 +12,11 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from verification_service import MONGO_URI
-from verification_service.data_model.api import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
-from verification_service.io import save_uploaded_file
-from verification_service.storage.database import MongoDbConnector
-from verification_service.api.handlers.log_config import setup_logging
+from bio_check import MONGO_URI
+from bio_check.data_model.api import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
+from bio_check.io import save_uploaded_file
+from bio_check.storage.database import MongoDbConnector
+from bio_check.api.handlers.log_config import setup_logging
 
 # --load env -- #
 
@@ -25,7 +25,7 @@ dotenv.load_dotenv()
 
 # -- constraints -- #
 
-APP_TITLE = "verification-service"
+APP_TITLE = "bio-check"
 APP_VERSION = "0.0.1"
 
 # TODO: update this
@@ -105,7 +105,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 @app.get("/")
 def root():
-    return {'verification-service-message': 'Hello from the Verification Service API!'}
+    return {'bio-check-message': 'Hello from the Verification Service API!'}
 
 
 @app.post(

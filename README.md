@@ -10,11 +10,11 @@ This application (`verification_service`) uses a microservices architecture whic
 ### Getting Started:
 
 #### __For Developers__:
-1. `git clone https://github.com/biosimulators/verification-service.git`
-2. `cd verification-service/verification_service`
+1. `git clone https://github.com/biosimulators/bio-check.git`
+2. `cd bio-check/verification_service`
 3. `touch .env`
 4. Enter the following fields into the `.env` file: `MONGO_DB_USERNAME, MONGO_DB_PWD, MONGO_DB_URI`.
-5. **Ensure that your IP address has been authorized in the `verification-service` cluster in Mongo Atlas.**
+5. **Ensure that your IP address has been authorized in the `bio-check` cluster in Mongo Atlas.**
 
 
 ### Notes:
