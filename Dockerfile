@@ -3,7 +3,7 @@ FROM python:3.11-alpine
 RUN mkdir /app
 WORKDIR /app
 
-COPY ./dockerfile-assets ./assets
+COPY docker-assets ./assets
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
@@ -21,7 +21,7 @@ COPY . /app/
 CMD ["pip", "install", "-r", "--no-cache-dir", "./assets/requirements.base.txt"]
 
 # FROM continuumio/miniconda3
-# ADD dockerfile-assets/environment.yml /tmp/environment.yml
+# ADD docker-assets/environment.yml /tmp/environment.yml
 # RUN conda env create -f /tmp/environment.yml
 # # Pull the environment name out of the environment.yml
 # RUN echo "source activate $(head -1 /tmp/environment.yml | cut -d' ' -f2)" > ~/.bashrc
@@ -59,7 +59,7 @@ CMD ["pip", "install", "-r", "--no-cache-dir", "./assets/requirements.base.txt"]
 #     && pip install --upgrade pip \
 #     && apt-get clean \
 #     && apt-get autoclean \
-#     && pip install --no-cache-dir -r ./dockerfile-assets/requirements.base.txt
+#     && pip install --no-cache-dir -r ./docker-assets/requirements.base.txt
 
 # 1.
 # docker system prune -a -f && \
