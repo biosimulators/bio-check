@@ -1,7 +1,6 @@
 release_env
 commit.sh
 .idea/
-scripts/
 .notes
 env/
 __pycache__/

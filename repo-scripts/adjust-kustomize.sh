@@ -4,6 +4,7 @@
 
 current_dir=$(pwd)
 deployment="$1"  # ie: dev, prod, etc
+_wait="$2"  # -w : whether to wait for the tunnel process to complete. Defaults to nothing.
 
 if [ -z "$deployment" ]; then
   echo "You must pass one of these three values as a runtime argument for environment to which changes will be applied: dev, prod, test"
@@ -81,9 +82,14 @@ refresh_overlays "$deployment"
 # 10. Re-create/update sealed secrets!
 create_sealed_secrets "$current_dir"
 
-# 11. OPEN A NEW TERMINAL WINDOW! Ensure minikube is running IN NEW WINDOW:
+# 11a. OPEN A NEW TERMINAL WINDOW! Ensure minikube is running IN NEW WINDOW:
 # open a new window!
-./start-tunnel.sh
+./start-tunnel.sh &
 
-# 12. Apply dev overlays:
-# apply_overlays "$deployment"
+TUNNEL_PID=$!
+
+# 11b. Apply dev overlays:
+apply_overlays "$deployment"
+
+# 11c. Optionally wait for process to complete
+# wait $TUNNEL_PID
