@@ -32,4 +32,5 @@ ENV PYTHONUNBUFFERED 1
 
 COPY . /app/
 
-CMD ["pip", "install", "-r", "--no-cache-dir", "./assets/requirements.base.txt"]
+RUN pip install --no-cache-dir -r ./assets/requirements.base.txt
+

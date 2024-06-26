@@ -4,17 +4,17 @@ lib="$1"
 version="$2"
 
 # PLEASE UPDATE THE LATEST VERSION HERE BEFORE RUNNING. CURRENT: 0.0.4
-current="0.0.0"
+# current="0.0.0"
 
 if [ "$version" == "" ]; then
   echo "You must pass the container version you wish to release as an argument to this script. Exiting."
   exit 1
 fi
 
-if [ "$version" == "$current" ]; then
-  echo "This version already exists on GHCR. Exiting."
-  exit 1
-fi
+# if [ "$version" == "$current" ]; then
+#   echo "This version already exists on GHCR. Exiting."
+#   exit 1
+# fi
 
 # login to github
 ./gh_login.sh

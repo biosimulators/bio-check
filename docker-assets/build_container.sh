@@ -21,7 +21,7 @@ if [ "$build_" ]; then
 fi
 
 cd bio_check/"$lib" || exit
-sudo docker build -t ghcr.io/biosimulators/bio-check-"$lib" ./bio_check/"$lib"
+docker build -t ghcr.io/biosimulators/bio-check-"$lib" ./bio_check/"$lib"
 
 if [ "$run_" ]; then
   echo "Running container for $lib"
