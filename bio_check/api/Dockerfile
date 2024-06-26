@@ -1,7 +1,5 @@
  # Api container
 
-
-# FROM python:3.11-slim-buster
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
 EXPOSE 3001

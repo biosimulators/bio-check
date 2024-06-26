@@ -6,5 +6,5 @@ if [ "$prune" ]; then
 fi
 
 echo "Building base image..."
-docker build -t ghcr.io/biosimulators/bio-check-base .
+docker build -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base .
 echo "Built base image."
