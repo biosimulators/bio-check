@@ -12,7 +12,7 @@ ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc-dev \
-    linux-headers-amd64 \
+    linux-headers-arm64 \
     libjpeg-dev \
     zlib1g-dev \
     libmariadb-dev \
