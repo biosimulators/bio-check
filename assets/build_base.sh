@@ -5,7 +5,7 @@ push="$2"
 version="$3"
 
 if [ "$version" == "" ]; then
-  version="$(cat ./BASE_VERSION.txt)"
+  version="$(cat ./assets/BASE_VERSION.txt)"
 fi
 
 if [ "$prune" == "--prune" ]; then
@@ -18,5 +18,5 @@ echo "Built base image."
 
 if [ "$push" == "--push" ]; then
   ./assets/push_image.sh "base"
-  echo "$version" > ./BASE_VERSION.txt
+  echo "$version" > ./assets/BASE_VERSION.txt
 fi
