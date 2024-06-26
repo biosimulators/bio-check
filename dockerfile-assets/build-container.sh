@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 
+# Args:
+# $1: the library for which you would like to build a container
+# -p ($2): whether to prune docker system before building anything.
+# -b ($3): whether to build the base image before building library
 # Run at root of repo!
 
 lib="$1"
-build_base="$2"
+prune="$2"  # -p
+build_="$3"  # -b
 
-docker system prune -a -f
+if [ "$prune" ]; then
+  docker system prune -a -f
+fi
 
-if [ -n "$build_base" ]; then
+if [ "$build_" ]; then
   echo "Building base image..."
   sudo docker build -t ghcr.io/biosimulators/bio-check-base .
   echo "Built base image."

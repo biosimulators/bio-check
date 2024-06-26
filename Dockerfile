@@ -2,8 +2,12 @@ FROM python:3.11-alpine
 
 RUN mkdir /app
 WORKDIR /app
-COPY requirements.txt /requirements.txt
+
+COPY ./dockerfile-assets ./assets
+
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
+# hdf5 deps
 RUN apk add --update --no-cache --virtual .tmp gcc libc-dev linux-headers
 RUN apk add --no-cache jpeg-dev zlib-dev mariadb-dev libffi-dev openblas-dev libgfortran lapack-dev build-base openssl-dev
 RUN apk add --no-cache hdf5-dev
@@ -11,7 +15,10 @@ RUN pip install -r /requirements.txt
 RUN apk --no-cache del build-base
 
 ENV PYTHONUNBUFFERED 1
+
 COPY . /app/
+
+CMD ["pip", "install", "-r", "--no-cache-dir", "./assets/requirements.base.txt"]
 
 # FROM continuumio/miniconda3
 # ADD dockerfile-assets/environment.yml /tmp/environment.yml
