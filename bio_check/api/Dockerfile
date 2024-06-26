@@ -8,5 +8,5 @@ EXPOSE 3001
 
 RUN pip install --no-cache-dir -r ./dockerfile-assets/requirements.api.txt
 
-CMD ["uvicorn", "verification_service.api.main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
+CMD ["uvicorn", "bio_check.api.main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
 
