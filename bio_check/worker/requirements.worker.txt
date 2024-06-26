@@ -5,9 +5,7 @@ httpx
 biosimulators-copasi
 biosimulators-amici
 biosimulators-tellurium
-biosimulators-utils
-python-multipart
-pymongo
+biosimulators-utils[logging]
 biosimulator-processes
-pymongo[srv]==3.11
+python-multipart
 python-dotenv

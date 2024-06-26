@@ -7,5 +7,3 @@ aiofiles
 aiobotocore
 python-dotenv
 uvicorn
-biosimulators-utils[logging]
-h5py
