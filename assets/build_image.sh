@@ -7,8 +7,9 @@
 # Run at root of repo!
 
 lib="$1"
-prune="$2"  # -p
-run_="$4"
+run_="$2" # -r
+prune="$3"  # -p
+
 
 if [ "$prune" ]; then
   yes | docker system prune -a
