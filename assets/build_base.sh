@@ -17,6 +17,6 @@ docker build -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base .
 echo "Built base image."
 
 if [ "$push" == "--push" ]; then
-  ./push_image.sh "base"
+  ./assets/push_image.sh "base"
   echo "$version" > ./BASE_VERSION.txt
 fi
