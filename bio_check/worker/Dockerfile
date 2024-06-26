@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /src
 
-COPY ../../docker-assets/requirements-worker.txt .
+COPY ../../docker-assets/requirements.worker.txt .
 
 RUN pip install --no-cache-dir -r requirements.api.txt
 
