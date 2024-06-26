@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 lib="$1"
 version="$2"
 
