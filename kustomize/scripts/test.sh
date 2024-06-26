@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-pwd
+x="$1"
+
+cd ../"$x" || exit && pwd

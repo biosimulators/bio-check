@@ -1,26 +1,25 @@
-# FROM continuumio/miniconda3
-# # ubuntu:22.04
-#
-# LABEL authors="alexanderpatrie"
-#
-# WORKDIR /src
-#
-# #COPY bio_check ./bio_check
-# #COPY dockerfile-assets ./dockerfile-assets
-#
-# RUN conda env create -f ./dockerfile-assets/environment.yml
-#
-# SHELL ["conda", "run", "-n", "bio-check"]
-#
-# CMD ["bash"]
+FROM python:3.11-alpine
 
-FROM continuumio/miniconda3
-ADD dockerfile-assets/environment.yml /tmp/environment.yml
-RUN conda env create -f /tmp/environment.yml
-# Pull the environment name out of the environment.yml
-RUN echo "source activate $(head -1 /tmp/environment.yml | cut -d' ' -f2)" > ~/.bashrc
-ENV PATH /opt/conda/envs/$(head -1 /tmp/environment.yml | cut -d' ' -f2)/bin:$PATH
-CMD ["bash"]
+RUN mkdir /app
+WORKDIR /app
+COPY requirements.txt /requirements.txt
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
+RUN apk add --update --no-cache --virtual .tmp gcc libc-dev linux-headers
+RUN apk add --no-cache jpeg-dev zlib-dev mariadb-dev libffi-dev openblas-dev libgfortran lapack-dev build-base openssl-dev
+RUN apk add --no-cache hdf5-dev
+RUN pip install -r /requirements.txt
+RUN apk --no-cache del build-base
+
+ENV PYTHONUNBUFFERED 1
+COPY . /app/
+
+# FROM continuumio/miniconda3
+# ADD dockerfile-assets/environment.yml /tmp/environment.yml
+# RUN conda env create -f /tmp/environment.yml
+# # Pull the environment name out of the environment.yml
+# RUN echo "source activate $(head -1 /tmp/environment.yml | cut -d' ' -f2)" > ~/.bashrc
+# ENV PATH /opt/conda/envs/$(head -1 /tmp/environment.yml | cut -d' ' -f2)/bin:$PATH
+# CMD ["bash"]
 
 # SHELL ["conda", "run", "-n", "bio-check", "/bin/bash", "-c"]
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 status=$(minikube status | grep "Running")
-if [ ! -z $status ]; then 
+if [ -n "$status" ]; then
     minikube stop
 fi
 
