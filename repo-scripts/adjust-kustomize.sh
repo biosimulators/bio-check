@@ -83,7 +83,7 @@ create_sealed_secrets "$current_dir"
 
 # 11. OPEN A NEW TERMINAL WINDOW! Ensure minikube is running IN NEW WINDOW:
 # open a new window!
-# sudo minikube tunnel
+./start-tunnel.sh
 
 # 12. Apply dev overlays:
 # apply_overlays "$deployment"

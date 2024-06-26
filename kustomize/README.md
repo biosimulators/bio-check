@@ -198,5 +198,6 @@ run VCell Java Client (cbit.vcell.client.VCellClientMain) against local minikube
 ```bash
 brew tap johanhaleby/kubetail
 brew install kubetail
-kubetail -n remote
+export deployment=<THE NAME OF YOUR DEPLOYMENT>  # or any deployment (prod, test, remote)
+kubetail -n "$deployment"  
 ```
