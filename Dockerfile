@@ -5,12 +5,12 @@
 #
 # WORKDIR /src
 #
-# #COPY verification_service ./verification_service
+# #COPY bio_check ./bio_check
 # #COPY dockerfile-assets ./dockerfile-assets
 #
 # RUN conda env create -f ./dockerfile-assets/environment.yml
 #
-# SHELL ["conda", "run", "-n", "verification-service"]
+# SHELL ["conda", "run", "-n", "bio-check"]
 #
 # CMD ["bash"]
 
@@ -22,9 +22,9 @@ RUN echo "source activate $(head -1 /tmp/environment.yml | cut -d' ' -f2)" > ~/.
 ENV PATH /opt/conda/envs/$(head -1 /tmp/environment.yml | cut -d' ' -f2)/bin:$PATH
 CMD ["bash"]
 
-# SHELL ["conda", "run", "-n", "verification-service", "/bin/bash", "-c"]
+# SHELL ["conda", "run", "-n", "bio-check", "/bin/bash", "-c"]
 
-# CMD ["conda", "run", "-n", "verification-service", "python", "your_script.py"]
+# CMD ["conda", "run", "-n", "bio-check", "python", "your_script.py"]
 
 # RUN apt-get update && apt-get install -y --no-install-recommends \
 #     python3.10  \
@@ -59,15 +59,15 @@ CMD ["bash"]
 # docker system prune -a -f && \
 
 # 2.
-# sudo docker build -t spacebearamadeus/verification-service-base . && \
-# sudo docker build -t spacebearamadeus/verification-service-api ./verification_service/api && \
+# sudo docker build -t spacebearamadeus/bio-check-base . && \
+# sudo docker build -t spacebearamadeus/bio-check-api ./bio_check/api && \
 
 # 3.
-# docker run -d -p 8000:3001 spacebearamadeus/verification-service-api
+# docker run -d -p 8000:3001 spacebearamadeus/bio-check-api
             # OR
-# docker run -it -p 8000:3001 spacebearamadeus/verification-service-api
+# docker run -it -p 8000:3001 spacebearamadeus/bio-check-api
 
 # docker system prune -a -f && \
-# sudo docker build -t spacebearamadeus/verification-service-base . && \
-# sudo docker build -t spacebearamadeus/verification-service-api ./verification_service/api && \
-# docker run --platform linux/amd64 -it -p 8000:3001 spacebearamadeus/verification-service-api
+# sudo docker build -t spacebearamadeus/bio-check-base . && \
+# sudo docker build -t spacebearamadeus/bio-check-api ./bio_check/api && \
+# docker run --platform linux/amd64 -it -p 8000:3001 spacebearamadeus/bio-check-api

@@ -10,12 +10,12 @@ import pandas as pd
 
 from biosimulator_processes.execute import exec_utc_comparison
 
-from verification_service import unique_id
-from verification_service.data_model.shared import BaseClass
-from verification_service.storage.database import MongoDbConnector
-from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
-from verification_service.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
-from verification_service.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
+from bio_check import unique_id
+from bio_check.data_model.shared import BaseClass
+from bio_check.storage.database import MongoDbConnector
+from bio_check.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
+from bio_check.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
+from bio_check.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 def utc_comparison(

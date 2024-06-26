@@ -1,4 +1,4 @@
-name: verification-service
+name: bio-check
 channels:
   - conda-forge
   - defaults

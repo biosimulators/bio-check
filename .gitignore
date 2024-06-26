@@ -6,6 +6,6 @@ scripts/
 env/
 __pycache__/
 *.pyc
-verification_service/worker/handlers/__pycache__/
+bio_check/worker/handlers/__pycache__/
 *.egg-info/
 .env

@@ -12,9 +12,9 @@ from typing import *
 
 from pymongo.mongo_client import MongoClient
 
-from verification_service.worker.compare import utc_comparison
-from verification_service.storage.database import MongoDbConnector
-from verification_service.data_model.worker import UtcComparison, SimulationError
+from bio_check.worker.compare import utc_comparison
+from bio_check.storage.database import MongoDbConnector
+from bio_check.data_model.worker import UtcComparison, SimulationError
 
 
 import numpy as np
@@ -22,12 +22,12 @@ import pandas as pd
 
 from biosimulator_processes.execute import exec_utc_comparison
 
-from verification_service import unique_id, MONGO_URI, load_arrows
-from verification_service.data_model.shared import BaseClass, MultipleConnectorError
-from verification_service.storage.database import MongoDbConnector
-from verification_service.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
-from verification_service.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
-from verification_service.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
+from bio_check import unique_id, MONGO_URI, load_arrows
+from bio_check.data_model.shared import BaseClass, MultipleConnectorError
+from bio_check.storage.database import MongoDbConnector
+from bio_check.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
+from bio_check.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
+from bio_check.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 DB_TYPE = "mongo"  # ie: postgres, etc

@@ -12,8 +12,8 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from verification_service import unique_id
-from verification_service.data_model.shared import BaseClass, MultipleConnectorError
+from bio_check import unique_id
+from bio_check.data_model.shared import BaseClass, MultipleConnectorError
 
 
 @dataclass

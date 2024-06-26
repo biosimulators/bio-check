@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "verification-service"
+name = "bio-check"
 version = "0.0.1"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "verification_service"}]
+packages = [{include = "bio_check"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
