@@ -15,7 +15,7 @@ if [ "$prune" ]; then
 fi
 
 cd bio_check/"$lib" || exit
-docker build -t ghcr.io/biosimulators/bio-check-"$lib" ./bio_check/"$lib"
+docker build -t ghcr.io/biosimulators/bio-check-"$lib" .
 
 if [ "$run_" ]; then
   echo "Running container for $lib"

@@ -4,7 +4,7 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 
 EXPOSE 3001
 
-COPY . .
+# COPY . .
 
 RUN pip install --no-cache-dir -r ./requirements.api.txt
 

@@ -4,7 +4,7 @@ LABEL authors="alexanderpatrie"
 RUN mkdir /app
 WORKDIR /app
 
-COPY docker-assets ./assets
+COPY assets ./assets
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
