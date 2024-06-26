@@ -6,12 +6,12 @@ version="$2"
 # PLEASE UPDATE THE LATEST VERSION HERE BEFORE RUNNING. CURRENT: 0.0.4
 current="0.0.0"
 
-if [ "${version}" == "" ]; then
+if [ "$version" == "" ]; then
   echo "You must pass the container version you wish to release as an argument to this script. Exiting."
   exit 1
 fi
 
-if [ "${version}" == "${current}" ]; then
+if [ "$version" == "$current" ]; then
   echo "This version already exists on GHCR. Exiting."
   exit 1
 fi
@@ -19,7 +19,7 @@ fi
 echo "Enter your Github User-Name: "
 read -r usr_name
 
-if docker login ghcr.io -u "${usr_name}"; then
+if docker login ghcr.io -u "$usr_name"; then
   echo "Successfully logged in to GHCR!"
 else
   echo "Could not validate credentials."
