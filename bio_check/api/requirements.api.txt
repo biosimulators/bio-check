@@ -7,3 +7,5 @@ aiofiles
 aiobotocore
 python-dotenv
 uvicorn
+h5py
+python-libsbml

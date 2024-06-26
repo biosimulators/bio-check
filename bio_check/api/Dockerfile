@@ -53,7 +53,7 @@ EXPOSE 3001
 #     && rm v${LSBMLSIM_VERSION}.tar.gz \
 #     && rm -r libsbmlsim-${LSBMLSIM_VERSION}
 
-
-RUN RUN pip install --upgrade pip && pip install --no-cache-dir -r /app/bio_check/api/requirements.api.txt
+COPY requirements.api.txt ./assets/requirements.api.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r ./assets/requirements.api.txt
 
 CMD ["uvicorn", "bio_check.api.main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
