@@ -1,4 +1,6 @@
-## Simulation Verification Service API.
+# Simulation Verification Service API
+## __This service utilizes separate containers for API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
+
 
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
 
