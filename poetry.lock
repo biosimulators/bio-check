@@ -167,9 +167,9 @@ files = [
 cmake-build-extension = "0.6.0"
 mpmath = "*"
 numpy = [
+    {version = ">=1.26.2", markers = "python_version == \"3.12\""},
     {version = ">=1.21.4", markers = "python_version >= \"3.10\" and python_version != \"3.11\" and python_version != \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
-    {version = ">=1.26.2", markers = "python_version == \"3.12\""},
 ]
 pandas = ">=2.0.2"
 pyarrow = "*"
@@ -1245,6 +1245,17 @@ files = [
 ]
 
 [[package]]
+name = "distlib"
+version = "0.3.8"
+description = "Distribution utilities"
+optional = false
+python-versions = "*"
+files = [
+    {file = "distlib-0.3.8-py2.py3-none-any.whl", hash = "sha256:034db59a0b96f8ca18035f36290806a9a6e6bd9d1ff91e45a7f172eb17e51784"},
+    {file = "distlib-0.3.8.tar.gz", hash = "sha256:1530ea13e350031b6312d8580ddb6b27a104275a31106523b8f123787f494f64"},
+]
+
+[[package]]
 name = "dnspython"
 version = "2.6.1"
 description = "DNS toolkit"
@@ -1474,6 +1485,22 @@ files = [
     {file = "fastobo-0.12.3-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:5e6f20a884c9409e9968e77ee74d407564814f2360dfc35440de268d753ad85e"},
     {file = "fastobo-0.12.3.tar.gz", hash = "sha256:f375932a24b078706797eb9296740f2d2e6987a34309bda7c9f235aba1d74217"},
 ]
+
+[[package]]
+name = "filelock"
+version = "3.15.4"
+description = "A platform independent file lock."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "filelock-3.15.4-py3-none-any.whl", hash = "sha256:6ca1fffae96225dab4c6eaf1c4f4f28cd2568d3ec2a44e15a08520504de468e7"},
+    {file = "filelock-3.15.4.tar.gz", hash = "sha256:2207938cbc1844345cb01a5a95524dae30f0ce089eba5b00378295a17e3e90cb"},
+]
+
+[package.extras]
+docs = ["furo (>=2023.9.10)", "sphinx (>=7.2.6)", "sphinx-autodoc-typehints (>=1.25.2)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8.0.1)", "pytest (>=7.4.3)", "pytest-asyncio (>=0.21)", "pytest-cov (>=4.1)", "pytest-mock (>=3.12)", "pytest-timeout (>=2.2)", "virtualenv (>=20.26.2)"]
+typing = ["typing-extensions (>=4.8)"]
 
 [[package]]
 name = "fire"
@@ -2876,9 +2903,9 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
-    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
+    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
 ]
 
 [package.extras]
@@ -3426,9 +3453,9 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.22.4", markers = "python_version < \"3.11\""},
-    {version = ">=1.23.2", markers = "python_version == \"3.11\""},
     {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
+    {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.22.4", markers = "python_version < \"3.11\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -3641,6 +3668,26 @@ test = ["pytest", "pytest-benchmark", "pytest-cov", "pytest-mpl", "pytest-subtes
 testbase = ["pytest", "pytest-benchmark", "pytest-cov", "pytest-subtests"]
 uncertainties = ["uncertainties (>=3.1.6)"]
 xarray = ["xarray"]
+
+[[package]]
+name = "pipenv"
+version = "2024.0.1"
+description = "Python Development Workflow for Humans."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pipenv-2024.0.1-py3-none-any.whl", hash = "sha256:5360835c613837423a99b8c94952b139b777b3eaabb42cb9edb34556245b4c25"},
+    {file = "pipenv-2024.0.1.tar.gz", hash = "sha256:ae5a83fa5b66065cebd2bd8f73f0b281b3bd202a13d58cc644f0b9765128c990"},
+]
+
+[package.dependencies]
+certifi = "*"
+setuptools = ">=67"
+virtualenv = ">=20.24.2"
+
+[package.extras]
+dev = ["beautifulsoup4", "black (==23.3)", "flake8 (>=3.3,<4.0)", "invoke", "parver", "sphinx", "towncrier"]
+tests = ["flaky", "mock", "pytest (>=5)", "pytest-timeout", "pytest-xdist"]
 
 [[package]]
 name = "platformdirs"
@@ -5996,6 +6043,26 @@ docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)", "sphinxc
 test = ["Cython (>=0.29.36,<0.30.0)", "aiohttp (==3.9.0b0)", "aiohttp (>=3.8.1)", "flake8 (>=5.0,<6.0)", "mypy (>=0.800)", "psutil", "pyOpenSSL (>=23.0.0,<23.1.0)", "pycodestyle (>=2.9.0,<2.10.0)"]
 
 [[package]]
+name = "virtualenv"
+version = "20.26.3"
+description = "Virtual Python Environment builder"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "virtualenv-20.26.3-py3-none-any.whl", hash = "sha256:8cc4a31139e796e9a7de2cd5cf2489de1217193116a8fd42328f1bd65f434589"},
+    {file = "virtualenv-20.26.3.tar.gz", hash = "sha256:4c43a2a236279d9ea36a0d76f98d84bd6ca94ac4e0f4a3b9d46d05e10fea542a"},
+]
+
+[package.dependencies]
+distlib = ">=0.3.7,<1"
+filelock = ">=3.12.2,<4"
+platformdirs = ">=3.9.1,<5"
+
+[package.extras]
+docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.2,!=7.3)", "sphinx-argparse (>=0.4)", "sphinxcontrib-towncrier (>=0.2.1a0)", "towncrier (>=23.6)"]
+test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7)", "packaging (>=23.1)", "pytest (>=7.4)", "pytest-env (>=0.8.2)", "pytest-freezer (>=0.4.8)", "pytest-mock (>=3.11.1)", "pytest-randomly (>=3.12)", "pytest-timeout (>=2.1)", "setuptools (>=68)", "time-machine (>=2.10)"]
+
+[[package]]
 name = "watchfiles"
 version = "0.22.0"
 description = "Simple, modern and high performance file watching and code reload in python."
@@ -6436,4 +6503,4 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10"
-content-hash = "0821fe664cac54f4bbed1fea0ed8b262828eab0f8fe254890eca35d455aa6c81"
+content-hash = "e7cd6748614b1240513ecc4695a12aacd283ac8b33fa6adf1a22b417452b9575"

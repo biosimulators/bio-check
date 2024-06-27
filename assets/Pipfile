@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pymongo = {extras = ["srv"], version = "*"}
+fastapi = "*"
+python-multipart = "^0.0.9"
+pymongo = {extras = ["srv"], version = "^4.7.3"}
+# biosimulator-processes = "^0.0.36"
+tensorstore = "^0.1.63"
+aiofiles = "^24.1.0"
+aiobotocore = "^2.13.1"
+pydantic-settings = "^2.3.4"
+pipenv = "^2024.0.1"
+fastapi = "^0.111.0"
+pyyaml = "^6.0.1"
+httpx = "^0.27.0"
+
+[dev-packages]
+pyyaml = "*"
+requests = "*"
+parameterized = "*"
+pytest = "*"
+pytest-forked = "*"
+pytest-timeout = "*"
+
+[requires]
+python_version = ">=3.10"
