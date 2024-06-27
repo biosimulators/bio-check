@@ -15,7 +15,6 @@ WORKDIR /app
 
 RUN mkdir /app/bio_check
 COPY bio_check /app/bio_check
-
 COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
 # COPY bio_check/io.py /app/bio_check/io.py
@@ -57,7 +56,11 @@ RUN pip install --upgrade pip  \
     && poetry update \
     && poetry install --no-cache --no-root --no-interaction
 
-# RUN groupadd -r user && useradd -r -g user user
-# USER user
-# RUN pip install --upgrade pip && pip install --no-cache-dir -r ./assets/requirements.base.txt
+COPY assets/scripts/enter.sh /app/.enter.sh
+
+# Make the entrypoint script executable
+RUN chmod +x /app/.enter.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/app/.enter.sh"]
 
