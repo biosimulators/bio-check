@@ -1,13 +1,20 @@
 FROM python:3.11-slim-bullseye
+
 LABEL authors="alexanderpatrie"
 
+# TODO: make base version more nuanced
+ENV BASE_VERSION=latest
+ENV BASE_ROOT=ghcr.io/biosimulators/bio-check
+ENV BASE_IMAGE="$BASE_VERSION-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN groupadd -r appgroup && mkdir /app
+RUN groupadd -r appgroup \
+    && mkdir /app
 
 WORKDIR /app
 
-RUN mkdir /app/bio_check && touch /app/bio_check/__init__.py
+RUN mkdir /app/bio_check  \
+    && touch /app/bio_check/__init__.py
 
 COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
