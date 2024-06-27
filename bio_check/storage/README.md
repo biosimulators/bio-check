@@ -1,1 +1,0 @@
-### This library handles MongoDB configs as well as bucket-like storages for uploaded files.

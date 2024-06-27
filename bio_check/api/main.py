@@ -10,10 +10,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from bio_check import MONGO_URI
+# from bio_check import MONGO_URI
 from bio_check.api.data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
 from bio_check.io import save_uploaded_file
-from bio_check.storage.database import MongoDbConnector
+from bio_check.database import MongoDbConnector
 from bio_check.api.handlers.log_config import setup_logging
 
 # --load env -- #
@@ -48,7 +48,7 @@ ORIGINS = [
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
-
+MONGO_URI = os.getenv("MONGO_URI")
 
 # -- handle logging -- #
 

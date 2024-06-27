@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# MONGO_URI = os.getenv("MONGO_DB_URI")
-MONGO_URI = "mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
+MONGO_URI = os.getenv("MONGO_DB_URI")
+# MONGO_URI = "mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
 
 
 def unique_id(): return str(uuid.uuid4())

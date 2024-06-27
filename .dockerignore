@@ -32,3 +32,5 @@ model-examples
 .gitignore
 .idea
 tests
+bio_check/api
+bio_check/worker

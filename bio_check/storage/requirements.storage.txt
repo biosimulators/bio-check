@@ -1,9 +1,0 @@
-fastapi
-pyyaml
-pydantic-settings
-httpx
-tensorstore
-aiofiles
-aiobotocore
-python-multipart
-python-dotenv
