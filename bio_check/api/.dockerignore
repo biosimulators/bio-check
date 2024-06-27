@@ -1,5 +1,6 @@
 .env
-__pycache__
+__pycache__/
+bio_check/__pycache__
 *.pyc
 *.pyo
 *.pyd
@@ -32,3 +33,7 @@ model-examples
 .gitignore
 .idea
 tests
+bio_check/api
+bio_check/worker
+!enter.sh
+bio_check/.env

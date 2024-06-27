@@ -9,17 +9,16 @@ ENV BASE_IMAGE="$BASE_VERSION-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN groupadd -r appgroup \
-    && mkdir /app
+    && mkdir /app \
+    && mkdir /app/bio_check  \
+    && mkdir /app/data
 
 WORKDIR /app
 
-RUN mkdir /app/bio_check
 COPY bio_check /app/bio_check
 COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
-# COPY bio_check/io.py /app/bio_check/io.py
-# COPY bio_check/__init__.py /app/bio_check/__init__.py
-# COPY bio_check/shared.py /app/bio_check/shared.py
+COPY assets/scripts/enter.sh /app/.enter.sh
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
@@ -54,12 +53,8 @@ RUN pip install --upgrade pip  \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
     && poetry update \
-    && poetry install --no-cache --no-root --no-interaction
-
-COPY assets/scripts/enter.sh /app/.enter.sh
-
-# Make the entrypoint script executable
-RUN chmod +x /app/.enter.sh
+    && poetry install --no-cache --no-root --no-interaction \
+    && chmod +x /app/.enter.sh
 
 # Set the entrypoint
 ENTRYPOINT ["/app/.enter.sh"]

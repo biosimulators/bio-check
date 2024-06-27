@@ -1,0 +1,41 @@
+name: bio-check
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - appnet
+
+  api:
+    build:
+      context: ./bio_check/api
+      dockerfile: bio_check/api/Dockerfile-api
+    container_name: api
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/service_requests?retryWrites=true&w=majority&appName=bio-check
+    ports:
+      - "3001:3001"
+    networks:
+      - appnet
+
+  worker:
+    build:
+      context: ./bio_check/worker
+      dockerfile: bio_check/worker/Dockerfile-worker
+    container_name: worker
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/service_requests?retryWrites=true&w=majority&appName=bio-check
+    networks:
+      - appnet
+
+volumes:
+  mongo-data:
+
+networks:
+  appnet:
+    driver: bridge

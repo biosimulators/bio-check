@@ -1,5 +1,7 @@
-# Run at root of repo!
+#!/usr/bin/env bash
 
+
+# Run at root of repo!
 set -e
 
 prune="$1"  # --prune
