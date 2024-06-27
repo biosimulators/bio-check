@@ -1,6 +1,5 @@
-import os.path
+import os
 
-import h5py
 from fastapi import UploadFile
 
 
