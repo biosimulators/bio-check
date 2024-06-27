@@ -34,3 +34,4 @@ model-examples
 tests
 bio_check/api
 bio_check/worker
+!enter.sh
