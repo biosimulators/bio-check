@@ -4,6 +4,7 @@ set -e
 
 lib="$1"
 version="$2"
+gh_username="$3"
 
 if [ "$version" == "" ]; then
   version="latest"
@@ -15,7 +16,7 @@ fi
 # fi
 
 # login to github
-./assets/scripts/gh_login.sh
+./assets/scripts/gh_login.sh "$gh_username"
 
 # yes | docker system prune
 

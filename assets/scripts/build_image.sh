@@ -9,33 +9,37 @@
 set -e
 
 # Default values for flags
-run_=false
-prune=false
+# run_=false
+# prune=false
+#
+# # Parse arguments
+# lib=""
+#
+# while [[ $# -gt 0 ]]; do
+#   case "$1" in
+#     --run)
+#       run_=true
+#       shift # Remove --run from processing
+#       ;;
+#     --prune)
+#       prune=true
+#       shift # Remove --prune from processing
+#       ;;
+#     *)
+#       if [[ -z "$lib" ]]; then
+#         lib="$1"
+#       else
+#         echo "Unknown argument: $1"
+#         exit 1
+#       fi
+#       shift # Remove the argument from processing
+#       ;;
+#   esac
+# done
 
-# Parse arguments
-lib=""
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --run)
-      run_=true
-      shift # Remove --run from processing
-      ;;
-    --prune)
-      prune=true
-      shift # Remove --prune from processing
-      ;;
-    *)
-      if [[ -z "$lib" ]]; then
-        lib="$1"
-      else
-        echo "Unknown argument: $1"
-        exit 1
-      fi
-      shift # Remove the argument from processing
-      ;;
-  esac
-done
+lib="$1"
+version="$2"
+prune="$3"
 
 if [[ -z "$lib" ]]; then
   echo "You must specify the library to build."
@@ -43,17 +47,10 @@ if [[ -z "$lib" ]]; then
 fi
 
 # Prune the Docker system if --prune flag is set
-if [ "$prune" = true ]; then
+if [ "$prune" == "--prune" ]; then
   yes | docker system prune -a
 fi
 
 # Build the Docker image
-docker build -f bio_check/"$lib"/Dockerfile -t ghcr.io/biosimulators/bio-check-"$lib" ./bio_check/"$lib"
+docker build -f bio_check/"$lib"/Dockerfile -t ghcr.io/biosimulators/bio-check-"$lib":"$version" ./bio_check/"$lib"
 
-# Run the container if --run flag is set
-if [ "$run_" = true ]; then
-  echo "Running container for $lib"
-  ./assets/scripts/run_container.sh "$lib"
-else
-  echo "Build complete. Not running the container."
-fi

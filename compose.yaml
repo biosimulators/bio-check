@@ -43,3 +43,11 @@ volumes:
 networks:
   appnet:
     driver: bridge
+
+
+# 1a. build base image
+# 1b. push base image to ghcr
+# 2. docker compose up
+# 3. docker compose down
+# 4. inspect worker and api containers to test
+# 5. push worker and api containers to ghcr
