@@ -5,14 +5,12 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from datetime import datetime
 from types import NoneType
-from typing import Mapping, Any, Dict, Union, List, Collection
+from typing import Mapping, Any, Dict, Union, List
 
-from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from bio_check import unique_id
 from bio_check.data_model.shared import BaseClass, MultipleConnectorError
 
 
@@ -102,7 +100,7 @@ class MongoDbConnector(DatabaseConnector):
         result = coll.insert_one(kwargs)
         return result
 
-    def get_collection(self, collection_name: str) -> Collection[Mapping[str, Any] | Any] | None:
+    def get_collection(self, collection_name: str) -> Collection | None:
         try:
             return self.db[collection_name]
         except:
