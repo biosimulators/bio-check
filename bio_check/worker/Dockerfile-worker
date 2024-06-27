@@ -1,8 +1,6 @@
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-RUN useradd -r -g appgroup worker
-
-USER worker
+COPY bio_check/worker /app/bio_check/worker
 
 RUN poetry add \
     biosimulators-copasi \
@@ -10,9 +8,8 @@ RUN poetry add \
     biosimulators-tellurium \
     biosimulators-utils --extras=logging \
     biosimulator-processes
-    # h5py
-
-COPY bio_check/worker .
+    # h5py \
+    # numpy \
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

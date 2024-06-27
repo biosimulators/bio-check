@@ -1,11 +1,10 @@
  # Api container
 
-FROM ghcr.io/biosimulators/bio-check-base:latest
+FROM ghcr.io/biosimulators/bio-check-base:0.0.1
 
-ENV LIB=api
-ENV API_ROOT=/app/bio_check/$LIB
-RUN mkdir $API_ROOT
-COPY . $API_ROOT
+WORKDIR /app
+
+COPY bio_check/api /app/bio_check/api
 
 EXPOSE 3001
 

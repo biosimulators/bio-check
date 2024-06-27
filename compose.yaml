@@ -14,7 +14,7 @@ services:
   api:
     build:
       context: ./bio_check/api
-      dockerfile: bio_check/api/Dockerfile-api
+      dockerfile: ./bio_check/api/Dockerfile-api
     container_name: api
     environment:
       - MONGO_URI=mongodb://mongo:27017/service_requests?retryWrites=true&w=majority&appName=bio-check
@@ -26,7 +26,7 @@ services:
   worker:
     build:
       context: ./bio_check/worker
-      dockerfile: bio_check/worker/Dockerfile-worker
+      dockerfile: ./bio_check/worker/Dockerfile-worker
     container_name: worker
     environment:
       - MONGO_URI=mongodb://mongo:27017/service_requests?retryWrites=true&w=majority&appName=bio-check
