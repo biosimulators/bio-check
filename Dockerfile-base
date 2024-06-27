@@ -3,7 +3,7 @@ LABEL authors="alexanderpatrie"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN mkdir /app
+RUN groupadd -r appgroup && mkdir /app
 
 WORKDIR /app
 
@@ -11,7 +11,6 @@ RUN mkdir /app/bio_check && touch /app/bio_check/__init__.py
 
 COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
-
 COPY bio_check/io.py /app/bio_check/io.py
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1

@@ -20,5 +20,5 @@ docker build -t ghcr.io/biosimulators/bio-check-"$lib" .
 
 if [ "$run_" == "--run" ]; then
   echo "Running container for $lib"
-  ../../assets/run_container.sh "$lib"
+  ./assets/scripts/run_container.sh "$lib"
 fi

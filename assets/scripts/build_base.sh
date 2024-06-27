@@ -1,5 +1,7 @@
 # Run at root of repo!
 
+set -e
+
 prune="$1"  # --prune
 push="$2"
 version="$3"
@@ -13,5 +15,5 @@ docker build -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base .
 echo "Built base image."
 
 if [ "$push" == "--push" ]; then
-  ./assets/push_base.sh "$version"
+  ./assets/scripts/push_base.sh "$version"
 fi

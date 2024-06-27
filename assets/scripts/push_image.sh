@@ -15,7 +15,7 @@ fi
 # fi
 
 # login to github
-./assets/gh_login.sh
+./assets/scripts/gh_login.sh
 
 # yes | docker system prune
 
