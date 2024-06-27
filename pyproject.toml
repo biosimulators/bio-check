@@ -20,6 +20,7 @@ pydantic = "^2.7.4"
 # biosimulators-tellurium = "^0.1.42"
 # biosimulators-utils = {version = "^0.1.187", extras = ["logging"]}
 # biosimulator-processes = "^0.0.36"
+# h5py = "*"
 
 # for API
 # tensorstore = "^0.1.63"
