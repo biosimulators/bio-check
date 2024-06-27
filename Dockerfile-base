@@ -19,6 +19,7 @@ COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
 COPY bio_check/io.py /app/bio_check/io.py
 COPY bio_check/__init__.py /app/bio_check/__init__.py
+COPY bio_check/shared.py /app/bio_check/shared.py
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
