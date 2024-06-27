@@ -2,13 +2,15 @@
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-# RUN useradd -r -g appgroup api
+ENV LIB=api
+ENV API_ROOT=/app/bio_check/$LIB
 
-# USER api
+RUN mkdir $API_ROOT
+RUN mkdir /app/bio_check/data_model
 
-RUN mkdir /app/bio_check/api
-
-COPY . /app/bio_check/api
+COPY data_model.py /app/bio_check/data_model/api.py
+COPY ../shared.py /app/bio_check/data_model/shared.py
+COPY . $API_ROOT
 
 EXPOSE 3001
 

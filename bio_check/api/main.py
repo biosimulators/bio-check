@@ -1,8 +1,6 @@
 import os
 import logging
-import tempfile
 import uuid
-from shutil import rmtree
 
 import dotenv
 from typing import *
@@ -13,7 +11,7 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
 from bio_check import MONGO_URI
-from bio_check.data_model.api import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
+from bio_check.api.data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
 from bio_check.io import save_uploaded_file
 from bio_check.storage.database import MongoDbConnector
 from bio_check.api.handlers.log_config import setup_logging

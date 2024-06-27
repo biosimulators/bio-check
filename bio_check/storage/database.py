@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from bio_check.data_model.shared import BaseClass, MultipleConnectorError
+from bio_check.shared import BaseClass
 
 
 @dataclass

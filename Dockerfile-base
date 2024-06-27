@@ -13,12 +13,12 @@ RUN groupadd -r appgroup \
 
 WORKDIR /app
 
-RUN mkdir /app/bio_check  \
-    && touch /app/bio_check/__init__.py
+RUN mkdir /app/bio_check
 
 COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
 COPY bio_check/io.py /app/bio_check/io.py
+COPY bio_check/__init__.py /app/bio_check/__init__.py
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 

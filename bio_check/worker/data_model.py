@@ -1,10 +1,9 @@
 # -- worker models -- #
 
 
-from time import sleep
 from typing import *
 
-from bio_check.data_model.shared import BaseModel, Job
+from bio_check.shared import BaseModel, Job
 
 
 class InProgressJob(Job):
