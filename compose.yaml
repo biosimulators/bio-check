@@ -36,6 +36,10 @@ services:
 volumes:
   mongo-data:
 
+# secrets:
+#   my_secret:
+#     file: ~/.env
+
 networks:
   appnet:
     driver: bridge
