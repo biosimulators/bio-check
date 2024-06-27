@@ -2,9 +2,9 @@
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-RUN useradd -r -g appgroup api
+# RUN useradd -r -g appgroup api
 
-USER api
+# USER api
 
 EXPOSE 3001
 

@@ -1,37 +1,27 @@
 # -- This should serve as the main file for worker container -- #
 
-import os
-import uuid
-from types import NoneType
+
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import partial
-from time import sleep
 from types import NoneType
 from typing import *
 
 from pymongo.mongo_client import MongoClient
-
-from bio_check.worker.compare import utc_comparison
-from bio_check.storage.database import MongoDbConnector
-from bio_check.data_model.worker import UtcComparison, SimulationError
-
-
 import numpy as np
 import pandas as pd
 
-from biosimulator_processes.execute import exec_utc_comparison
-
-from bio_check import unique_id, MONGO_URI, load_arrows
-from bio_check.data_model.shared import BaseClass, MultipleConnectorError
+from bio_check import unique_id, load_arrows
+from bio_check.data_model.shared import BaseClass
 from bio_check.storage.database import MongoDbConnector
 from bio_check.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
-from bio_check.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
+from bio_check.worker.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from bio_check.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
+MONGO_URI = "mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
 mongo_client = MongoClient(MONGO_URI)
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 

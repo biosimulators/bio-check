@@ -10,13 +10,13 @@ lib="$1"
 run_="$2" # --run
 prune="$3"  # --prune
 
+set -e
 
 if [ "$prune" == "--prune" ]; then
   yes | docker system prune -a
 fi
 
-cd bio_check/"$lib" || exit
-docker build -t ghcr.io/biosimulators/bio-check-"$lib" .
+docker build -f bio_check/"$lib"/Dockerfile -t ghcr.io/biosimulators/bio-check-"$lib" ./bio_check/"$lib"
 
 if [ "$run_" == "--run" ]; then
   echo "Running container for $lib"
