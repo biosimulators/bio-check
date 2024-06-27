@@ -2,9 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /src
 
-COPY requirements.worker.txt .
+COPY requirements.worker.txt ./assets/requirements.worker.txt
 
-RUN pip install --no-cache-dir -r requirements.api.txt
+RUN pip install --no-cache-dir -r ./assets/requirements.worker.txt
 
 COPY bio_check/worker .
 
