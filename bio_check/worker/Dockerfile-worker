@@ -24,8 +24,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     wget  \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --upgrade pip \
-    && poetry add wheel setuptools
+    && poetry run pip install --upgrade pip \
+    && poetry add wheel setuptools biosimulator-processes \
+    && echo "" > /app/README.md \
+    && poetry install \
+    # && poetry add biosimulators-utils --extras=logging
 
 # RUN poetry add \
 #     biosimulators-copasi \
@@ -37,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 #     # numpy \
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
-SHELL ["/usr/bin/env", "-c"]
+SHELL ["/usr/bin/env bash", "-c"]
 
 CMD ["bash", "-c", "source /app/.venv/bin/activate && poetry run python3 /app/bio_check/worker/main.py"]
 # && python /app/bio_check/worker/worker_main.py"]

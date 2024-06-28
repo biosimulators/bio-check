@@ -8,17 +8,14 @@ ENV BASE_ROOT=ghcr.io/biosimulators/bio-check
 ENV BASE_IMAGE="$BASE_VERSION-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN groupadd -r appgroup \
-    && mkdir /app \
-    && mkdir /app/bio_check  \
-    && mkdir /app/data
-
 WORKDIR /app
 
-COPY bio_check /app/bio_check
-COPY pyproject.toml /app/pyproject.toml
-COPY poetry.lock /app/poetry.lock
-COPY assets/scripts/enter.sh /app/.enter.sh
+RUN mkdir /app/bio_check  \
+    && mkdir /app/data
+
+COPY ./pyproject.toml ./poetry.lock ./assets/requirements.base.txt /app/
+COPY ./bio_check/__init__.py ./bio_check/io.py ./bio_check/database.py ./bio_check/shared.py  /app/bio_check/
+COPY ./assets/scripts/enter.sh /app/.enter.sh
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
@@ -53,9 +50,8 @@ RUN pip install --upgrade pip  \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
     && poetry update \
-    && poetry install --no-cache --no-root --no-interaction \
+    && poetry install \
     && chmod +x /app/.enter.sh
 
 # Set the entrypoint
 ENTRYPOINT ["/app/.enter.sh"]
-
