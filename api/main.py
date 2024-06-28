@@ -173,4 +173,4 @@ async def fetch_results(comparison_id: str):
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-docker build -f ./worker/Dockerfile-worker -t ghcr.io/biosimulators/bio-check-worker:0.0.0 ./worker
+

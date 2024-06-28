@@ -11,8 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-RUN mkdir /app/bio_check  \
-    && mkdir /app/data
+RUN mkdir /app/data
 
 # copy deps
 COPY ./assets/requirements.base.txt /app/requirements.txt
@@ -24,3 +23,9 @@ RUN pip install --upgrade pip  \
     && pip uninstall biosimulators-utils -y \
     && pip uninstall biosimulators-masspy -y \
     && pip install --no-cache-dir -r ./requirements.txt
+
+# yes | docker system prune -a && yes | docker buildx prune -a \
+#   && docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" . \
+#   && docker tag "$PKG_ROOT"-base:"$base_version" "$PKG_ROOT"-base:latest \
+#   && docker build -f ./api/Dockerfile-api -t ghcr.io/biosimulators/bio-check-api:0.0.0 ./api \
+#   && docker build -f ./worker/Dockerfile-worker -t ghcr.io/biosimulators/bio-check-worker:0.0.0 ./worker

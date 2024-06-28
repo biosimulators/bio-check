@@ -5,7 +5,7 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 
 WORKDIR /app
 
-COPY . /app/bio_check/worker
+COPY . /app/worker
 
 RUN echo pip show biosimulators-amici | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
     && echo pip show biosimulators-copasi | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
