@@ -4,14 +4,43 @@ WORKDIR /app
 
 COPY . /app/bio_check/worker
 
-RUN poetry add \
-    biosimulators-copasi \
-    biosimulators-amici \
-    biosimulators-tellurium \
-    biosimulator-processes \
-    && poetry add biosimulators-utils --extras=logging
-    # h5py \
-    # numpy \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    build-essential  \
+    libncurses5  \
+    cmake  \
+    make  \
+    libx11-dev  \
+    libc6-dev  \
+    libx11-6  \
+    libc6  \
+    gcc  \
+    swig \
+    pkg-config  \
+    curl  \
+    tar  \
+    libgl1-mesa-glx  \
+    libice6  \
+    libsm6 \
+    wget  \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip \
+    && poetry add wheel setuptools
+
+# RUN poetry add \
+#     biosimulators-copasi \
+#     biosimulators-amici \
+#     biosimulators-tellurium \
+#     biosimulator-processes \
+#     && poetry add biosimulators-utils --extras=logging
+#     # h5py \
+#     # numpy \
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
-CMD ["/usr/bin/env", "bash"]
+SHELL ["/usr/bin/env", "-c"]
+
+CMD ["bash", "-c", "source /app/.venv/bin/activate && poetry run python3 /app/bio_check/worker/main.py"]
+# && python /app/bio_check/worker/worker_main.py"]
+# yes | docker system prune -a \
+#     && docker build -f bio_check/worker/Dockerfile-worker -t ghcr.io/biosimulators/bio-check-worker:0.0.0 ./bio_check/worker \
+#     && docker run --name worker -it ghcr.io/biosimulators/bio-check-worker:0.0.0

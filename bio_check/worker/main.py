@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 from bio_check.database import MongoDbConnector
 from bio_check.worker.jobs import Supervisor
@@ -18,3 +19,10 @@ async def main():
         result = await supervisor.check_jobs(max_retries=MAX_RETRIES, delay=DELAY_TIMER)
         if result > 0:
             n_timeouts += 1
+
+
+if __name__ == "__main__":
+    for _ in range(5):
+        print("Here is where we run")
+        asyncio.sleep(3)
+
