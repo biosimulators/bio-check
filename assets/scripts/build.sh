@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-
 export PKG_ROOT="ghcr.io/biosimulators/bio-check"
 version="$1"
 
 # clear system
-yes | docker system prune
+yes | docker system prune -a
 yes | docker buildx prune
 
 
