@@ -10,7 +10,7 @@ COPY . /app/bio_check/worker
 RUN echo pip show biosimulators-amici | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
     && echo pip show biosimulators-copasi | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
     && echo pip show biosimulators-tellurium | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
-    && pip install --no-cache-dir /app/requirements.txt
+    && pip install --no-cache-dir -r /app/requirements.txt
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
 CMD ["python3"]
