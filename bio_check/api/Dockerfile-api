@@ -7,8 +7,6 @@ WORKDIR /app
 
 COPY . /app/bio_check/api
 
-ENV packages="tensorstore aiofiles aiobotocore pyyaml httpx uvicorn"
-
 RUN poetry add tensorstore aiofiles aiobotocore pyyaml httpx uvicorn
 
 # TODO: add this and make it work
