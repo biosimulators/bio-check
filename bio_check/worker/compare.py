@@ -5,7 +5,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from biosimulator_processes.execute import exec_utc_comparison
+# from biosimulator_processes.execute import exec_utc_comparison
 
 from bio_check.worker.data_model import UtcComparison, SimulationError, UtcSpeciesComparison
 from bio_check.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
@@ -44,13 +44,13 @@ def utc_comparison(
         simulators=simulators)
 
 
-def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: str = None, include_outputs: bool = True):
-    # TODO: ensure that specific simulators get selected with the list of simulators.
-    return exec_utc_comparison(
-        omex_fp=omex_fp,
-        simulators=simulators,
-        comparison_id=comparison_id or 'utc-simulator-verification',
-        include_outputs=include_outputs)
+# def generate_utc_comparison(omex_fp: str, simulators: list[str], comparison_id: str = None, include_outputs: bool = True):
+#     # TODO: ensure that specific simulators get selected with the list of simulators.
+#     return exec_utc_comparison(
+#         omex_fp=omex_fp,
+#         simulators=simulators,
+#         comparison_id=comparison_id or 'utc-simulator-verification',
+#         include_outputs=include_outputs)
 
 
 def generate_biosimulators_utc_species_comparison(omex_fp, out_dir, species_name, simulators, ground_truth=None):

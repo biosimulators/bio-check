@@ -7,7 +7,5 @@ WORKDIR /app
 
 COPY . /app/bio_check/worker
 
-RUN ./assets/scripts/add_deps.sh "biosimulators-amici biosimulators-copasi biosimulators-tellurium biosimulator-processes"
-
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
 CMD ["python3"]

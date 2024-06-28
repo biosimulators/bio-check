@@ -1,48 +1,47 @@
 # FROM python:3.11-slim-bullseye
-FROM ghcr.io/biosimulators/biosimulators:latest as base_image
+# FROM ghcr.io/biosimulators/biosimulators:latest as base_image
 
 # Install dependencies required for building Python from source
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    wget \
-    libssl-dev \
-    zlib1g-dev \
-    libncurses5-dev \
-    libreadline-dev \
-    libffi-dev \
-    libsqlite3-dev \
-    libbz2-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     build-essential \
+#     wget \
+#     libssl-dev \
+#     zlib1g-dev \
+#     libncurses5-dev \
+#     libreadline-dev \
+#     libffi-dev \
+#     libsqlite3-dev \
+#     libbz2-dev \
+#     libc6-dev \
+#     g++ \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
+#
+# # Download and install Python 3.11
+# RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz \
+#     && tar xzf Python-3.11.0.tgz \
+#     && cd Python-3.11.0 \
+#     && ./configure --enable-optimizations --with-system-ffi --with-ensurepip=install \
+#     && make -j $(nproc) \
+#     && make altinstall \
+#     && cd .. \
+#     && rm -rf Python-3.11.0 Python-3.11.0.tgz
+#
+# # Set the newly installed Python 3.11 as the default python3
+# RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.11 1
+#
+# # Install pip for Python 3.11
+# RUN wget https://bootstrap.pypa.io/get-pip.py \
+#     && python3.11 get-pip.py \
+#     && rm get-pip.py
 
-# Uninstall existing Python if needed (this step depends on how Python is installed in the base image)
-# RUN apt-get remove -y python3.9
-
-# Download and install Python 3.11
-RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz \
-    && tar xzf Python-3.11.0.tgz \
-    && cd Python-3.11.0 \
-    && ./configure --enable-optimizations \
-    && make -j $(nproc) \
-    && make altinstall \
-    && cd .. \
-    && rm -rf Python-3.11.0 Python-3.11.0.tgz
-
-# Set the newly installed Python 3.11 as the default python3
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.11 1
-
-# Install pip for Python 3.11
-RUN wget https://bootstrap.pypa.io/get-pip.py \
-    && python3.11 get-pip.py \
-    && rm get-pip.py
-
-FROM base_image
+FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
 
 # TODO: make base version more nuanced
 ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
-ENV BASE_VERSION=0.0.2
+ENV BASE_VERSION=0.0.0
 ENV BASE_IMAGE="$PACKAGE_ROOT-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -63,13 +62,18 @@ COPY ./assets/scripts/enter.sh /app/.enter.sh
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 RUN pip install --upgrade pip  \
-    && pip install poetry \
-    && poetry config virtualenvs.in-project true \
-    && poetry update \
-    && echo "bio-check-base" > /app/README.md \
-    && poetry install \
-    && chmod +x /app/.enter.sh \
-    && rm /app/README.md
+    && pip install biosimulators-copasi biosimulators-amici biosimulators-tellurium \
+    && pip install .
+
+# RUN pip install --upgrade pip \
+#     && pip install poetry \
+#     && poetry config virtualenvs.in-project true \
+#     && poetry update \
+#     && echo "bio-check-base" > /app/README.md \
+#     && poetry install --no-interaction \
+#     && poetry add biosimulators-copasi biosimulators-amici biosimulators-tellurium \
+#     && chmod +x /app/.enter.sh \
+#     && rm /app/README.md
 
 # Set the entrypoint
 ENTRYPOINT ["/app/.enter.sh"]
