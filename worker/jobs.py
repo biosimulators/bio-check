@@ -6,7 +6,6 @@ import uuid
 from asyncio import sleep
 from dataclasses import dataclass
 from functools import partial
-from types import NoneType
 from typing import *
 
 from pymongo.mongo_client import MongoClient
@@ -82,7 +81,7 @@ class Worker(BaseClass):
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
             comparison_id=comparison_id,
-            ground_truth=truth_vals.to_dict() if not isinstance(truth_vals, NoneType) else truth_vals)
+            ground_truth=truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals)
         spec_comparisons = []
         for spec_name, comparison_data in comparison['results'].items():
             species_comparison = UtcSpeciesComparison(

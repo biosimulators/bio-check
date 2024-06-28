@@ -3,7 +3,7 @@ FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
 
-# TODO: make base version more nuanced
+# TODO: make base version more nuanceddo
 ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
 ENV BASE_VERSION=0.0.0
 ENV BASE_IMAGE="$PACKAGE_ROOT-base:$BASE_VERSION"
@@ -14,15 +14,13 @@ WORKDIR /app
 RUN mkdir /app/data
 
 # copy deps
-COPY ./assets/requirements.base.txt /app/requirements.txt
+COPY ./assets/requirements.base.txt ./assets/scripts/remove-pkgs.sh ./assets/dropped.txt /app/assets/
 
-# copy entry script
-COPY ./assets/scripts/enter.sh /app/.enter.sh
-
-RUN pip install --upgrade pip  \
-    && pip uninstall biosimulators-utils -y \
-    && pip uninstall biosimulators-masspy -y \
-    && pip install --no-cache-dir -r ./requirements.txt
+RUN chmod +x /app/assets/remove-pkgs.sh \
+    && pip install --upgrade pip  \
+    && /app/assets/remove-pkgs.sh \
+    && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
+    && rm /app/assets/remove-pkgs.sh
 
 # yes | docker system prune -a && yes | docker buildx prune -a \
 #   && docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" . \

@@ -4,7 +4,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from datetime import datetime
-from types import NoneType
 from typing import Mapping, Any, Dict, Union, List
 
 from pymongo import MongoClient
@@ -100,7 +99,7 @@ class MongoDbConnector(DatabaseConnector):
         result = coll.insert_one(kwargs)
         return result
 
-    def get_collection(self, collection_name: str) -> Collection | None:
+    def get_collection(self, collection_name: str) -> Collection:
         try:
             return self.db[collection_name]
         except:
@@ -161,7 +160,7 @@ class MongoDbConnector(DatabaseConnector):
         # check if query already exists
         # job_query = coll.find_one({"job_id": job_id})
         job_query = await self.read(collection_name, job_id=job_id)
-        if isinstance(job_query, NoneType):
+        if isinstance(job_query, type(None)):
             pending_job_spec = {
                 "job_id": job_id,
                 "status": "PENDING",
@@ -211,7 +210,7 @@ class MongoDbConnector(DatabaseConnector):
         for i, collection in enumerate(collections):
             coll = self.get_collection(collection)
             complete_job = coll.find_one({'comparison_id': comparison_id})
-            if not isinstance(complete_job, NoneType):
+            if not isinstance(complete_job, type(None)):
                 return complete_job
             else:
                 next_i = i + 1 if i < len(collections) else i

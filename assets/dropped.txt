@@ -1,0 +1,12 @@
+biosimulators-bionetgen
+biosimulators-boolnet
+biosimulators-cbmpy
+biosimulators-cobrapy
+biosimulators-gillespy2
+biosimulators-ginsim
+biosimulators-libsbmlsi
+biosimulators-pyneuroml
+biosimulators-pysces
+biosimulators-rbapy
+biosimulators-masspy
+biosimulators-xpp

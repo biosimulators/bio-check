@@ -7,10 +7,14 @@ WORKDIR /app
 
 COPY . /app/worker
 
-RUN echo pip show biosimulators-amici | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
-    && echo pip show biosimulators-copasi | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
-    && echo pip show biosimulators-tellurium | grep Version | cut -d ' ' -f 2 >> /app/requirements.txt \
-    && pip install --no-cache-dir -r /app/requirements.txt
+RUN pip uninstall biosimulators-utils -y \
+    && echo "\nbiosimulators-utils[logging]==0.1.187" >> /app/assets/requirements.base.txt \
+    && pip install biosimulators-utils[logging]==0.1.187
+
+# && pip install --no-cache-dir -r /app/assets/requirements.base.txt
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
-CMD ["python3"]
+
+WORKDIR /app/worker
+
+CMD ["python3", "main.py"]
