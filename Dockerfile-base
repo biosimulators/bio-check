@@ -29,3 +29,7 @@ RUN pip install --upgrade pip  \
 #   && docker tag "$PKG_ROOT"-base:"$base_version" "$PKG_ROOT"-base:latest \
 #   && docker build -f ./api/Dockerfile-api -t ghcr.io/biosimulators/bio-check-api:0.0.0 ./api \
 #   && docker build -f ./worker/Dockerfile-worker -t ghcr.io/biosimulators/bio-check-worker:0.0.0 ./worker
+
+
+# docker run --name worker --platform linux/amd64 -it ghcr.io/biosimulators/bio-check-worker:0.0.0 \
+#   && docker run --name api --platform linux/amd64 -it ghcr.io/biosimulators/bio-check-api:0.0.0

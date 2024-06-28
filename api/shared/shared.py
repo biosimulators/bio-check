@@ -17,7 +17,7 @@ class BaseModel(_BaseModel):
 @dataclass
 class BaseClass:
     """Base Python Dataclass multipurpose class with custom app configuration."""
-    def todict(self):
+    def to_dict(self):
         return asdict(self)
 
 

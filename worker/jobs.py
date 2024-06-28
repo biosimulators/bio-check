@@ -2,6 +2,8 @@
 
 
 import tempfile
+import uuid 
+from asyncio import sleep
 from dataclasses import dataclass
 from functools import partial
 from types import NoneType
@@ -11,7 +13,6 @@ from pymongo.mongo_client import MongoClient
 import numpy as np
 import pandas as pd
 
-from bio_check import unique_id, load_arrows
 from worker.shared.shared import BaseClass
 from worker.shared.database import MongoDbConnector
 from worker.data_model import UtcComparison, SimulationError, UtcSpeciesComparison
@@ -24,6 +25,26 @@ DB_NAME = "service_requests"
 MONGO_URI = "mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
 mongo_client = MongoClient(MONGO_URI)
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+
+
+def unique_id(): str(uuid.uuid4())
+
+
+async def load_arrows(timer):
+    check_timer = timer
+    ell = ""
+    bars = ""
+    msg = "|"
+    n_ellipses = timer
+    log_interval = check_timer / n_ellipses
+    for n in range(n_ellipses):
+        single_interval = log_interval / 3
+        await sleep(single_interval)
+        bars += "="
+        disp = bars + ">"
+        if n == n_ellipses - 1:
+            disp += "|"
+        print(disp)
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
@@ -330,3 +351,6 @@ class Supervisor(BaseClass):
 
     def call_worker(self, job_params: Dict, worker_id: Optional[str] = None) -> Worker:
         return Worker(job_params=job_params, worker_id=worker_id)
+    
+
+

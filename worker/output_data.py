@@ -6,9 +6,11 @@ import numpy as np
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
+from worker.data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.io import standardize_report_outputs
-from worker.shared.io import make_dir, read_report_outputs
+from worker.io import read_report_outputs
+from worker.shared.io import make_dir
 
 
 def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:
