@@ -1,16 +1,15 @@
  # Api container
 
 # TODO: Ensure read from BASE_VERSION.txt
-
-FROM ghcr.io/biosimulators/bio-check-base:0.0.1
+FROM ghcr.io/biosimulators/bio-check-base:latest
 
 WORKDIR /app
 
-COPY bio_check/api /app/bio_check/api
+COPY . /app/bio_check/api
 
 EXPOSE 3001
 
-RUN poetry add tensorstore aiofiles aiobotocore pyyaml httpx uvicorn
+RUN ./assets/scripts/add_deps.sh "tensorstore aiofiles aiobotocore pyyaml httpx uvicorn"
 
 CMD ["uvicorn", "bio_check.api.main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
 # "poetry", "run",

@@ -1,49 +1,13 @@
-FROM ghcr.io/biosimulators/bio-check-base:0.0.1
+# Worker container
+
+# TODO: Read in from BASE_VERSION.txt aka the most recent stable release
+FROM ghcr.io/biosimulators/bio-check-base:latest
 
 WORKDIR /app
 
 COPY . /app/bio_check/worker
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    build-essential  \
-    libncurses5  \
-    cmake  \
-    make  \
-    libx11-dev  \
-    libc6-dev  \
-    libx11-6  \
-    libc6  \
-    gcc  \
-    swig \
-    pkg-config  \
-    curl  \
-    tar  \
-    libgl1-mesa-glx  \
-    libice6  \
-    libsm6 \
-    wget  \
-    && rm -rf /var/lib/apt/lists/* \
-    && poetry run pip install --upgrade pip \
-    && poetry add wheel setuptools biosimulator-processes \
-    && echo "" > /app/README.md \
-    && poetry install \
-    # && poetry add biosimulators-utils --extras=logging
-
-# RUN poetry add \
-#     biosimulators-copasi \
-#     biosimulators-amici \
-#     biosimulators-tellurium \
-#     biosimulator-processes \
-#     && poetry add biosimulators-utils --extras=logging
-#     # h5py \
-#     # numpy \
+RUN ./assets/scripts/add_deps.sh "biosimulators-amici biosimulators-copasi biosimulators-tellurium biosimulator-processes"
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
-SHELL ["/usr/bin/env bash", "-c"]
-
-CMD ["bash", "-c", "source /app/.venv/bin/activate && poetry run python3 /app/bio_check/worker/main.py"]
-# && python /app/bio_check/worker/worker_main.py"]
-# yes | docker system prune -a \
-#     && docker build -f bio_check/worker/Dockerfile-worker -t ghcr.io/biosimulators/bio-check-worker:0.0.0 ./bio_check/worker \
-#     && docker run --name worker -it ghcr.io/biosimulators/bio-check-worker:0.0.0
+CMD ["python3"]

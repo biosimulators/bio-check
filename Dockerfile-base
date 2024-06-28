@@ -1,11 +1,13 @@
-FROM python:3.11-slim-bullseye
+# FROM python:3.11-slim-bullseye
+
+FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
 
 # TODO: make base version more nuanced
-ENV BASE_VERSION=latest
-ENV BASE_ROOT=ghcr.io/biosimulators/bio-check
-ENV BASE_IMAGE="$BASE_VERSION-base:$BASE_VERSION"
+ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
+ENV BASE_VERSION=0.0.2
+ENV BASE_IMAGE="$PACKAGE_ROOT-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
@@ -13,45 +15,55 @@ WORKDIR /app
 RUN mkdir /app/bio_check  \
     && mkdir /app/data
 
-COPY ./pyproject.toml ./poetry.lock ./assets/requirements.base.txt /app/
+# copy deps
+COPY ./pyproject.toml ./poetry.lock /app/
+
+# copy package root files
 COPY ./bio_check/__init__.py ./bio_check/io.py ./bio_check/database.py ./bio_check/shared.py  /app/bio_check/
+
+# copy entry script
 COPY ./assets/scripts/enter.sh /app/.enter.sh
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 # hdf5 deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libc-dev \
-    linux-headers-arm64 \
-    libjpeg-dev \
-    zlib1g-dev \
-    libmariadb-dev \
-    libffi-dev \
-    libopenblas-dev \
-    libgfortran5 \
-    liblapack-dev \
-    build-essential \
-    libssl-dev \
-    libhdf5-dev \
-    pkg-config \
-    wget \
-    build-essential \
-    cmake \
-    swig \
-    libbz2-dev \
-    && apt-get clean  \
-    && rm -rf /var/lib/apt/lists/*  \
-    && apt-get autoremove -y
-
-ENV PYTHONUNBUFFERED 1
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     gcc \
+#     libc-dev \
+#     linux-headers-arm64 \
+#     libjpeg-dev \
+#     zlib1g-dev \
+#     libmariadb-dev \
+#     libffi-dev \
+#     libopenblas-dev \
+#     libgfortran5 \
+#     liblapack-dev \
+#     build-essential \
+#     zlib1g-dev \
+#     libncurses5-dev \
+#     libreadline-dev \
+#     libssl-dev \
+#     libhdf5-dev \
+#     pkg-config \
+#     wget \
+#     build-essential \
+#     cmake \
+#     swig \
+#     libbz2-dev \
+#     && apt-get clean  \
+#     && rm -rf /var/lib/apt/lists/*  \
+#     && apt-get autoremove -y
+#
+# ENV PYTHONUNBUFFERED 1
 
 RUN pip install --upgrade pip  \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
     && poetry update \
+    && echo "bio-check-base" > /app/README.md \
     && poetry install \
-    && chmod +x /app/.enter.sh
+    && chmod +x /app/.enter.sh \
+    && rm /app/README.md
 
 # Set the entrypoint
 ENTRYPOINT ["/app/.enter.sh"]
