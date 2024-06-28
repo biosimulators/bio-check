@@ -62,8 +62,13 @@ COPY ./assets/scripts/enter.sh /app/.enter.sh
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 RUN pip install --upgrade pip  \
+    && pip uninstall biosimulators-utils -y \
+    && pip uninstall biosimulators-masspy -y \
+    && pip install biosimulators-utils \
     && pip install biosimulators-copasi biosimulators-amici biosimulators-tellurium \
-    && pip install .
+    && echo "bio-check-base" > /app/README.md \
+    && pip install . \
+    && rm /app/README.md
 
 # RUN pip install --upgrade pip \
 #     && pip install poetry \
@@ -76,4 +81,6 @@ RUN pip install --upgrade pip  \
 #     && rm /app/README.md
 
 # Set the entrypoint
-ENTRYPOINT ["/app/.enter.sh"]
+# ENTRYPOINT ["/app/.enter.sh"]
+
+# CMD ["/usr/bin/env bash"]
