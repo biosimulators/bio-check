@@ -2,7 +2,7 @@
 FROM ghcr.io/biosimulators/biosimulators:latest as base_image
 
 # Install dependencies required for building Python from source
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     wget \
     libssl-dev \
