@@ -35,5 +35,6 @@ tests
 # bio_check/api
 # bio_check/worker
 !enter.sh
+!add_deps.sh
 bio_check/.env
 

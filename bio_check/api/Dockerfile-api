@@ -7,9 +7,14 @@ WORKDIR /app
 
 COPY . /app/bio_check/api
 
-EXPOSE 3001
+ENV packages="tensorstore aiofiles aiobotocore pyyaml httpx uvicorn"
 
-RUN ./assets/scripts/add_deps.sh "tensorstore aiofiles aiobotocore pyyaml httpx uvicorn"
+RUN poetry add tensorstore aiofiles aiobotocore pyyaml httpx uvicorn
+
+# TODO: add this and make it work
+# COPY ./assets/scripts/add_deps.sh ./add_deps.sh
+
+EXPOSE 3001
 
 CMD ["uvicorn", "bio_check.api.main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
 # "poetry", "run",

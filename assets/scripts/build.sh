@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-export PKG_ROOT="ghcr.io/biosimulators/bio-check"
+export PKG_ROOT=ghcr.io/biosimulators/bio-check
 version="$1"
+base_version="$2"
 
 # clear system
 yes | docker system prune -a
-yes | docker buildx prune
-
 
 # build base
-docker build -f ./Dockerfile-base -it "$PKG_ROOT"-base:"$version" .
+docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" .
 
 # build api
 docker build -f bio_check/api/Dockerfile-api -t "$PKG_ROOT"-api:"$version" ./bio_check/api

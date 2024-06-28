@@ -1,6 +1,42 @@
 # FROM python:3.11-slim-bullseye
+FROM ghcr.io/biosimulators/biosimulators:latest as base_image
 
-FROM ghcr.io/biosimulators/biosimulators:latest
+# Install dependencies required for building Python from source
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    libssl-dev \
+    zlib1g-dev \
+    libncurses5-dev \
+    libreadline-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    libbz2-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Uninstall existing Python if needed (this step depends on how Python is installed in the base image)
+# RUN apt-get remove -y python3.9
+
+# Download and install Python 3.11
+RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz \
+    && tar xzf Python-3.11.0.tgz \
+    && cd Python-3.11.0 \
+    && ./configure --enable-optimizations \
+    && make -j $(nproc) \
+    && make altinstall \
+    && cd .. \
+    && rm -rf Python-3.11.0 Python-3.11.0.tgz
+
+# Set the newly installed Python 3.11 as the default python3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.11 1
+
+# Install pip for Python 3.11
+RUN wget https://bootstrap.pypa.io/get-pip.py \
+    && python3.11 get-pip.py \
+    && rm get-pip.py
+
+FROM base_image
 
 LABEL authors="alexanderpatrie"
 
@@ -25,36 +61,6 @@ COPY ./bio_check/__init__.py ./bio_check/io.py ./bio_check/database.py ./bio_che
 COPY ./assets/scripts/enter.sh /app/.enter.sh
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
-
-# hdf5 deps
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     gcc \
-#     libc-dev \
-#     linux-headers-arm64 \
-#     libjpeg-dev \
-#     zlib1g-dev \
-#     libmariadb-dev \
-#     libffi-dev \
-#     libopenblas-dev \
-#     libgfortran5 \
-#     liblapack-dev \
-#     build-essential \
-#     zlib1g-dev \
-#     libncurses5-dev \
-#     libreadline-dev \
-#     libssl-dev \
-#     libhdf5-dev \
-#     pkg-config \
-#     wget \
-#     build-essential \
-#     cmake \
-#     swig \
-#     libbz2-dev \
-#     && apt-get clean  \
-#     && rm -rf /var/lib/apt/lists/*  \
-#     && apt-get autoremove -y
-#
-# ENV PYTHONUNBUFFERED 1
 
 RUN pip install --upgrade pip  \
     && pip install poetry \
