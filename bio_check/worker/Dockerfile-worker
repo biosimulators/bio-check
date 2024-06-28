@@ -8,8 +8,8 @@ RUN poetry add \
     biosimulators-copasi \
     biosimulators-amici \
     biosimulators-tellurium \
-    biosimulators-utils --extras=logging \
-    biosimulator-processes
+    biosimulator-processes \
+    && poetry add biosimulators-utils --extras=logging
     # h5py \
     # numpy \
 
