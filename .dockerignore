@@ -32,7 +32,8 @@ model-examples
 .gitignore
 .idea
 tests
-bio_check/api
-bio_check/worker
+# bio_check/api
+# bio_check/worker
 !enter.sh
 bio_check/.env
+

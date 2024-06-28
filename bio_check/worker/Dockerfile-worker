@@ -1,6 +1,8 @@
-FROM ghcr.io/biosimulators/bio-check-base:latest
+FROM ghcr.io/biosimulators/bio-check-base:0.0.1
 
-COPY bio_check/worker /app/bio_check/worker
+WORKDIR /app
+
+COPY . /app/bio_check/worker
 
 RUN poetry add \
     biosimulators-copasi \
@@ -12,4 +14,4 @@ RUN poetry add \
     # numpy \
 
 # TODO: For CMD, run a main python file that is a while loop checking for jobs
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["/usr/bin/env", "bash"]

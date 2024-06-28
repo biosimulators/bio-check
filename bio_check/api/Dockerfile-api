@@ -1,5 +1,7 @@
  # Api container
 
+# TODO: Ensure read from BASE_VERSION.txt
+
 FROM ghcr.io/biosimulators/bio-check-base:0.0.1
 
 WORKDIR /app
