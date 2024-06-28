@@ -4,7 +4,7 @@ from typing import *
 
 import numpy as np
 
-from bio_check.shared import BaseModel, Job, BaseClass
+from worker.shared.shared import BaseModel, Job, BaseClass
 
 
 @dataclass

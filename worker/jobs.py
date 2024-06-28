@@ -12,11 +12,11 @@ import numpy as np
 import pandas as pd
 
 from bio_check import unique_id, load_arrows
-from bio_check.shared import BaseClass
-from bio_check.database import MongoDbConnector
-from bio_check.worker.data_model import UtcComparison, SimulationError, UtcSpeciesComparison
-from bio_check.worker.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
-from bio_check.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
+from worker.shared.shared import BaseClass
+from worker.shared.database import MongoDbConnector
+from worker.data_model import UtcComparison, SimulationError, UtcSpeciesComparison
+from worker.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
+from worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 DB_TYPE = "mongo"  # ie: postgres, etc

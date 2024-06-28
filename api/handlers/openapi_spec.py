@@ -4,7 +4,7 @@ import os
 import yaml
 from fastapi.openapi.utils import get_openapi
 
-from bio_check.api.main import app
+from api.main import app
 
 
 def main():

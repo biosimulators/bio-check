@@ -18,3 +18,6 @@ docker build -f bio_check/api/Dockerfile-api -t "$PKG_ROOT"-api:"$lib_version" .
 
 # build worker
 docker build -f bio_check/worker/Dockerfile-worker -t "$PKG_ROOT"-worker:"$lib_version" ./bio_check/worker
+
+# test run
+# docker run --name base --platform linux/amd64 "$PKG_ROOT"-base:"$base_version" /usr/bin/env bash

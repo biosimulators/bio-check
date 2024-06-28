@@ -1,40 +1,4 @@
-# FROM python:3.11-slim-bullseye
-# FROM ghcr.io/biosimulators/biosimulators:latest as base_image
-
-# Install dependencies required for building Python from source
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     build-essential \
-#     wget \
-#     libssl-dev \
-#     zlib1g-dev \
-#     libncurses5-dev \
-#     libreadline-dev \
-#     libffi-dev \
-#     libsqlite3-dev \
-#     libbz2-dev \
-#     libc6-dev \
-#     g++ \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
-#
-# # Download and install Python 3.11
-# RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz \
-#     && tar xzf Python-3.11.0.tgz \
-#     && cd Python-3.11.0 \
-#     && ./configure --enable-optimizations --with-system-ffi --with-ensurepip=install \
-#     && make -j $(nproc) \
-#     && make altinstall \
-#     && cd .. \
-#     && rm -rf Python-3.11.0 Python-3.11.0.tgz
-#
-# # Set the newly installed Python 3.11 as the default python3
-# RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.11 1
-#
-# # Install pip for Python 3.11
-# RUN wget https://bootstrap.pypa.io/get-pip.py \
-#     && python3.11 get-pip.py \
-#     && rm get-pip.py
-
+# This base image is already configured for many purposes
 FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
@@ -51,36 +15,12 @@ RUN mkdir /app/bio_check  \
     && mkdir /app/data
 
 # copy deps
-COPY ./pyproject.toml ./poetry.lock /app/
-
-# copy package root files
-COPY ./bio_check/__init__.py ./bio_check/io.py ./bio_check/database.py ./bio_check/shared.py  /app/bio_check/
+COPY ./assets/requirements.base.txt /app/requirements.txt
 
 # copy entry script
 COPY ./assets/scripts/enter.sh /app/.enter.sh
 
-ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
-
 RUN pip install --upgrade pip  \
     && pip uninstall biosimulators-utils -y \
     && pip uninstall biosimulators-masspy -y \
-    && pip install biosimulators-utils \
-    && pip install biosimulators-copasi biosimulators-amici biosimulators-tellurium \
-    && echo "bio-check-base" > /app/README.md \
-    && pip install . \
-    && rm /app/README.md
-
-# RUN pip install --upgrade pip \
-#     && pip install poetry \
-#     && poetry config virtualenvs.in-project true \
-#     && poetry update \
-#     && echo "bio-check-base" > /app/README.md \
-#     && poetry install --no-interaction \
-#     && poetry add biosimulators-copasi biosimulators-amici biosimulators-tellurium \
-#     && chmod +x /app/.enter.sh \
-#     && rm /app/README.md
-
-# Set the entrypoint
-# ENTRYPOINT ["/app/.enter.sh"]
-
-# CMD ["/usr/bin/env bash"]
+    && pip install --no-cache-dir -r ./requirements.txt

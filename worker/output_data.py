@@ -2,14 +2,13 @@ import os
 from typing import *
 from importlib import import_module
 
-import pandas as pd
 import numpy as np
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
 # from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.io import standardize_report_outputs
-from bio_check.io import make_dir, read_report_outputs
+from worker.shared.io import make_dir, read_report_outputs
 
 
 def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:

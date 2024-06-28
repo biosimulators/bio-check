@@ -1,8 +1,8 @@
 import os
 import asyncio
 
-from bio_check.database import MongoDbConnector
-from bio_check.worker.jobs import Supervisor
+from worker.shared.database import MongoDbConnector
+from worker.jobs import Supervisor
 
 DELAY_TIMER = 5
 MAX_RETRIES = 5
