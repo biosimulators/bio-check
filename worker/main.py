@@ -2,7 +2,8 @@ import os
 import asyncio
 
 from shared import MongoDbConnector
-# from .jobs import Supervisor
+from jobs import Supervisor
+
 
 DELAY_TIMER = 5
 MAX_RETRIES = 5
@@ -11,6 +12,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 
 
 # async def main():
+#     keep in mind that data gets saved to ../../data
 #     n_timeouts = 0
 #     db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id="service_requests")
 #     supervisor = Supervisor(db_connector=db_connector)
@@ -24,5 +26,6 @@ MONGO_URI = os.getenv("MONGO_URI")
 if __name__ == "__main__":
     for _ in range(5):
         print("Here is where we run")
-        asyncio.sleep(3)
+        print(MONGO_URI)
+        asyncio.run(asyncio.sleep(3))
 

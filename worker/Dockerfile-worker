@@ -5,6 +5,8 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 
 WORKDIR /app
 
+ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
+
 COPY . /app/worker
 
 RUN pip uninstall biosimulators-utils -y \
@@ -12,4 +14,6 @@ RUN pip uninstall biosimulators-utils -y \
     && pip install biosimulators-utils[logging]==0.1.187 \
     && pip install biosimulators-copasi biosimulators-tellurium
 
-CMD ["python3", "worker/main.py"]
+WORKDIR /app/worker
+
+CMD ["python3", "main.py"]

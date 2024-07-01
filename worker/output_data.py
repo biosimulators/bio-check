@@ -9,7 +9,7 @@ from biosimulators_utils.config import Config
 from data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.io import standardize_report_outputs
-from io import read_report_outputs
+from io_worker import read_report_outputs
 from shared import make_dir
 
 

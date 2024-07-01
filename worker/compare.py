@@ -7,7 +7,7 @@ import pandas as pd
 # from biosimulator_processes.execute import exec_utc_comparison
 
 from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
-from io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
+from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
