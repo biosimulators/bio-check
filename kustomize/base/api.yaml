@@ -32,8 +32,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: api-config
-            - configMapRef:
-                name: shared-config
+            # - configMapRef:
+                # name: shared-config
 #          command: [ "/bin/sh", "-c", "env; cat /run/secrets/api-secrets/dbpswd" ]
           env:
             - name: MONGO_DB_PWD

@@ -32,8 +32,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: worker-config
-            - configMapRef:
-                name: shared-config
+            # - configMapRef:
+                # name: shared-config
 #          command: [ "/bin/sh", "-c", "env; cat /run/secrets/worker-secrets/dbpswd" ]
           env:
             - name: MONGO_DB_PWD
@@ -67,6 +67,14 @@ spec:
       imagePullSecrets:
         - name: ghcr-secret
       volumes:
+        - name: worker-secrets
+          secret:
+            items:
+              - key: mongo-password
+                path: mongo-password
+              - key: mongo-username
+                path: mongo-username
+            secretName: worker-secrets
         # - name: worker-secrets
         #   secret:
         #     items:
