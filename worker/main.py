@@ -13,7 +13,7 @@ DB_NAME = "service_requests"
 
 
 async def main():
-    # keep in mind that data gets saved to ../../data
+    # keep in mind that data gets saved to ../data
 
     # set timeout counter
     n_timeouts = 0
