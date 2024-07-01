@@ -5,7 +5,7 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 
 WORKDIR /app
 
-ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
+# ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
 
 COPY . /app/worker
 

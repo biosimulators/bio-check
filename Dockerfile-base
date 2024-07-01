@@ -8,6 +8,7 @@ ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
 ENV BASE_VERSION=0.0.0
 ENV BASE_IMAGE="$PACKAGE_ROOT-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
+ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
 
 WORKDIR /app
 
