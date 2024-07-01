@@ -1,4 +1,4 @@
-# This base image is already configured for many purposes
+# This base image is already configured for many purposes LATEST: 0.0.1
 FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"

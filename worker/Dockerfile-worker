@@ -1,4 +1,4 @@
-# Worker container
+# Worker container LATEST: 0.0.1
 
 # TODO: Read in from BASE_VERSION.txt aka the most recent stable release
 FROM ghcr.io/biosimulators/bio-check-base:latest
