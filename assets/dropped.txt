@@ -10,3 +10,4 @@ biosimulators-pysces
 biosimulators-rbapy
 biosimulators-masspy
 biosimulators-xpp
+cobra

@@ -7,9 +7,14 @@ WORKDIR /app
 
 COPY . /app/worker
 
-RUN pip uninstall biosimulators-utils -y \
+ENV PACKAGE_DIR="/app/worker"
+
+ENV PYTHONPATH=$PYTHONPATH:$PACKAGE_DIR
+
+RUN pipenv run uninstall biosimulators-utils -y \
     && echo "\nbiosimulators-utils[logging]==0.1.187" >> /app/assets/requirements.base.txt \
-    && pip install biosimulators-utils[logging]==0.1.187
+    && pipenv run install biosimulators-utils'[logging]'==0.1.187 \
+    && pipenv run pip install -e /app/worker
 
 # && pip install --no-cache-dir -r /app/assets/requirements.base.txt
 
@@ -17,4 +22,4 @@ RUN pip uninstall biosimulators-utils -y \
 
 WORKDIR /app/worker
 
-CMD ["python3", "main.py"]
+CMD ["pipenv", "run", "python3", "main.py"]

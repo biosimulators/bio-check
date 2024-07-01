@@ -52,5 +52,5 @@ if [ "$prune" == "--prune" ]; then
 fi
 
 # Build the Docker image
-docker build -f bio_check/"$lib"/Dockerfile-"$lib" -t ghcr.io/biosimulators/bio-check-"$lib":"$version" ./bio_check/"$lib"
+docker build -f ./"$lib"/Dockerfile-"$lib" -t ghcr.io/biosimulators/bio-check-"$lib":"$version" ./"$lib"
 
