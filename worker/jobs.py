@@ -20,9 +20,6 @@ from output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
-MONGO_URI = "mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
-mongo_client = MongoClient(MONGO_URI)
-db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
 
 def unique_id(): str(uuid.uuid4())
