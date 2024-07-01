@@ -9,6 +9,7 @@ DELAY_TIMER = 5
 MAX_RETRIES = 5
 MAX_TIMEOUTS = 2
 MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = "service_requests"
 
 
 async def main():
@@ -18,7 +19,7 @@ async def main():
     n_timeouts = 0
 
     # create connector and supervisor
-    db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id="service_requests")
+    db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
     supervisor = Supervisor(db_connector=db_connector)
 
     run = n_timeouts < MAX_TIMEOUTS
@@ -29,8 +30,10 @@ async def main():
 
 
 if __name__ == "__main__":
-    for _ in range(5):
-        print("Here is where we run")
-        print(MONGO_URI)
-        # asyncio.run(main())
+    asyncio.run(main())
 
+
+# net=app-net
+# docker network create "$net"
+# docker run -d --rm --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib":latest
+# docker run -it --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib"
