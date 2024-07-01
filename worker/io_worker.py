@@ -2,8 +2,9 @@ import os
 
 import h5py
 import libsbml
-from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
 from biosimulators_utils.combine.io import CombineArchiveReader
+
+from data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
 
 
 def get_sbml_species_names(fp: str) -> list[str]:

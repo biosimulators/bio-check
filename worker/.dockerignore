@@ -1,8 +1,10 @@
 .env
+__pycache__/
 bio_check/__pycache__
 *.pyc
 *.pyo
 *.pyd
+*.sh
 .Python
 env
 pip-log.txt
@@ -22,6 +24,7 @@ coverage.xml
 tmp
 commit.sh
 kustomize
+scripts
 BASE_VERSION.txt
 README.md
 *.yaml
@@ -30,9 +33,7 @@ model-examples
 .gitignore
 .idea
 tests
-# bio_check/api
-# bio_check/worker
+bio_check/api
+bio_check/worker
 !enter.sh
-!add_deps.sh
 bio_check/.env
-

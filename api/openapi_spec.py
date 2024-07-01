@@ -4,7 +4,7 @@ import os
 import yaml
 from fastapi.openapi.utils import get_openapi
 
-from bio_check.api.main import app
+from main import app
 
 
 def main():
@@ -23,7 +23,7 @@ def main():
 
     # Write the YAML OpenAPI spec to a file in subdirectory spec
     openapi_version = app.openapi_version.replace('.', '_')
-    spec_fp = f"{current_directory}/../spec/openapi_{openapi_version}_generated.yaml"
+    spec_fp = f"{current_directory}/spec/openapi_{openapi_version}_generated.yaml"
     if os.path.exists(spec_fp):
         print('Spec exists, overwriting')
         os.remove(spec_fp)

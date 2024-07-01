@@ -5,6 +5,6 @@ commit.sh
 env/
 __pycache__/
 *.pyc
-bio_check/worker/handlers/__pycache__/
+worker/handlers/__pycache__/
 *.egg-info/
 .env

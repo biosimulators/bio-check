@@ -1,0 +1,19 @@
+# Worker container
+
+# TODO: Read in from BASE_VERSION.txt aka the most recent stable release
+FROM ghcr.io/biosimulators/bio-check-base:latest
+
+WORKDIR /app
+
+# ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
+
+COPY . /app/worker
+
+RUN pip uninstall biosimulators-utils -y \
+    && echo "\nbiosimulators-utils[logging]==0.1.187" >> /app/assets/requirements.base.txt \
+    && pip install biosimulators-utils[logging]==0.1.187 \
+    && pip install biosimulators-copasi biosimulators-tellurium
+
+WORKDIR /app/worker
+
+CMD ["python3", "main.py"]

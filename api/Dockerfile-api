@@ -1,0 +1,13 @@
+ # Api container
+
+# TODO: Ensure read from BASE_VERSION.txt
+FROM ghcr.io/biosimulators/bio-check-base:latest
+
+WORKDIR /app
+
+COPY . /app/api
+
+EXPOSE 3001
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
+

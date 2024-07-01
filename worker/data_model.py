@@ -1,10 +1,22 @@
 # -- worker models -- #
-
-
-from time import sleep
+from dataclasses import dataclass
 from typing import *
 
-from bio_check.data_model.shared import BaseModel, Job
+import numpy as np
+
+from shared import BaseModel, Job, BaseClass
+
+
+@dataclass
+class BiosimulationsReportOutput(BaseClass):
+    dataset_label: str
+    data: np.ndarray
+
+
+@dataclass
+class BiosimulationsRunOutputData(BaseClass):
+    report_path: str
+    data: list[BiosimulationsReportOutput]
 
 
 class InProgressJob(Job):

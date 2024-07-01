@@ -1,39 +1,45 @@
 # -- This should serve as the main file for worker container -- #
 
-import os
-import uuid
-from types import NoneType
+
 import tempfile
-from dataclasses import dataclass, field
+import uuid 
+from asyncio import sleep
+from dataclasses import dataclass
 from functools import partial
-from time import sleep
-from types import NoneType
 from typing import *
 
 from pymongo.mongo_client import MongoClient
-
-from bio_check.worker.compare import utc_comparison
-from bio_check.storage.database import MongoDbConnector
-from bio_check.data_model.worker import UtcComparison, SimulationError
-
-
 import numpy as np
 import pandas as pd
 
-from biosimulator_processes.execute import exec_utc_comparison
-
-from bio_check import unique_id, MONGO_URI, load_arrows
-from bio_check.data_model.shared import BaseClass, MultipleConnectorError
-from bio_check.storage.database import MongoDbConnector
-from bio_check.data_model.worker import UtcComparison, SimulationError, UtcSpeciesComparison
-from bio_check.io import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
-from bio_check.worker.output_data import generate_biosimulator_utc_outputs, _get_output_stack
+from shared import BaseClass, MongoDbConnector
+from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
+from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
+from output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
-mongo_client = MongoClient(MONGO_URI)
-db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+
+
+def unique_id(): str(uuid.uuid4())
+
+
+async def load_arrows(timer):
+    check_timer = timer
+    ell = ""
+    bars = ""
+    msg = "|"
+    n_ellipses = timer
+    log_interval = check_timer / n_ellipses
+    for n in range(n_ellipses):
+        single_interval = log_interval / 3
+        await sleep(single_interval)
+        bars += "="
+        disp = bars + ">"
+        if n == n_ellipses - 1:
+            disp += "|"
+        print(disp)
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
@@ -71,7 +77,7 @@ class Worker(BaseClass):
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
             comparison_id=comparison_id,
-            ground_truth=truth_vals.to_dict() if not isinstance(truth_vals, NoneType) else truth_vals)
+            ground_truth=truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals)
         spec_comparisons = []
         for spec_name, comparison_data in comparison['results'].items():
             species_comparison = UtcSpeciesComparison(
@@ -340,3 +346,6 @@ class Supervisor(BaseClass):
 
     def call_worker(self, job_params: Dict, worker_id: Optional[str] = None) -> Worker:
         return Worker(job_params=job_params, worker_id=worker_id)
+    
+
+

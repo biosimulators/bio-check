@@ -1,17 +1,76 @@
 # -- db connectors -- #
 
-
+import os 
 from abc import abstractmethod, ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
-from types import NoneType
-from typing import Mapping, Any, Dict, Union, List
+from typing import *
 
+from pydantic import BaseModel as _BaseModel, ConfigDict
+from fastapi import UploadFile
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from bio_check.data_model.shared import BaseClass, MultipleConnectorError
+
+# -- globally-shared content-- #
+
+async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
+    # TODO: replace this with s3 and use save_dest
+    file_path = os.path.join(save_dest, uploaded_file.filename)
+    with open(file_path, 'wb') as file:
+        contents = await uploaded_file.read()
+        file.write(contents)
+    return file_path
+
+
+def make_dir(fp: str):
+    if not os.path.exists(fp):
+        os.mkdir(fp)
+
+
+# -- base models --
+
+class BaseModel(_BaseModel):
+    """Base Pydantic Model with custom app configuration"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+@dataclass
+class BaseClass:
+    """Base Python Dataclass multipurpose class with custom app configuration."""
+    def to_dict(self):
+        return asdict(self)
+
+
+class MultipleConnectorError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
+# -- jobs --
+
+class Job(BaseModel):
+    job_id: str
+    status: str
+    timestamp: str
+    comparison_id: str
+
+
+class InProgressJob(Job):
+    job_id: str
+    status: str
+    timestamp: str
+    comparison_id: str
+    worker_id: str
+
+
+class CompletedJob(Job):
+    job_id: str
+    status: str
+    timestamp: str
+    comparison_id: str
+    results: Dict
 
 
 @dataclass
@@ -100,7 +159,7 @@ class MongoDbConnector(DatabaseConnector):
         result = coll.insert_one(kwargs)
         return result
 
-    def get_collection(self, collection_name: str) -> Collection | None:
+    def get_collection(self, collection_name: str) -> Collection:
         try:
             return self.db[collection_name]
         except:
@@ -161,7 +220,7 @@ class MongoDbConnector(DatabaseConnector):
         # check if query already exists
         # job_query = coll.find_one({"job_id": job_id})
         job_query = await self.read(collection_name, job_id=job_id)
-        if isinstance(job_query, NoneType):
+        if isinstance(job_query, type(None)):
             pending_job_spec = {
                 "job_id": job_id,
                 "status": "PENDING",
@@ -211,7 +270,7 @@ class MongoDbConnector(DatabaseConnector):
         for i, collection in enumerate(collections):
             coll = self.get_collection(collection)
             complete_job = coll.find_one({'comparison_id': comparison_id})
-            if not isinstance(complete_job, NoneType):
+            if not isinstance(complete_job, type(None)):
                 return complete_job
             else:
                 next_i = i + 1 if i < len(collections) else i

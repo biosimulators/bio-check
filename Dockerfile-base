@@ -1,51 +1,34 @@
-FROM python:3.11-slim-bullseye
+# This base image is already configured for many purposes
+FROM ghcr.io/biosimulators/biosimulators:latest
+
 LABEL authors="alexanderpatrie"
 
-RUN mkdir /app
+# TODO: make base version more nuanceddo
+ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
+ENV BASE_VERSION=0.0.0
+ENV BASE_IMAGE="$PACKAGE_ROOT-base:$BASE_VERSION"
+ENV DEBIAN_FRONTEND=noninteractive
+ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
 
 WORKDIR /app
 
-RUN mkdir /app/bio_check && touch /app/bio_check/__init__.py
+RUN mkdir /app/data
 
-COPY bio_check/io.py /app/bio_check/io.py
+# copy deps
+COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt /app/assets/
 
-COPY assets/Pipfile /app/assets/Pipfile
-COPY assets/Pipfile.lock /app/Pipfile.lock
+RUN chmod +x /app/assets/remove_deps.sh \
+    && chmod +x /app/assets/update_deps.sh \
+    && pip install --upgrade pip  \
+    && /app/assets/remove_deps.sh \
+    && pip install --no-cache-dir -r /app/assets/requirements.base.txt
 
-ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
-
-# hdf5 deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libc-dev \
-    linux-headers-arm64 \
-    libjpeg-dev \
-    zlib1g-dev \
-    libmariadb-dev \
-    libffi-dev \
-    libopenblas-dev \
-    libgfortran5 \
-    liblapack-dev \
-    build-essential \
-    libssl-dev \
-    libhdf5-dev \
-    pkg-config \
-    wget \
-    build-essential \
-    cmake \
-    swig \
-    libbz2-dev
+# yes | docker system prune -a && yes | docker buildx prune -a \
+#   && docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" . \
+#   && docker tag "$PKG_ROOT"-base:"$base_version" "$PKG_ROOT"-base:latest \
+#   && docker build -f ./api/Dockerfile-api -t ghcr.io/biosimulators/bio-check-api:0.0.0 ./api \
+#   && docker build -f ./worker/Dockerfile-worker -t ghcr.io/biosimulators/bio-check-worker:0.0.0 ./worker
 
 
-
-# Clean up the apt cache and remove build dependencies to reduce image size
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* && apt-get autoremove -y
-
-ENV PYTHONUNBUFFERED 1
-
-# install pipenv and set up environment
-RUN pip install pipenv \
-    && pipenv install --system --deploy
-
-# RUN pip install --upgrade pip && pip install --no-cache-dir -r ./assets/requirements.base.txt
-
+# docker run --name worker --platform linux/amd64 -it ghcr.io/biosimulators/bio-check-worker:0.0.0 \
+#   && docker run --name api --platform linux/amd64 -it ghcr.io/biosimulators/bio-check-api:0.0.0

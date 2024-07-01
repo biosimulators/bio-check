@@ -1,8 +1,6 @@
 import os
 import logging
-import tempfile
 import uuid
-from shutil import rmtree
 
 import dotenv
 from typing import *
@@ -12,11 +10,11 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from bio_check import MONGO_URI
-from bio_check.data_model.api import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
-from bio_check.io import save_uploaded_file
-from bio_check.storage.database import MongoDbConnector
-from bio_check.api.handlers.log_config import setup_logging
+# from bio_check import MONGO_URI
+from data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
+from shared import save_uploaded_file
+from shared import MongoDbConnector
+from log_config import setup_logging
 
 # --load env -- #
 
@@ -50,7 +48,7 @@ ORIGINS = [
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
-
+MONGO_URI = os.getenv("MONGO_URI")
 
 # -- handle logging -- #
 
@@ -124,7 +122,7 @@ async def utc_comparison(
     try:
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
-        save_dest = "../tmp"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
+        save_dest = "../data"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
 
         # TODO: remove this when using a shared filestore
         if not os.path.exists(save_dest):
@@ -174,3 +172,5 @@ async def fetch_results(comparison_id: str):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
