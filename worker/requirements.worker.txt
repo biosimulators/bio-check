@@ -1,0 +1,4 @@
+biosimulators-utils==0.1.187
+biosimulators-amici~=0.1.24
+biosimulators-copasi~=0.1.35
+biosimulators-tellurium~=0.1.42

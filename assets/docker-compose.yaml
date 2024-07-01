@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - appnetwork
+
+  api:
+    build:
+      context: ./api
+      dockerfile: ./api/Dockerfile-api
+    container_name: api
+    environment:
+      - MONGO_URI=mongodb://your-remote-mongo-instance:27017
+    ports:
+      - "3001:3001"
+    networks:
+      - appnetwork
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: ./worker/Dockerfile-worker
+    container_name: worker
+    environment:
+      - MONGO_URI=mongodb://your-remote-mongo-instance:27017
+    networks:
+      - appnetwork
+
+volumes:
+  mongo-data:
+
+networks:
+  appnetwork:
+    driver: bridge

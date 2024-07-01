@@ -10,4 +10,10 @@ biosimulators-pysces
 biosimulators-rbapy
 biosimulators-masspy
 biosimulators-xpp
+biosimulators-utils
+biosimulators-copasi
+biosimulators-tellurium
+python-copasi
+tellurium
+masspy
 cobra

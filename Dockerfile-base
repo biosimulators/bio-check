@@ -14,15 +14,13 @@ WORKDIR /app
 RUN mkdir /app/data
 
 # copy deps
-COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/dropped.txt /app/assets/
+COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt /app/assets/
 
 RUN chmod +x /app/assets/remove_deps.sh \
+    && chmod +x /app/assets/update_deps.sh \
     && pip install --upgrade pip  \
     && /app/assets/remove_deps.sh \
-    && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
-    && rm /app/assets/remove_deps.sh \
-    && rm /app/assets/dropped.txt
-
+    && pip install --no-cache-dir -r /app/assets/requirements.base.txt
 
 # yes | docker system prune -a && yes | docker buildx prune -a \
 #   && docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" . \

@@ -11,10 +11,10 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
-from api.data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
-from api.shared.io import save_uploaded_file
-from api.shared.database import MongoDbConnector
-from api.handlers.log_config import setup_logging
+from data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
+from shared import save_uploaded_file
+from shared import MongoDbConnector
+from log_config import setup_logging
 
 # --load env -- #
 

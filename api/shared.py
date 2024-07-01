@@ -1,16 +1,76 @@
 # -- db connectors -- #
 
-
+import os 
 from abc import abstractmethod, ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import Mapping, Any, Dict, Union, List
+from typing import *
 
+from pydantic import BaseModel as _BaseModel, ConfigDict
+from fastapi import UploadFile
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from worker.shared.shared import BaseClass
+
+# -- globally-shared content-- #
+
+async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
+    # TODO: replace this with s3 and use save_dest
+    file_path = os.path.join(save_dest, uploaded_file.filename)
+    with open(file_path, 'wb') as file:
+        contents = await uploaded_file.read()
+        file.write(contents)
+    return file_path
+
+
+def make_dir(fp: str):
+    if not os.path.exists(fp):
+        os.mkdir(fp)
+
+
+# -- base models --
+
+class BaseModel(_BaseModel):
+    """Base Pydantic Model with custom app configuration"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+@dataclass
+class BaseClass:
+    """Base Python Dataclass multipurpose class with custom app configuration."""
+    def to_dict(self):
+        return asdict(self)
+
+
+class MultipleConnectorError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
+# -- jobs --
+
+class Job(BaseModel):
+    job_id: str
+    status: str
+    timestamp: str
+    comparison_id: str
+
+
+class InProgressJob(Job):
+    job_id: str
+    status: str
+    timestamp: str
+    comparison_id: str
+    worker_id: str
+
+
+class CompletedJob(Job):
+    job_id: str
+    status: str
+    timestamp: str
+    comparison_id: str
+    results: Dict
 
 
 @dataclass

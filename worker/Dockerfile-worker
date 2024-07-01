@@ -7,19 +7,9 @@ WORKDIR /app
 
 COPY . /app/worker
 
-ENV PACKAGE_DIR="/app/worker"
-
-ENV PYTHONPATH=$PYTHONPATH:$PACKAGE_DIR
-
-RUN pipenv run uninstall biosimulators-utils -y \
+RUN pip uninstall biosimulators-utils -y \
     && echo "\nbiosimulators-utils[logging]==0.1.187" >> /app/assets/requirements.base.txt \
-    && pipenv run install biosimulators-utils'[logging]'==0.1.187 \
-    && pipenv run pip install -e /app/worker
+    && pip install biosimulators-utils[logging]==0.1.187 \
+    && pip install biosimulators-copasi biosimulators-tellurium
 
-# && pip install --no-cache-dir -r /app/assets/requirements.base.txt
-
-# TODO: For CMD, run a main python file that is a while loop checking for jobs
-
-WORKDIR /app/worker
-
-CMD ["pipenv", "run", "python3", "main.py"]
+CMD ["python3", "worker/main.py"]

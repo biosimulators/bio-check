@@ -1,7 +1,7 @@
 import os
 import asyncio
 
-from .shared.database import MongoDbConnector
+from shared import MongoDbConnector
 # from .jobs import Supervisor
 
 DELAY_TIMER = 5
