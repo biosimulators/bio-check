@@ -277,3 +277,54 @@ class MongoDbConnector(DatabaseConnector):
                 next_msg = collections[next_i] if next_i < len(collections) else "None"
                 # TODO: Log this instead
                 print(f"Job not found in {collection}. Now searching {collections[i + 1]}")
+
+
+
+# import redis
+# import pymongo
+# import json
+# from bson import json_util
+# Redis configuration
+# redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+#
+# # MongoDB configuration
+# mongo_client = pymongo.MongoClient('mongodb://localhost:27017/')
+# mongo_db = mongo_client['your_database']
+# mongo_collection = mongo_db['your_collection']
+#
+# # Function to get data from MongoDB
+# def get_data_from_mongo(query):
+#     return mongo_collection.find_one(query)
+#
+# # Function to get data from Redis cache
+# def get_data_from_cache(key):
+#     cached_data = redis_client.get(key)
+#     if cached_data:
+#         return json.loads(cached_data, object_hook=json_util.object_hook)
+#     return None
+#
+# # Function to set data in Redis cache
+# def set_data_in_cache(key, data, ttl=300):
+#     redis_client.set(key, json.dumps(data, default=json_util.default), ex=ttl)
+#
+# # Cache-aside pattern implementation
+# def get_data(query):
+#     # Generate a unique key based on the query for Redis
+#     cache_key = f"mongo_cache:{json.dumps(query, sort_keys=True)}"
+#
+#     # Try to get data from Redis cache
+#     data = get_data_from_cache(cache_key)
+#     if data:
+#         print("Data retrieved from cache")
+#         return data
+#
+#     # If data is not found in cache, get it from MongoDB
+#     data = get_data_from_mongo(query)
+#     if data:
+#         # Store the retrieved data in Redis cache for future requests
+#         set_data_in_cache(cache_key, data)
+#         print("Data retrieved from MongoDB and stored in cache")
+#         return data
+#
+#     print("Data not found")
+#     return None
