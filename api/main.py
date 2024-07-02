@@ -49,6 +49,7 @@ ORIGINS = [
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 MONGO_URI = os.getenv("MONGO_URI")
+FILE_STORAGE_LOCATION = os.getenv("FILE_STORAGE_LOCATION")
 
 # -- handle logging -- #
 
@@ -122,7 +123,7 @@ async def utc_comparison(
     try:
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
-        save_dest = "../../data"  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
+        save_dest = FILE_STORAGE_LOCATION  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
 
         # TODO: remove this when using a shared filestore
         if not os.path.exists(save_dest):
