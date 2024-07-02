@@ -24,6 +24,8 @@ resources:
 - api-secrets.yaml
 - mongodb-pvc.yaml
 - secret-ghcr.yaml
+- api-certificate.yaml
+- selfsigned-issuer.yaml
 - bio-check-ingress.yaml
 - ../../config/dev
 - ../../base

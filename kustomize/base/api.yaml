@@ -103,8 +103,7 @@ metadata:
   name: api
 spec:
   ports:
-    - name: "3001"
-      port: 3001
+    - port: 3001
       targetPort: 3001
   selector:
     app: api

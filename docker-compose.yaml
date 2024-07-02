@@ -1,4 +1,4 @@
-version: '3.8'
+name: bio-check
 
 services:
   mongo:
@@ -13,11 +13,11 @@ services:
 
   api:
     build:
-      context: ./api
+      context: .
       dockerfile: ./api/Dockerfile-api
     container_name: api
     environment:
-      - MONGO_URI=mongodb://your-remote-mongo-instance:27017
+      - MONGO_URI=mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check:27017
     ports:
       - "3001:3001"
     networks:
@@ -25,11 +25,11 @@ services:
 
   worker:
     build:
-      context: ./worker
+      context: .
       dockerfile: ./worker/Dockerfile-worker
     container_name: worker
     environment:
-      - MONGO_URI=mongodb://your-remote-mongo-instance:27017
+      - MONGO_URI=mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check:27017
     networks:
       - appnetwork
 
