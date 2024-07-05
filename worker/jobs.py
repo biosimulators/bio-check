@@ -336,7 +336,8 @@ class Supervisor(BaseClass):
             print()
             await self.refresh_jobs_async()
             job_queue = self.pending_jobs
-
+        else:
+            print('There are no pending jobs.')
         return 0
 
     def _job_exists(self, **kwargs):
