@@ -12,7 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
-from shared import save_uploaded_file
+from shared import save_uploaded_file, upload_blob
 from shared import MongoDbConnector
 from log_config import setup_logging
 
@@ -49,7 +49,7 @@ ORIGINS = [
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 MONGO_URI = os.getenv("MONGO_URI")
-FILE_STORAGE_LOCATION = os.getenv("FILE_STORAGE_LOCATION")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 # -- handle logging -- #
 
@@ -107,6 +107,52 @@ def root():
     return {'bio-check-message': 'Hello from the Verification Service API!'}
 
 
+# @app.post(
+#     "/utc-comparison",  # "/biosimulators-utc-comparison",
+#     response_model=UtcComparisonSubmission,
+#     name="Uniform Time Course Comparison",
+#     operation_id="utc-comparison",
+#     summary="Compare UTC outputs from for a deterministic SBML model within a given archive.")
+# async def utc_comparison(
+#         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
+#         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+#         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+#         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
+#         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison.")
+#         ) -> UtcComparisonSubmission:
+#     try:
+#         job_id = str(uuid.uuid4())
+#         _time = db_connector.timestamp()
+#         save_dest = FILE_STORAGE_LOCATION  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
+#
+#         # TODO: remove this when using a shared filestore
+#         if not os.path.exists(save_dest):
+#             os.mkdir(save_dest)
+#
+#         # save uploaded omex file to shared storage
+#         omex_fp = await save_uploaded_file(uploaded_file, save_dest)
+#
+#         # save uploaded reports file to shared storage if applicable
+#         report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
+#
+#         pending_job_doc = await db_connector.insert_job_async(
+#             collection_name="pending_jobs",
+#             status="PENDING",
+#             job_id=job_id,
+#             omex_path=omex_fp,
+#             simulators=simulators,
+#             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
+#             timestamp=_time,
+#             ground_truth_report_path=report_fp,
+#             include_outputs=include_outputs)
+#
+#         # TODO: remove this when using shared file store.
+#         # rmtree(save_dest)
+#         return UtcComparisonSubmission(**pending_job_doc)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post(
     "/utc-comparison",  # "/biosimulators-utc-comparison",
     response_model=UtcComparisonSubmission,
@@ -121,33 +167,45 @@ async def utc_comparison(
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison.")
         ) -> UtcComparisonSubmission:
     try:
+        # request specific params
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
-        save_dest = FILE_STORAGE_LOCATION  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
 
-        # TODO: remove this when using a shared filestore
-        if not os.path.exists(save_dest):
-            os.mkdir(save_dest)
+        # bucket params
+        upload_prefix = f"uploads/{job_id}/"
+        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
-        # save uploaded omex file to shared storage
-        omex_fp = await save_uploaded_file(uploaded_file, save_dest)
+        # Save uploaded omex file to Google Cloud Storage
+        omex_fp = await save_uploaded_file(uploaded_file, "/tmp")
+        omex_blob_dest = upload_prefix + uploaded_file.filename
+        upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
+        omex_path = bucket_prefix + uploaded_file.filename
 
-        # save uploaded reports file to shared storage if applicable
-        report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
+        # Save uploaded reports file to Google Cloud Storage if applicable
+        report_fp = None
+        if ground_truth_report:
+            report_fp = await save_uploaded_file(ground_truth_report, "/tmp")
+            report_blob_dest = upload_prefix + ground_truth_report.filename
+            upload_blob(BUCKET_NAME, report_fp, report_blob_dest)
+        report_path = bucket_prefix + ground_truth_report.filename if report_fp else None
 
+        # run insert job
         pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
-            omex_path=omex_fp,
+            omex_path=omex_path,
             simulators=simulators,
             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
             timestamp=_time,
-            ground_truth_report_path=report_fp,
+            ground_truth_report_path=report_path,
             include_outputs=include_outputs)
 
-        # TODO: remove this when using shared file store.
-        # rmtree(save_dest)
+        # clean up local temp files
+        os.remove(omex_fp)
+        if report_fp:
+            os.remove(report_fp)
+
         return UtcComparisonSubmission(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

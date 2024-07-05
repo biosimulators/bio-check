@@ -8,12 +8,69 @@ from typing import *
 
 from pydantic import BaseModel as _BaseModel, ConfigDict
 from fastapi import UploadFile
+from google.cloud import storage
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
 
 # -- globally-shared content-- #
+
+
+# BUCKET_URL = "gs://bio-check-requests-1/"
+
+
+async def save_uploaded_file(file: UploadFile, destination: str) -> str:
+    file_path = f"{destination}/{file.filename}"
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+    return file_path
+
+
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+    # The path to your file to upload
+    # source_file_name = "local/path/to/file"
+    # The ID of your GCS object
+    # destination_blob_name = "storage-object-name"
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    # Optional: set a generation-match precondition to avoid potential race conditions
+    # and data corruptions. The request to upload is aborted if the object's
+    # generation number does not match your precondition. For a destination
+    # object that does not yet exist, set the if_generation_match precondition to 0.
+    # If the destination object already exists in your bucket, set instead a
+    # generation-match precondition using its generation number.
+    generation_match_precondition = 0
+
+    blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
+
+    print(
+        f"File {source_file_name} uploaded to {destination_blob_name}."
+    )
+
+def upload_to_gcs(bucket_name, destination_blob_name, content):
+    """Uploads a file to the Google Cloud Storage bucket."""
+
+    # Initialize a storage client
+    storage_client = storage.Client()
+
+    # Get the bucket
+    bucket = storage_client.bucket(bucket_name)
+
+    # Create a blob object from the filepath
+    blob = bucket.blob(destination_blob_name)
+
+    # Upload the content to the blob
+    blob.upload_from_string(content)
+
+    print(f"File {destination_blob_name} uploaded to {bucket_name}.")
+
 
 async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
     # TODO: replace this with s3 and use save_dest
