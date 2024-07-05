@@ -13,4 +13,4 @@ function login_prompt {
 
 
 usr_name="$1"
-cat ~/.ssh/.env | docker login ghcr.io -u "$usr_name" --password-stdin
+cat ~/.ssh/.gh_login | docker login ghcr.io -u "$usr_name" --password-stdin

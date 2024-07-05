@@ -7,7 +7,8 @@ version="$2"
 gh_username="$3"
 
 if [ "$version" == "" ]; then
-  version="latest"
+  echo "You must pass a version as second arg."
+  exit 1
 fi
 
 # if [ "$version" == "$current" ]; then
@@ -28,3 +29,5 @@ docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulato
 
 # push newest latest
 docker push ghcr.io/biosimulators/bio-check-"$lib":latest
+
+echo "$version" > ./"$lib"/CONTAINER_VERSION.txt
