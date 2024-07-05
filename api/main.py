@@ -18,7 +18,7 @@ from log_config import setup_logging
 
 # --load env -- #
 
-dotenv.load_dotenv()
+# dotenv.load_dotenv()
 
 
 # -- constraints -- #
@@ -171,12 +171,14 @@ async def utc_comparison(
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
 
+        from tempfile import mkdtemp
+        save_dest = mkdtemp()
         # bucket params
         upload_prefix = f"uploads/{job_id}/"
         bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
         # Save uploaded omex file to Google Cloud Storage
-        omex_fp = await save_uploaded_file(uploaded_file, "/tmp")
+        omex_fp = await save_uploaded_file(uploaded_file, save_dest)
         omex_blob_dest = upload_prefix + uploaded_file.filename
         upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
         omex_path = bucket_prefix + uploaded_file.filename
@@ -184,7 +186,7 @@ async def utc_comparison(
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
         if ground_truth_report:
-            report_fp = await save_uploaded_file(ground_truth_report, "/tmp")
+            report_fp = await save_uploaded_file(ground_truth_report, save_dest)
             report_blob_dest = upload_prefix + ground_truth_report.filename
             upload_blob(BUCKET_NAME, report_fp, report_blob_dest)
         report_path = bucket_prefix + ground_truth_report.filename if report_fp else None

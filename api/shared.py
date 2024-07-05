@@ -36,7 +36,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     # The ID of your GCS object
     # destination_blob_name = "storage-object-name"
 
-    storage_client = storage.Client()
+    storage_client = storage.Client('bio-check-428516')
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
 
@@ -72,13 +72,13 @@ def upload_to_gcs(bucket_name, destination_blob_name, content):
     print(f"File {destination_blob_name} uploaded to {bucket_name}.")
 
 
-async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
-    # TODO: replace this with s3 and use save_dest
-    file_path = os.path.join(save_dest, uploaded_file.filename)
-    with open(file_path, 'wb') as file:
-        contents = await uploaded_file.read()
-        file.write(contents)
-    return file_path
+# async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
+#     # TODO: replace this with s3 and use save_dest
+#     file_path = os.path.join(save_dest, uploaded_file.filename)
+#     with open(file_path, 'wb') as file:
+#         contents = await uploaded_file.read()
+#         file.write(contents)
+#     return file_path
 
 
 def make_dir(fp: str):
