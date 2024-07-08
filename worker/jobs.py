@@ -1,6 +1,5 @@
 # -- This should serve as the main file for worker container -- #
-
-
+import os
 import tempfile
 import uuid 
 from asyncio import sleep
@@ -12,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 import numpy as np
 import pandas as pd
 
-from shared import BaseClass, MongoDbConnector
+from shared import BaseClass, MongoDbConnector, download_blob
 from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack
@@ -20,6 +19,7 @@ from output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
+BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 
 def unique_id(): str(uuid.uuid4())
@@ -70,7 +70,21 @@ class Worker(BaseClass):
     ) -> Union[UtcComparison, SimulationError]:
         """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
         out_dir = tempfile.mktemp()
-        truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
+
+        # download the omex file from GCS
+        source_blob_name = omex_path  # Assuming omex_fp is the blob name in GCS
+        local_omex_fp = os.path.join(out_dir, source_blob_name.split('/')[-1])
+        download_blob(BUCKET_NAME, source_blob_name, local_omex_fp)
+
+        # download the report file from GCS if applicable
+        if ground_truth_report_path is not None:
+            source_report_blob_name = ground_truth_report_path
+            local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
+            truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
+        else:
+            truth_vals = None
+
+        # run comparison
         comparison_id = comparison_id or 'biosimulators-utc-comparison'
         comparison = self._generate_utc_comparison(
             omex_fp=omex_path,

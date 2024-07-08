@@ -12,7 +12,7 @@
 # validate the number of arguments
 if [ "$#" -ne 3 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./sealed_secret_api.sh <namespace> <mongo_user> <mongo_pswd>"
+    echo "Usage: ./sealed_secret_api.sh <namespace> <mongo_user> <mongo_pswd> <google_creds_path>"
     exit 1
 fi
 
@@ -20,8 +20,10 @@ SECRET_NAME="api-secrets"
 NAMESPACE=$1
 MONGO_USERNAME=$2
 MONGO_PASSWORD=$3
+GOOGLE_APPLICATION_CREDENTIALS=$4
 
 kubectl create secret generic ${SECRET_NAME} --dry-run=client \
       --from-literal=mongo-username="${MONGO_USERNAME}" \
       --from-literal=mongo-password="${MONGO_PASSWORD}" \
+      --from-literal=google-application-credentials="${GOOGLE_APPLICATION_CREDENTIALS}" \
       --namespace="${NAMESPACE}" -o yaml | kubeseal --format yaml

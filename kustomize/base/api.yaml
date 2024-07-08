@@ -46,6 +46,11 @@ spec:
                 secretKeyRef:
                   name: api-secrets
                   key: mongo-username
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: google-application-credentials
 
           #   - name: jmspswdfile
           #     value: "/run/secrets/api-secrets/jmspswd"
