@@ -1,15 +1,21 @@
-# This base image is already configured for many purposes LATEST: 0.0.1
+# This base image is already configured for many purposes LATEST: 0.0.2
 FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
 
 # TODO: make base version more nuanceddo
 ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
-ENV BASE_VERSION=0.0.0
+ENV BASE_VERSION=0.0.2
 ENV BASE_IMAGE="$PACKAGE_ROOT-base:$BASE_VERSION"
 ENV DEBIAN_FRONTEND=noninteractive
-ENV MONGO_URI="mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check"
+ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
+# handle app creds from google
+WORKDIR /var
+COPY /Users/alexanderpatrie/.ssh/.bio-check.json /var/secrets/.bio-check.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/.bio-check.json
+
+# handle main content
 WORKDIR /app
 
 RUN mkdir /app/data
@@ -21,7 +27,8 @@ RUN chmod +x /app/assets/remove_deps.sh \
     && chmod +x /app/assets/update_deps.sh \
     && pip install --upgrade pip  \
     && /app/assets/remove_deps.sh \
-    && pip install --no-cache-dir -r /app/assets/requirements.base.txt
+    && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
+    && pip install --upgrade google-cloud-storage
 
 # yes | docker system prune -a && yes | docker buildx prune -a \
 #   && docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" . \
