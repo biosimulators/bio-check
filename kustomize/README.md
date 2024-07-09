@@ -1,5 +1,17 @@
 # local minikube config
 
+0. Build base 0.0.2
+0a. Check gcloud creds in base
+0b. Push base 0.0.2
+1. build api 0.0.0
+2. test gcloud creds 
+3. push api 0.0.0
+4. build worker 0.0.0
+5. test gcloud creds
+6. push worker 0.0.0
+7. Perform readme wf again
+
+
 ## ArgoCD setup
 
 according to https://argo-cd.readthedocs.io/en/stable/getting_started/

@@ -1,4 +1,4 @@
- # Api container LATEST: 0.0.2
+# Api container
 
 # TODO: Ensure read from BASE_VERSION.txt
 FROM ghcr.io/biosimulators/bio-check-base:latest
@@ -11,7 +11,7 @@ EXPOSE 3001
 
 WORKDIR /app/api
 
-RUN pip install --upgrade google-cloud-storage
+# RUN pip install --upgrade google-cloud-storage
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
 
