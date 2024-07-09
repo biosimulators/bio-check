@@ -50,6 +50,8 @@ DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 MONGO_URI = os.getenv("MONGO_URI")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
 
 # -- handle logging -- #
 

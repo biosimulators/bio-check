@@ -5,10 +5,14 @@ from shared import MongoDbConnector
 from jobs import Supervisor
 
 
+# sleep params
 DELAY_TIMER = 5
 MAX_RETRIES = 5
 MAX_TIMEOUTS = 2
+
+# creds params
 MONGO_URI = os.getenv("MONGO_URI")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 DB_NAME = "service_requests"
 
 
