@@ -14,10 +14,6 @@ spec:
       labels:
         app: api
     spec:
-      # securityContext:
-      #   runAsUser: 10001
-      #   runAsGroup: 10000
-      #   fsGroup: 10000
       containers:
         - name: api
           image: ghcr.io/biosimulators/bio-check-api  # push to ghcr.io/biosimulators
@@ -32,9 +28,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: api-config
-            # - configMapRef:
-                # name: shared-config
-#          command: [ "/bin/sh", "-c", "env; cat /run/secrets/api-secrets/dbpswd" ]
           env:
             - name: MONGO_DB_PWD
               valueFrom:
@@ -51,24 +44,11 @@ spec:
                 secretKeyRef:
                   name: api-secrets
                   key: google-application-credentials
-
-          #   - name: jmspswdfile
-          #     value: "/run/secrets/api-secrets/jmspswd"
-          #   - name: dbpswdfile
-          #     value: "/run/secrets/api-secrets/dbpswd"
-          #   - name: vcellapi_privatekeyfile
-          #     value: "/run/secrets/jwt-secret/apiprivkey"
-          #   - name: vcellapi_publickeyfile
-          #     value: "/run/secrets/jwt-secret/apipubkey"
           ports:
             - containerPort: 3001
           volumeMounts:
             - name: api-secrets
               mountPath: /run/secrets/api-secrets
-
-            # - name: nfs-primary-pvc  TODO: revisit this.
-            #   mountPath: /n5DataDir
-            #   subPath: n5
       restartPolicy: Always
       imagePullSecrets:
         - name: ghcr-secret
@@ -80,24 +60,9 @@ spec:
                 path: mongo-password
               - key: mongo-username
                 path: mongo-username
+              - key: google-application-credentials
+                path: google-application-credentials
             secretName: api-secrets
-        # - name: jwt-secret
-        #   secret:
-        #     items:
-        #       - key: apiprivkey
-        #         path: apiprivkey
-        #       - key: apipubkey
-        #         path: apipubkey
-        #     secretName: jwt-secret
-        # - name: nfs-primary-pvc
-        #   persistentVolumeClaim:
-        #     claimName: nfs-primary-pvc
-        # - name: nfs-archive-pvc
-        #   persistentVolumeClaim:
-        #     claimName: nfs-archive-pvc
-#        - name: nfs-secondary-pvc
-#          persistentVolumeClaim:
-#            claimName: nfs-secondary-pvc
 
 ---
 apiVersion: v1

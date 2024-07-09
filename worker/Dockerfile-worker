@@ -12,7 +12,8 @@ COPY . /app/worker
 RUN pip uninstall biosimulators-utils -y \
     && echo "\nbiosimulators-utils[logging]==0.1.187" >> /app/assets/requirements.base.txt \
     && pip install biosimulators-utils[logging]==0.1.187 \
-    && pip install biosimulators-copasi biosimulators-tellurium
+    && pip install biosimulators-copasi biosimulators-tellurium \
+    && pip install --upgrade google-cloud-storage
 
 WORKDIR /app/worker
 

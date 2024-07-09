@@ -16,12 +16,6 @@ from pymongo.database import Database
 
 # -- globally-shared content-- #
 
-async def save_uploaded_file(file: UploadFile, destination: str) -> str:
-    file_path = f"{destination}/{file.filename}"
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
-    return file_path
-
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""

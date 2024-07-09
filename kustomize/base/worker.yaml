@@ -14,10 +14,6 @@ spec:
       labels:
         app: worker
     spec:
-      # securityContext:
-      #   runAsUser: 10001
-      #   runAsGroup: 10000
-      #   fsGroup: 10000
       containers:
         - name: worker
           image: ghcr.io/biosimulators/bio-check-worker  # push to ghcr.io/biosimulators
@@ -32,9 +28,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: worker-config
-            # - configMapRef:
-                # name: shared-config
-#          command: [ "/bin/sh", "-c", "env; cat /run/secrets/worker-secrets/dbpswd" ]
           env:
             - name: MONGO_DB_PWD
               valueFrom:
@@ -51,60 +44,25 @@ spec:
                 secretKeyRef:
                   name: api-secrets
                   key: google-application-credentials
-          #   - name: jmspswdfile
-          #     value: "/run/secrets/worker-secrets/jmspswd"
-          #   - name: dbpswdfile
-          #     value: "/run/secrets/worker-secrets/dbpswd"
-          #   - name: vcellworker_privatekeyfile
-          #     value: "/run/secrets/jwt-secret/workerprivkey"
-          #   - name: vcellworker_publickeyfile
-          #     value: "/run/secrets/jwt-secret/workerpubkey"
           ports:
             - containerPort: 3001
-          # volumeMounts:
-            # - name: worker-secrets
-            #   mountPath: /run/secrets/worker-secrets
-
-            # - name: nfs-primary-pvc  TODO: revisit this.
-            #   mountPath: /n5DataDir
-            #   subPath: n5
+          volumeMounts:
+            - name: api-secrets
+              mountPath: /run/secrets/api-secrets
       restartPolicy: Always
       imagePullSecrets:
         - name: ghcr-secret
       volumes:
-        - name: worker-secrets
+        - name: api-secrets
           secret:
             items:
               - key: mongo-password
                 path: mongo-password
               - key: mongo-username
                 path: mongo-username
-            secretName: worker-secrets
-        # - name: worker-secrets
-        #   secret:
-        #     items:
-        #       - key: dbpswd
-        #         path: dbpswd
-        #       - key: jmspswd
-        #         path: jmspswd
-        #     secretName: worker-secrets
-        # - name: jwt-secret
-        #   secret:
-        #     items:
-        #       - key: workerprivkey
-        #         path: workerprivkey
-        #       - key: workerpubkey
-        #         path: workerpubkey
-        #     secretName: jwt-secret
-        # - name: nfs-primary-pvc
-        #   persistentVolumeClaim:
-        #     claimName: nfs-primary-pvc
-        # - name: nfs-archive-pvc
-        #   persistentVolumeClaim:
-        #     claimName: nfs-archive-pvc
-#        - name: nfs-secondary-pvc
-#          persistentVolumeClaim:
-#            claimName: nfs-secondary-pvc
+              - key: google-application-credentials
+                path: google-application-credentials
+            secretName: api-secrets
 
 ---
 apiVersion: v1

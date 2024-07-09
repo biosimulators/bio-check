@@ -10,7 +10,7 @@
 # Example: ./sealed_secret_api.sh remote pswd12345 pswd39393 mongo_user pswd292929 > output.yaml
 
 # validate the number of arguments
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 4 ]; then
     echo "Illegal number of parameters"
     echo "Usage: ./sealed_secret_api.sh <namespace> <mongo_user> <mongo_pswd> <google_creds_path>"
     exit 1

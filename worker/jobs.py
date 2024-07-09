@@ -72,15 +72,15 @@ class Worker(BaseClass):
         out_dir = tempfile.mktemp()
 
         # download the omex file from GCS
-        source_blob_name = omex_path  # Assuming omex_fp is the blob name in GCS
+        source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
         local_omex_fp = os.path.join(out_dir, source_blob_name.split('/')[-1])
         download_blob(BUCKET_NAME, source_blob_name, local_omex_fp)
 
         # download the report file from GCS if applicable
         if ground_truth_report_path is not None:
-            source_report_blob_name = ground_truth_report_path
+            source_report_blob_name = ground_truth_report_path.replace('gs://bio-check-requests-1', '')
             local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
-            truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
+            truth_vals = read_report_outputs(ground_truth_report_path)
         else:
             truth_vals = None
 

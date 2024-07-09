@@ -11,11 +11,6 @@ if [ "$version" == "" ]; then
   exit 1
 fi
 
-# if [ "$version" == "$current" ]; then
-#   echo "This version already exists on GHCR. Exiting."
-#   exit 1
-# fi
-
 # login to github
 ./assets/scripts/gh_login.sh "$gh_username"
 
@@ -30,4 +25,10 @@ docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulato
 # push newest latest
 docker push ghcr.io/biosimulators/bio-check-"$lib":latest
 
-echo "$version" > ./"$lib"/CONTAINER_VERSION.txt
+# handle version
+VERSION_FILE=./"$lib"/CONTAINER_VERSION.txt
+
+echo "$version" > "$VERSION_FILE"
+
+# Optional: Output the new version
+echo "Updated version: $version"
