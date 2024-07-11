@@ -11,9 +11,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
 # handle app creds from google
-WORKDIR /var
-COPY /Users/alexanderpatrie/.ssh/.bio-check.json /var/secrets/.bio-check.json
-ENV GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/.bio-check.json
+RUN mkdir /.google
+COPY ./.bio-check.json /.google/.bio-check.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
 
 # handle main content
 WORKDIR /app

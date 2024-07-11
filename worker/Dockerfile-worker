@@ -3,7 +3,7 @@
 # TODO: Read in from BASE_VERSION.txt aka the most recent stable release
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-WORKDIR /app
+# WORKDIR /app
 
 COPY . /app/worker
 
