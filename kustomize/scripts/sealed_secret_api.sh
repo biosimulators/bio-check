@@ -27,3 +27,5 @@ kubectl create secret generic ${SECRET_NAME} --dry-run=client \
       --from-literal=mongo-password="${MONGO_PASSWORD}" \
       --from-literal=google-application-credentials="${GOOGLE_APPLICATION_CREDENTIALS}" \
       --namespace="${NAMESPACE}" -o yaml | kubeseal --format yaml
+#       --namespace="${NAMESPACE}" -o yaml | kubeseal --controller-namespace kube-system --cert /Users/alexanderpatrie/.ssh/pub-cert.pem --format yaml > mysealedsecret.yaml
+

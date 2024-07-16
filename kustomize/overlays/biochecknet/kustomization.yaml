@@ -1,0 +1,30 @@
+# create kustimization.yaml file
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: biochecknet
+
+images:
+- name: ghcr.io/biosimulators/bio-check-api
+  newTag: 0.0.0
+- name: ghcr.io/biosimulators/bio-check-worker
+  newTag: 0.0.0
+- name: mongo
+  newTag: 8.0-rc
+
+replicas:
+- count: 1
+  name: api
+- count: 1
+  name: worker
+- count: 1
+  name: mongodb
+
+resources:
+- api-secrets.yaml
+- mongodb-pvc.yaml
+- secret-ghcr.yaml
+- bio-check-ingress.yaml
+- ../../config/biochecknet
+- ../../base
+
