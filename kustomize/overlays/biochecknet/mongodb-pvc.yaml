@@ -6,7 +6,7 @@ metadata:
         app: mongodb
 spec:
     accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
     storageClassName: standard
     resources:
         requests:
