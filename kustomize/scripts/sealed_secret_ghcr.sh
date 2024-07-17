@@ -23,5 +23,7 @@ kubectl create secret docker-registry ${SECRET_NAME} --dry-run=client \
       --docker-username="${USERNAME}" \
       --docker-email="${EMAIL}" \
       --docker-password="${PASSWORD}" \
-      --namespace="${NAMESPACE}" -o yaml | kubeseal --format yaml
+      --namespace="${NAMESPACE}" -o yaml | kubeseal \
+      --format yaml \
+      --cert=/Users/alexanderpatrie/.ssh/sealed_secrets_biosimulations.pem
 

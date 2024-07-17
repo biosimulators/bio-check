@@ -57,7 +57,7 @@ brew install helm
 ### install kube-prometheus-stack
 
 see https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-
+`
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -128,6 +128,8 @@ cmctl check api
 echo "127.0.0.1 minikube.local" | sudo tee -a /etc/hosts
 ```
 
+**FOR PROD:**
+
 * **note** on mapping to localhost rather than minikube ip address:  
    from https://github.com/kubernetes/minikube/issues/13510.  "Hi, I can confirm that running minikube tunnel works for me on m1 with the docker driver.
    Keep in mind that your etc/hosts file needs to map to 127.0.0.1, instead of the output
@@ -169,6 +171,11 @@ sudo minikube tunnel
 2. Apply dev overlays:
 ```bash
 kubectl kustomize overlays/dev | kubectl apply -f -
+```
+
+2a. Apply **biocheck** overlays:
+```bash
+kubectl kustomize overlays/biocheck | kubectl apply -f -
 ```
 
 ### expose JMS and Mongo services to UCH routable ip address

@@ -14,17 +14,17 @@ images:
 
 replicas:
 - count: 1
-  name: api
+  name: biochecknet-api
 - count: 1
   name: worker
 - count: 1
   name: mongodb
 
 resources:
-- api-secrets.yaml
+- biochecknet-api-secrets.yaml
 - mongodb-pvc.yaml
 - secret-ghcr.yaml
-- bio-check-ingress.yaml
+- biochecknet-ingress.yaml
 - ../../config/biochecknet
 - ../../base
 

@@ -14,7 +14,7 @@ images:
 
 replicas:
 - count: 1
-  name: api
+  name: biochecknet-api
 - count: 1
   name: worker
 - count: 1

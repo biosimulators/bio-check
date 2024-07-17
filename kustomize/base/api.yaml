@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: api
-  name: api
+    app: biochecknet-api
+  name: biochecknet-api
 spec:
   selector:
     matchLabels:
-      app: api
+      app: biochecknet-api
   replicas: 0
   template:
     metadata:
       labels:
-        app: api
+        app: biochecknet-api
     spec:
       containers:
-        - name: api
+        - name: biochecknet-api
           image: ghcr.io/biosimulators/bio-check-api  # push to ghcr.io/biosimulators
           imagePullPolicy: "Always"
           resources:
@@ -27,33 +27,33 @@ spec:
 #              cpu: "500m"
           envFrom:
             - configMapRef:
-                name: api-config
+                name: biochecknet-api-config
           env:
             - name: MONGO_DB_PWD
               valueFrom:
                 secretKeyRef:
-                  name: api-secrets
+                  name: biochecknet-api-secrets
                   key: mongo-password
             - name: MONGO_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: api-secrets
+                  name: biochecknet-api-secrets
                   key: mongo-username
             - name: GOOGLE_APPLICATION_CREDENTIALS
               valueFrom:
                 secretKeyRef:
-                  name: api-secrets
+                  name: biochecknet-api-secrets
                   key: google-application-credentials
           ports:
             - containerPort: 3001
           volumeMounts:
-            - name: api-secrets
+            - name: biochecknet-api-secrets
               mountPath: /run/secrets/api-secrets
       restartPolicy: Always
       imagePullSecrets:
         - name: ghcr-secret
       volumes:
-        - name: api-secrets
+        - name: biochecknet-api-secrets
           secret:
             items:
               - key: mongo-password
@@ -62,18 +62,19 @@ spec:
                 path: mongo-username
               - key: google-application-credentials
                 path: google-application-credentials
-            secretName: api-secrets
+            secretName: biochecknet-api-secrets
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: api
-  name: api
+    app: biochecknet-api
+  name: biochecknet-api
 spec:
   ports:
-    - port: 3001
+    - protocol: TCP
+      port: 3001
       targetPort: 3001
   selector:
-    app: api
+    app: biochecknet-api

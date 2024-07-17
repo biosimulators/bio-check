@@ -17,8 +17,7 @@ spec:
     spec:
       containers:
         - name: mongodb
-#          image: ghcr.io/virtualcell/vcell-mongo
-          image: mongo  # zcube/bitnami-compat-mongodb:6.0.5
+          image: mongo 
 #          args: ["--dbpath","/data/db"]
 #          livenessProbe:
 #            exec:
@@ -49,12 +48,12 @@ spec:
             - name: MONGODB_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: api-secrets
+                  name: biochecknet-api-secrets
                   key: mongo-password
             - name: MONGODB_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: api-secrets
+                  name: biochecknet-api-secrets
                   key: mongo-username
           ports:
             - containerPort: 27017

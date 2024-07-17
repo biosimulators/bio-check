@@ -16,7 +16,7 @@ if [ "$#" -ne 4 ]; then
     exit 1
 fi
 
-SECRET_NAME="api-secrets"
+SECRET_NAME="biochecknet-api-secrets"
 NAMESPACE=$1
 MONGO_USERNAME=$2
 MONGO_PASSWORD=$3
@@ -26,6 +26,8 @@ kubectl create secret generic ${SECRET_NAME} --dry-run=client \
       --from-literal=mongo-username="${MONGO_USERNAME}" \
       --from-literal=mongo-password="${MONGO_PASSWORD}" \
       --from-literal=google-application-credentials="${GOOGLE_APPLICATION_CREDENTIALS}" \
-      --namespace="${NAMESPACE}" -o yaml | kubeseal --format yaml
+      --namespace="${NAMESPACE}" -o yaml | kubeseal \
+      --format yaml \
+      --cert=/Users/alexanderpatrie/.ssh/sealed_secrets_biosimulations.pem
 #       --namespace="${NAMESPACE}" -o yaml | kubeseal --controller-namespace kube-system --cert /Users/alexanderpatrie/.ssh/pub-cert.pem --format yaml > mysealedsecret.yaml
 

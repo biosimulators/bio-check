@@ -15,7 +15,7 @@ services:
     build:
       context: .
       dockerfile: ./api/Dockerfile-api
-    container_name: api
+    container_name: biocheck-api
     environment:
       - MONGO_URI=mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check:27017
     ports:
