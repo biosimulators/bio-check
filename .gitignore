@@ -9,3 +9,4 @@ worker/handlers/__pycache__/
 *.egg-info/
 .env
 .bio-check.json
+bucket.sh
