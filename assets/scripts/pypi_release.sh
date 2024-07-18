@@ -55,4 +55,4 @@ rm -r dist && rm -r build && rm -r bio_check.egg-info
 
 echo "Version v$version has been published on PyPI and has a git tag."
 
-echo "$version" > ./bio_check/_VERSION
+echo "$version" > ./bio_check/.VERSION
