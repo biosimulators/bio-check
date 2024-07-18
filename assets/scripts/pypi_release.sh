@@ -13,14 +13,18 @@ if [ "${version}" == "" ]; then
   exit 1
 fi
 
-# version=$(grep "__version__" biosimulator_processes/_VERSION.py | awk -F\' '{print $2}')
+# handle existing version
+function get_version {
+   python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])"
+}
 
-# Check version is valid
-setup_py_version="$(python setup.py --version)"
-if [ "$setup_py_version" != "$version" ]; then
-    echo "setup.py has version $setup_py_version, not $version."
+current_version=$(get_version)
+if [ "$current_version" != "$version" ]; then
+    echo "pyproject.toml has version $current_version, not $version."
     echo "Aborting."
     exit 1
+else
+    echo "Version matches: $current_version"
 fi
 
 # Check working directory is clean
