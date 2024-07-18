@@ -11,6 +11,8 @@ can be performed using PyPI as such:
 
 **PLEASE NOTE: You must have `>=python3.9` in order to use the high-level api.**
 
+### **GOOGLE COLAB DEMO:**
+A convenient notebook demonstrating the functionality of this service is hosted on Google Colab and can be found [here.](https://colab.research.google.com/drive/19uxh93pZvhCGXkC7a15SmAx4oH4MV7OJ#scrollTo=j_mN-EE3vanZ)
 ### **FOR DEVELOPERS:**
 
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
