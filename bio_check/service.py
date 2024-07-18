@@ -28,7 +28,7 @@ class VerificationService:
                 omex_filepath:`str`: The path to the omex file to submit.
                 simulators:`List[str]`: The list of simulators to include in comparison.
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
-                comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `verification-request-<UUID>` is generated.
+                comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
                 ground_truth_report_path:`str, optional`: The path to the ground truth report file to include in comparison. Defaults to None.
 
             Returns:
@@ -37,7 +37,7 @@ class VerificationService:
         endpoint = self._format_endpoint('utc-comparison')
 
         # configure params
-        _id = comparison_id or "verification-request-" + str(uuid4())
+        _id = comparison_id or "bio_check-request-" + str(uuid4())
         _report = ('ground_truth_file', open(ground_truth_report_path, 'rb'), 'application/octet-stream') if ground_truth_report_path else None
         multidata = MultipartEncoder(fields={
             'uploaded_file': ('omex_file', open(omex_filepath, 'rb'), 'application/octet-stream'),

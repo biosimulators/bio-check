@@ -48,7 +48,7 @@ def utc_comparison(
 #     return exec_utc_comparison(
 #         omex_fp=omex_fp,
 #         simulators=simulators,
-#         comparison_id=comparison_id or 'utc-simulator-verification',
+#         comparison_id=comparison_id or 'utc-simulator-bio_check',
 #         include_outputs=include_outputs)
 
 
