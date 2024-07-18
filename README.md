@@ -1,8 +1,17 @@
-# Simulation Verification Service API
-## __This service utilizes separate containers for API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
+# BioCheck: A Simulation Verification Service API
+#### __This service utilizes separate containers for API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
+## Getting Started:
 
-### TODO: Update this readme to reflect high level api 
+### **HIGH-LEVEL `bio_check` API:**
+The primary method of user-facing interaction for this service is done through the use of a high-level "notebook" api called `bio_check`. Installation of this tooling
+can be performed using PyPI as such:
+
+`pip install bio-check`
+
+**PLEASE NOTE: You must have `>=python3.9` in order to use the high-level api.**
+
+### **FOR DEVELOPERS:**
 
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
 
@@ -10,10 +19,8 @@ This application (`bio_check`) uses a microservices architecture which presents 
 - `storage`: This library handles MongoDB configs as well as bucket-like storages for uploaded files.
 - `worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and comparison execution.
 
+The installation process is outlined as follows:
 
-### Getting Started:
-
-#### __For Developers__:
 1. `git clone https://github.com/biosimulators/bio-check.git`
 2. `cd bio-check/bio_check`
 3. `touch .env`
