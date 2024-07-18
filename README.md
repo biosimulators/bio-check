@@ -4,8 +4,13 @@
 ## Getting Started:
 
 ### **HIGH-LEVEL `bio_check` API:**
-The primary method of user-facing interaction for this service is done through the use of a high-level "notebook" api called `bio_check`. Installation of this tooling
-can be performed using PyPI as such:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19uxh93pZvhCGXkC7a15SmAx4oH4MV7OJ#scrollTo=j_mN-EE3vanZ)
+
+
+The primary method of user-facing interaction for this service is done through the use of a high-level "notebook" api called `bio_check`. 
+A convenient notebook demonstrating the functionality of this service is hosted on Google Colab and can be accessed by clicking the above "Open In Colab" badge.
+
+Installation of this tooling can be performed using PyPI as such:
 
 ```bash
 pip install bio-check
@@ -14,7 +19,8 @@ pip install bio-check
 **PLEASE NOTE: You must have `>=python3.9` in order to use the high-level api.**
 
 ### **GOOGLE COLAB DEMO:**
-A convenient notebook demonstrating the functionality of this service is hosted on Google Colab and can be found [here.](https://colab.research.google.com/drive/19uxh93pZvhCGXkC7a15SmAx4oH4MV7OJ#scrollTo=j_mN-EE3vanZ)
+(https://colab.research.google.com/drive/19uxh93pZvhCGXkC7a15SmAx4oH4MV7OJ#scrollTo=j_mN-EE3vanZ)
+
 ### **FOR DEVELOPERS:**
 
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
