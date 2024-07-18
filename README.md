@@ -7,7 +7,9 @@
 The primary method of user-facing interaction for this service is done through the use of a high-level "notebook" api called `bio_check`. Installation of this tooling
 can be performed using PyPI as such:
 
-`pip install bio-check`
+```bash
+pip install bio-check
+```
 
 **PLEASE NOTE: You must have `>=python3.9` in order to use the high-level api.**
 
@@ -32,7 +34,7 @@ The installation process is outlined as follows:
 
 ### Notes:
 - This application currently uses MongoDB as the database store in which jobs are read/written. Database access is given to both the `api` and `worker` libraries. Such database access is 
-executed/implemented with the use of a `Supervisor` singleton. **TODO: Make this pattern implementation threadsafe.**
+executed/implemented with the use of a `Supervisor` singleton.
 
 
 ### **Note (05/22/2024):**
