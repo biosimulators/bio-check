@@ -55,7 +55,7 @@ function get_pypi_token {
 pypi_token=$(get_pypi_token)
 poetry build
 poetry publish --username __token__ --password "$pypi_token"
-rm -r dist && rm -r bio_check.egg-info
+# rm -r dist && rm -r bio_check.egg-info
 
 # If using a non-poetry build
 # python setup.py sdist bdist_wheel
