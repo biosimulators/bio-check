@@ -31,7 +31,7 @@ fi
 if [ ! -z "$(git status --untracked-files=no --porcelain)" ]; then
     echo "You have changes that have yet to be committed."
     echo "Aborting PyPI upload and attempting to commit your changes."
-    scripts/commit.sh
+    ../../commit.sh
 fi
 
 # Check that we are on main
@@ -48,11 +48,22 @@ git push --tags
 
 
 # Create and publish package
-python setup.py sdist bdist_wheel
-twine check dist/*
-twine upload dist/*
-rm -r dist && rm -r build && rm -r bio_check.egg-info
+function get_pypi_token {
+  cat ~/.ssh/.bio-check-pypi
+}
+
+pypi_token=$(get_pypi_token)
+poetry build
+poetry publish --username __token__ --password "$pypi_token"
+rm -r dist && rm -r bio_check.egg-info
+
+# If using a non-poetry build
+# python setup.py sdist bdist_wheel
+# twine check dist/*
+# twine upload dist/*
+# rm -r dist && rm -r build && rm -r bio_check.egg-info
 
 echo "Version v$version has been published on PyPI and has a git tag."
 
 echo "$version" > ./bio_check/.VERSION
+
