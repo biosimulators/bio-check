@@ -2,6 +2,8 @@
 ## __This service utilizes separate containers for API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
 
+### TODO: Update this readme to reflect high level api 
+
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
 
 - `api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.

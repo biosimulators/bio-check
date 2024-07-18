@@ -16,7 +16,7 @@ class RequestError:
         return asdict(self)
 
 
-class VerificationService:
+class Service:
     def __init__(self):
         """Quasi-Singleton that is used to represent the BioCheck REST API and its methods therein."""
         self.endpoint_root = "https://biochecknet.biosimulations.org"
