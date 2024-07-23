@@ -50,9 +50,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
     blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
 
-    print(
-        f"File {source_file_name} uploaded to {destination_blob_name}."
-    )
+    return {'message': f"File {source_file_name} uploaded to {destination_blob_name}."}
 
 def upload_to_gcs(bucket_name, destination_blob_name, content):
     """Uploads a file to the Google Cloud Storage bucket."""
@@ -69,7 +67,7 @@ def upload_to_gcs(bucket_name, destination_blob_name, content):
     # Upload the content to the blob
     blob.upload_from_string(content)
 
-    print(f"File {destination_blob_name} uploaded to {bucket_name}.")
+    return {'message': f"File {destination_blob_name} uploaded to {bucket_name}."}
 
 
 # async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
@@ -333,7 +331,9 @@ class MongoDbConnector(DatabaseConnector):
                 next_i = i + 1 if i < len(collections) else i
                 next_msg = collections[next_i] if next_i < len(collections) else "None"
                 # TODO: Log this instead
-                print(f"Job not found in {collection}. Now searching {collections[i + 1]}")
+                return {
+                    'message': f"Job not found in {collection}. Now searching {collections[i + 1]}"
+                }
 
 
 

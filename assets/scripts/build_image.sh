@@ -52,6 +52,6 @@ if [ "$prune" == "--prune" ]; then
 fi
 
 # Build the Docker image
-docker build -f ./"$lib"/Dockerfile-"$lib" -t ghcr.io/biosimulators/bio-check-"$lib":"$version" ./"$lib"
+docker build --platform linux/amd64 -f ./"$lib"/Dockerfile-"$lib" -t ghcr.io/biosimulators/bio-check-"$lib":"$version" ./"$lib"
 
 # kubectl create secret generic gcp-credentials --from-file=key.json=/Users/alexanderpatrie/.ssh/bio-check-428516-eb623914aa25.json --namespace=dev --dry-run=client -o yaml > gcp-secret.yaml

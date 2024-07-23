@@ -58,7 +58,7 @@ def _get_output_stack(outputs: dict, spec_id: str):
         for data_index, data in enumerate(sim_data):
             data_id = data['dataset_label']
             if data_id == spec_id:
-                print(spec_id, data_id)
+                # print(spec_id, data_id)
                 output_stack.append(sim_data[data_index]['data'])
             else:
                 pass

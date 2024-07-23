@@ -261,7 +261,7 @@ class Supervisor(BaseClass):
 
     def _handle_in_progress_job(self, job_exists: bool, job_comparison_id: str):
         if not job_exists:
-            print(f"In progress job does not yet exist for {job_comparison_id}")
+            # print(f"In progress job does not yet exist for {job_comparison_id}")
             in_progress_job_id = unique_id()
             worker_id = unique_id()
             id_kwargs = ['job_id', 'worker_id']
@@ -272,16 +272,17 @@ class Supervisor(BaseClass):
             in_prog_kwargs['comparison_id'] = job_comparison_id
 
             self.db_connector.insert_in_progress_job(**in_prog_kwargs)
-            print(f"Successfully created new progress job for {job_comparison_id}")
+            # print(f"Successfully created new progress job for {job_comparison_id}")
             # await supervisor.async_refresh_jobs()
         else:
-            print(f'In Progress Job for {job_comparison_id} already exists. Now checking if it has been completed.')
+            # print(f'In Progress Job for {job_comparison_id} already exists. Now checking if it has been completed.')
+            pass 
 
         return True
 
     def _handle_completed_job(self, job_exists: bool, job_comparison_id: str, job_doc):
         if not job_exists:
-            print(f"Completed job does not yet exist for {job_comparison_id}")
+            # print(f"Completed job does not yet exist for {job_comparison_id}")
             # pop in-progress job from internal queue and use it parameterize the worker
             in_prog_id = [job for job in self.db_connector.in_progress_jobs.find()].pop(self.preferred_queue_index)['job_id']
 
@@ -300,10 +301,9 @@ class Supervisor(BaseClass):
 
             # release the worker from being busy and refresh jobs
             self.workers.pop(self.preferred_queue_index)
-            print(f"Successfully created new completed job for {job_comparison_id}")
             # await supervisor.async_refresh_jobs()
         else:
-            print(f'Completed Job for {job_comparison_id} already exists. Done with that job.')
+            pass 
 
         return True
 
@@ -317,15 +317,12 @@ class Supervisor(BaseClass):
             # count tries
             n_tries += 1
             if n_tries == max_retries + 1:
-                print(f'Max retries {max_retries} reached!')
                 return 1
 
             # if n_tries is greater than 1 then it is a retry
             if n_tries > 1:
-                print(f'{n_retries} is a retry. Running sim again.')
                 n_retries += 1
 
-            print('There are pending jobs.')
             for i, job in enumerate(job_queue):
                 # get the next job in the queue based on the preferred_queue_index
                 job_doc = job_queue.pop(self.preferred_queue_index)
@@ -339,19 +336,17 @@ class Supervisor(BaseClass):
                 # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
                 completed_exists = _job_exists(collection_name='completed_jobs')
                 self._handle_completed_job(completed_exists, job_comparison_id, job_doc)
+                
                 # remove the job from queue
-                print(f'Job queue length: {len(job_queue)}')
                 # if len(job_queue):
                 #     job_queue.pop(0)
 
             # sleep
-            print(f'Sleeping for {delay} seconds...')
-            await load_arrows(delay)
-            print()
+            await sleep(delay)
             await self.refresh_jobs_async()
             job_queue = self.pending_jobs
         else:
-            print('There are no pending jobs.')
+            pass 
         return 0
 
     def _job_exists(self, **kwargs):

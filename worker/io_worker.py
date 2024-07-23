@@ -1,4 +1,5 @@
 import os
+from typing import Union 
 
 import h5py
 import libsbml
@@ -26,11 +27,11 @@ def get_sbml_model_file_from_archive(archive_fp: str, save_dir: str):
             return os.path.join(save_dir, loc)
 
 
-async def read_report_outputs_async(report_file_path: str) -> BiosimulationsRunOutputData:
+async def read_report_outputs_async(report_file_path: str) -> Union[BiosimulationsRunOutputData, str]:
     return read_report_outputs(report_file_path)
 
 
-def read_report_outputs(report_file_path) -> BiosimulationsRunOutputData:
+def read_report_outputs(report_file_path) -> Union[BiosimulationsRunOutputData, str]:
     """Read the outputs from all species in the given report file from biosimulations output.
         Args:
             report_file_path (str): The path to the simulation.sedml/report.h5 HDF5 file.
@@ -51,4 +52,4 @@ def read_report_outputs(report_file_path) -> BiosimulationsRunOutputData:
                 outputs.append(output)
             return BiosimulationsRunOutputData(report_path=report_file_path, data=outputs)
         else:
-            print(f"Group '{group_path}' not found in the file.")
+            return f"Group '{group_path}' not found in the file."

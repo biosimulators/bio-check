@@ -29,7 +29,6 @@ async def main():
     run = n_timeouts < MAX_TIMEOUTS
     while run:
         result = await supervisor.check_jobs(max_retries=MAX_RETRIES, delay=DELAY_TIMER)
-        print("Check complete!")
         if result > 0:
             n_timeouts += 1
 

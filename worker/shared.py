@@ -40,9 +40,9 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
     blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
 
-    print(
-        f"File {source_file_name} uploaded to {destination_blob_name}."
-    )
+    return {
+        'message': f"File {source_file_name} uploaded to {destination_blob_name}."
+    }
 
 
 def read_uploaded_file(bucket_name, source_blob_name, destination_file_name):
@@ -327,4 +327,5 @@ class MongoDbConnector(DatabaseConnector):
                 next_i = i + 1 if i < len(collections) else i
                 next_msg = collections[next_i] if next_i < len(collections) else "None"
                 # TODO: Log this instead
-                print(f"Job not found in {collection}. Now searching {collections[i + 1]}")
+                # print()
+                return {'message': f"Job not found in {collection}. Now searching {collections[i + 1]}"}
