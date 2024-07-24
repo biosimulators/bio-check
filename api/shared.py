@@ -324,16 +324,16 @@ class MongoDbConnector(DatabaseConnector):
         collections = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         for i, collection in enumerate(collections):
             coll = self.get_collection(collection)
-            complete_job = coll.find_one({'comparison_id': comparison_id})
-            if not isinstance(complete_job, type(None)):
-                return complete_job
-            else:
-                next_i = i + 1 if i < len(collections) else i
-                next_msg = collections[next_i] if next_i < len(collections) else "None"
-                # TODO: Log this instead
-                return {
-                    'message': f"Job not found in {collection}. Now searching {collections[i + 1]}"
-                }
+            job = coll.find_one({'comparison_id': comparison_id})
+            # case: job exists of some type for that comparison id; return that
+            if not isinstance(job, type(None)):
+               return job 
+        
+        # case: no job exists for that id
+        return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}
+
+
+        
 
 
 
