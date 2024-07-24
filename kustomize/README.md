@@ -190,7 +190,7 @@ kubectl kustomize overlays/dev | kubectl apply -f -
 
 2a. Apply **biocheck** overlays:
 ```bash
-kubectl kustomize overlays/biocheck | kubectl apply -f -
+kubectl kustomize overlays/biochecknet | kubectl apply -f -
 ```
 
 ### expose JMS and Mongo services to UCH routable ip address
