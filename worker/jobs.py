@@ -54,11 +54,14 @@ class Worker(BaseClass):
         return self._execute_job()
 
     def _execute_job(self):
-        """pop job_id, status, timestamp"""
-        params = self.job_params.copy()
-        list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
-        result = self._run_comparison(**params)
-        self.job_result = result.model_dump()
+        try:
+            """pop job_id, status, timestamp"""
+            params = self.job_params.copy()
+            list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
+            result = self._run_comparison(**params)
+            self.job_result = result.model_dump()
+        except:
+            self.job_result = {"bio-check-message": f"Job for {params['comparison_id']} could not be completed"}
 
     def _run_comparison(
             self,
