@@ -216,7 +216,7 @@ async def utc_comparison(
 
 
 @app.get(
-    "/fetch-results/{comparison_run_id}",
+    "/fetch-results/{comparison_id}",
     response_model=UtcComparisonResult,
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')

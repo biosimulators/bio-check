@@ -73,13 +73,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /fetch-results/{comparison_run_id}:
+  /fetch-results/{comparison_id}:
     get:
       summary: Get the results of an existing uniform time course comparison.
       operationId: fetch-results
       parameters:
       - name: comparison_id
-        in: query
+        in: path
         required: true
         schema:
           type: string
