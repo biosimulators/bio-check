@@ -6,7 +6,7 @@ namespace: biochecknet
 
 images:
 - name: ghcr.io/biosimulators/bio-check-api
-  newTag: 0.0.1
+  newTag: 0.0.2
 - name: ghcr.io/biosimulators/bio-check-worker
   newTag: 0.0.1
 - name: mongo
