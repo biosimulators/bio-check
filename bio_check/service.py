@@ -3,6 +3,7 @@ import requests
 from uuid import uuid4
 
 from requests import Response
+from requests.exceptions import RequestException
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from typing import *
 from dataclasses import dataclass, asdict
@@ -20,6 +21,7 @@ class Service:
     def __init__(self):
         """Quasi-Singleton that is used to represent the BioCheck REST API and its methods therein."""
         self.endpoint_root = "https://biochecknet.biosimulations.org"
+        self._test_root()
 
     def submit(self, omex_filepath: str, simulators: List[str], include_outputs: bool = True, comparison_id: str = None, ground_truth_report_path: Optional[str] = None) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
@@ -50,6 +52,7 @@ class Service:
 
         try:
             response = requests.post(endpoint, headers=headers, data=multidata)
+            response.raise_for_status()
             self._check_response(response)
             return response.json()
         except Exception as e:
@@ -87,4 +90,11 @@ class Service:
     def _check_response(self, resp: Response) -> None:
         if resp.status_code != 200:
             raise Exception(f"Request failed:\n{resp.status_code}\n{resp.text}\n")
+    
+    def _test_root(self):
+        try:
+            resp = requests.get(self.endpoint_root)
+            resp.raise_for_status()
+        except RequestException as e:
+            print(f"A connection to that endpoint could not be established: {e}")
 
