@@ -95,6 +95,7 @@ class Service:
         try:
             resp = requests.get(self.endpoint_root)
             resp.raise_for_status()
+            return resp.json()
         except RequestException as e:
             print(f"A connection to that endpoint could not be established: {e}")
 
