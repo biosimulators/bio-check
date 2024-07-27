@@ -173,14 +173,18 @@ async def utc_comparison(
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
 
-        from tempfile import mkdtemp
-        save_dest = mkdtemp()
         # bucket params
         upload_prefix = f"uploads/{job_id}/"
         bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
+        # from tempfile import mkdtemp
+        # save_dest = mkdtemp()
+
+        # fix: ephemeral data store
+        save_dest = "/app/uploads"
+        omex_fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
+
         # Save uploaded omex file to Google Cloud Storage
-        omex_fp = await save_uploaded_file(uploaded_file, save_dest)
         omex_blob_dest = upload_prefix + uploaded_file.filename
         upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
         omex_path = bucket_prefix + uploaded_file.filename

@@ -21,6 +21,7 @@ RUN mkdir /app/data
 
 # copy deps
 COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt /app/assets/
+COPY ./uploads /app/uploads
 
 RUN chmod +x /app/assets/remove_deps.sh \
     && chmod +x /app/assets/update_deps.sh \
