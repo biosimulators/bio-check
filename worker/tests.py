@@ -1,6 +1,7 @@
 import uuid
 import os
 import asyncio
+from pprint import pp
 from dotenv import load_dotenv
 from tempfile import mkdtemp
 
@@ -14,9 +15,10 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 BUCKET_NAME = os.getenv('BUCKET_NAME')
 DB_NAME = os.getenv('DB_NAME')
 
+db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME, connector_id="test_worker")
+
 
 async def test_worker(uploaded_file: str, ground_truth_report: str = None, simulators: list[str] = None, include_outputs=True):
-    db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME, connector_id="test_worker")
     job_id = str(uuid.uuid4())
     _time = db_connector.timestamp()
 
@@ -30,10 +32,11 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None, simul
     # omex_fp = await save_uploaded_file(uploaded_file, save_dest)
 
     # for local dev, the file is already written, duh!
+    uploaded_file_name = uploaded_file.split('/')[-1]
     omex_fp = uploaded_file
-    omex_blob_dest = upload_prefix + uploaded_file
+    omex_blob_dest = upload_prefix + uploaded_file_name
     omex_path = omex_blob_dest  # bucket_prefix + uploaded_file
-    upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
+    upload_blob(bucket_name=BUCKET_NAME, source_file_name=omex_fp, destination_blob_name=omex_blob_dest)
 
     # Save uploaded reports file to Google Cloud Storage if applicable
     report_fp = None
@@ -58,15 +61,15 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None, simul
         ground_truth_report_path=report_path,
         include_outputs=include_outputs)
 
-    print(pending_job_doc)
+    pp(pending_job_doc)
 
     # worker = Worker()
     # request specific params
 
 
 if __name__ == '__main__':
-    omex_dir = "../model-examples/Elowitz-Nature-2000-Repressilator"
+    omex_dir = "../model-examples/sbml-core/Elowitz-Nature-2000-Repressilator"
     omex_fp = omex_dir + '.omex'
-    report_fp = os.path.join(omex_dir, 'reports.h5')
+    report_fp = None  # os.path.join(omex_dir, 'reports.h5')
 
     asyncio.run(test_worker(uploaded_file=omex_fp, ground_truth_report=report_fp))
