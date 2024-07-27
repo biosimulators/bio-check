@@ -319,7 +319,7 @@ class Supervisor(BaseClass):
         if not job_exists:
             # print(f"Completed job does not yet exist for {job_comparison_id}")
             # pop in-progress job from internal queue and use it parameterize the worker
-            in_prog_id = [job for job in self.db_connector.in_progress_jobs.find()].pop(self.preferred_queue_index)['job_id']
+            in_prog_id = [job for job in self.db_connector.db.in_progress_jobs.find()].pop(self.preferred_queue_index)['job_id']
 
             # double-check and verify doc
             in_progress_doc = self.db_connector.db.in_progress_jobs.find_one({'job_id': in_prog_id})
