@@ -104,13 +104,16 @@ class MultipleConnectorError(Exception):
 
 # -- jobs --
 
+@dataclass
 class Job(BaseModel):
     job_id: str
     status: str
     timestamp: str
+
     comparison_id: str
 
 
+@dataclass
 class InProgressJob(Job):
     job_id: str
     status: str
@@ -119,6 +122,7 @@ class InProgressJob(Job):
     worker_id: str
 
 
+@dataclass
 class CompletedJob(Job):
     job_id: str
     status: str
@@ -127,8 +131,7 @@ class CompletedJob(Job):
     results: Dict
 
 
-@dataclass
-class DatabaseConnector(ABC, BaseClass):
+class DatabaseConnector(ABC):
     """Abstract class that is both serializable and interacts with the database (of any type). """
     def __init__(self, connection_uri: str, database_id: str, connector_id: str):
         self.database_id = database_id
@@ -180,7 +183,6 @@ class DatabaseConnector(ABC, BaseClass):
         pass
 
 
-@dataclass
 class MongoDbConnector(DatabaseConnector):
     def __init__(self, connection_uri: str, database_id: str, connector_id: str = None):
         super().__init__(connection_uri, database_id, connector_id)

@@ -6,6 +6,7 @@ from asyncio import sleep
 from dataclasses import dataclass
 from functools import partial
 from typing import *
+from dotenv import load_dotenv
 
 import numpy as np
 import pandas as pd
@@ -16,10 +17,12 @@ from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, 
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
+# for dev only
+load_dotenv('../assets/.env_dev')
+
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
-
 
 def unique_id(): str(uuid.uuid4())
 
@@ -54,32 +57,15 @@ class Worker(BaseClass):
 
     def _execute_job(self):
         params = None
-        try:
-            """pop job_id, status, timestamp"""
-            params = self.job_params.copy()
-            list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
-            result = self._run_comparison(**params)
-            self.job_result = result.model_dump()
-        except Exception as e:
-            self.job_result = {"bio-check-message": f"Job for {params['comparison_id']} could not be completed because:\n{str(e)}"}
-
-    def _run_comparison(
-            self,
-            omex_path: str,
-            simulators: List[str],
-            include_outputs: bool = True,
-            comparison_id: str = None,
-            ground_truth_report_path: str = None
-    ) -> Union[UtcComparison, SimulationError]:
-        """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
         out_dir = tempfile.mkdtemp()
 
-        # download the omex file from GCS
-        # source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
-        local_omex_fp = os.path.join(out_dir, omex_path.split('/')[-1])
-        download_blob(bucket_name=BUCKET_NAME, source_blob_name=omex_path, destination_file_name=local_omex_fp)
+        # get omex from bucket
+        source_omex_blob = self.job_params['omex_path']
+        local_omex_fp = os.path.join(out_dir, source_omex_blob.split('/')[-1])
+        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob, destination_file_name=local_omex_fp)
 
-        # download the report file from GCS if applicable
+        # get ground truth from bucket if applicable
+        ground_truth_report_path = self.job_params['ground_truth_report_path']
         if ground_truth_report_path is not None:
             source_report_blob_name = ground_truth_report_path.replace('gs://bio-check-requests-1', '')
             # local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
@@ -88,14 +74,57 @@ class Worker(BaseClass):
         else:
             truth_vals = None
 
+        try:
+            simulators = self.job_params.get('simulators', [])
+            include_outs = self.job_params.get('include_outputs', False)
+            comparison_id = self.job_params['comparison_id']
+            result = self._run_comparison(
+                omex_path=local_omex_fp,
+                simulators=simulators,
+                out_dir=out_dir,
+                include_outputs=include_outs,
+                comparison_id=comparison_id)
+            self.job_result = result.model_dump()
+        except Exception as e:
+            self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
+
+    def _run_comparison(
+            self,
+            omex_path: str,
+            simulators: List[str],
+            out_dir: str,
+            include_outputs: bool = True,
+            comparison_id: str = None,
+            truth_vals=None
+    ) -> Union[UtcComparison, SimulationError]:
+        """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
+        # download the omex file from GCS
+        # source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
+        # local_omex_fp = os.path.join(out_dir, omex_path.split('/')[-1])
+        # download_blob(bucket_name=BUCKET_NAME, source_blob_name=omex_path, destination_file_name=local_omex_fp)
+
+        # download the report file from GCS if applicable
+        # if ground_truth_report_path is not None:
+        #     source_report_blob_name = ground_truth_report_path.replace('gs://bio-check-requests-1', '')
+        #     # local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
+        #     local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
+        #     truth_vals = read_report_outputs(ground_truth_report_path)
+        # else:
+        #     truth_vals = None
+
         # run comparison
         comparison_id = comparison_id or 'biosimulators-utc-comparison'
+        ground_truth_data = truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals
+
         comparison = self._generate_utc_comparison(
-            omex_fp=local_omex_fp,  # omex_path,
+            omex_fp=omex_path,  # omex_path,
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
             comparison_id=comparison_id,
-            ground_truth=truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals)
+            ground_truth=ground_truth_data
+        )
+
+        # parse data for return vals
         spec_comparisons = []
         for spec_name, comparison_data in comparison['results'].items():
             species_comparison = UtcSpeciesComparison(
