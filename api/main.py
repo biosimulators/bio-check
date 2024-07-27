@@ -49,7 +49,7 @@ ORIGINS = [
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 MONGO_URI = os.getenv("MONGO_URI")
-BUCKET_NAME = os.getenv("BUCKET_NAME")
+BUCKET_NAME = os.getenv("BUCKET_NAME") or "bio-check-requests-1"
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 
@@ -184,18 +184,20 @@ async def utc_comparison(
         omex_fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
-        omex_blob_dest = upload_prefix + uploaded_file.filename
-        upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
+        omex_blob_dest = upload_prefix + omex_fp.split("/")[-1]
+        upload_blob(bucket_name=BUCKET_NAME, source_file_name=omex_fp, destination_blob_name=omex_blob_dest)
         # omex_location = bucket_prefix + uploaded_file.filename
         omex_location = omex_blob_dest
 
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
+        report_blob_dest = None
         if ground_truth_report:
             report_fp = await save_uploaded_file(ground_truth_report, save_dest)
-            report_blob_dest = upload_prefix + ground_truth_report.filename
-            upload_blob(BUCKET_NAME, report_fp, report_blob_dest)
-        report_path = bucket_prefix + ground_truth_report.filename if report_fp else None
+            report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+            upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
+        # report_path = bucket_prefix + ground_truth_report.filename if report_fp else None
+        report_location = report_blob_dest
 
         # run insert job
         pending_job_doc = await db_connector.insert_job_async(
@@ -206,7 +208,7 @@ async def utc_comparison(
             simulators=simulators,
             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
             timestamp=_time,
-            ground_truth_report_path=report_path,
+            ground_truth_report_path=report_location,
             include_outputs=include_outputs)
 
         # clean up local temp files
