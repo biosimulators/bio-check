@@ -1,8 +1,8 @@
 import os
 import logging
 import uuid
-
 import dotenv
+from tempfile import mkdtemp
 from typing import *
 
 import uvicorn
@@ -177,11 +177,10 @@ async def utc_comparison(
         upload_prefix = f"uploads/{job_id}/"
         bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
-        # from tempfile import mkdtemp
-        # save_dest = mkdtemp()
+        save_dest = mkdtemp()
 
         # fix: ephemeral data store
-        save_dest = "/app/uploads"
+        # save_dest = "/app/uploads"
         omex_fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage

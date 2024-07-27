@@ -1,5 +1,6 @@
 import uuid
 import os
+import asyncio
 from dotenv import load_dotenv
 from tempfile import mkdtemp
 
@@ -14,7 +15,7 @@ BUCKET_NAME = os.getenv('BUCKET_NAME')
 DB_NAME = os.getenv('DB_NAME')
 
 
-async def test_worker(uploaded_file: str, ground_truth_report: str = None):
+async def test_worker(uploaded_file: str, ground_truth_report: str = None, simulators: list[str] = None, include_outputs=True):
     db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME, connector_id="test_worker")
     job_id = str(uuid.uuid4())
     _time = db_connector.timestamp()
@@ -31,18 +32,21 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None):
     # for local dev, the file is already written, duh!
     omex_fp = uploaded_file
     omex_blob_dest = upload_prefix + uploaded_file
-    omex_path = bucket_prefix + uploaded_file
+    omex_path = omex_blob_dest  # bucket_prefix + uploaded_file
     upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
 
     # Save uploaded reports file to Google Cloud Storage if applicable
     report_fp = None
+    report_blob_dest = None
     if ground_truth_report:
-        report_fp = await save_uploaded_file(ground_truth_report, save_dest)
-        report_blob_dest = upload_prefix + ground_truth_report.filename
+        # report_fp = await save_uploaded_file(ground_truth_report, save_dest)
+        report_blob_dest = upload_prefix + ground_truth_report
         upload_blob(BUCKET_NAME, report_fp, report_blob_dest)
-    report_path = bucket_prefix + ground_truth_report.filename if report_fp else None
+    report_path = report_blob_dest if report_fp else None # bucket_prefix + ground_truth_report.filename if report_fp else None
 
     # run insert job
+    simulators = simulators or ['amici', 'copasi', 'tellurium']
+    comparison_id = f"test_{job_id}"
     pending_job_doc = await db_connector.insert_job_async(
         collection_name="pending_jobs",
         status="PENDING",
@@ -54,5 +58,15 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None):
         ground_truth_report_path=report_path,
         include_outputs=include_outputs)
 
+    print(pending_job_doc)
+
     # worker = Worker()
     # request specific params
+
+
+if __name__ == '__main__':
+    omex_dir = "../model-examples/Elowitz-Nature-2000-Repressilator"
+    omex_fp = omex_dir + '.omex'
+    report_fp = os.path.join(omex_dir, 'reports.h5')
+
+    asyncio.run(test_worker(uploaded_file=omex_fp, ground_truth_report=report_fp))

@@ -10,7 +10,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from worker.shared import BaseClass, MongoDbConnector, download_blob
+from shared import BaseClass, MongoDbConnector, download_blob
 from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack
@@ -82,7 +82,8 @@ class Worker(BaseClass):
         # download the report file from GCS if applicable
         if ground_truth_report_path is not None:
             source_report_blob_name = ground_truth_report_path.replace('gs://bio-check-requests-1', '')
-            local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
+            # local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
+            local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
             truth_vals = read_report_outputs(ground_truth_report_path)
         else:
             truth_vals = None
@@ -90,7 +91,7 @@ class Worker(BaseClass):
         # run comparison
         comparison_id = comparison_id or 'biosimulators-utc-comparison'
         comparison = self._generate_utc_comparison(
-            omex_fp=omex_path,
+            omex_fp=local_omex_fp,  # omex_path,
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
             comparison_id=comparison_id,
