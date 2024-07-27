@@ -1,7 +1,7 @@
 import os
 import asyncio
 
-from worker.shared import MongoDbConnector
+from shared import MongoDbConnector
 from jobs import Supervisor
 
 

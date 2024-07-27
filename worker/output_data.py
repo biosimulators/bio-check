@@ -10,7 +10,7 @@ from data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.io import standardize_report_outputs
 from io_worker import read_report_outputs
-from worker.shared import make_dir
+from shared import make_dir
 
 
 def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:
