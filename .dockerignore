@@ -38,3 +38,4 @@ bio_check/.env
 tests.py
 worker/shared.py
 .env_dev
+tests.ipynb

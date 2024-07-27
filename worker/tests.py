@@ -61,9 +61,8 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None, simul
         ground_truth_report_path=report_path,
         include_outputs=include_outputs)
 
-    pp(pending_job_doc)
-
-    # worker = Worker()
+    worker = Worker(job_params=pending_job_doc)
+    pp(f'Job result of worker: {worker.job_result}')
     # request specific params
 
 
