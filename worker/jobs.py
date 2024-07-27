@@ -7,11 +7,10 @@ from dataclasses import dataclass
 from functools import partial
 from typing import *
 
-from pymongo.mongo_client import MongoClient
 import numpy as np
 import pandas as pd
 
-from shared import BaseClass, MongoDbConnector, download_blob
+from worker.shared import BaseClass, MongoDbConnector, download_blob
 from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack
@@ -54,14 +53,15 @@ class Worker(BaseClass):
         return self._execute_job()
 
     def _execute_job(self):
+        params = None
         try:
             """pop job_id, status, timestamp"""
             params = self.job_params.copy()
             list(map(lambda k: params.pop(k), ['job_id', 'status', 'timestamp', '_id']))
             result = self._run_comparison(**params)
             self.job_result = result.model_dump()
-        except:
-            self.job_result = {"bio-check-message": f"Job for {params['comparison_id']} could not be completed"}
+        except Exception as e:
+            self.job_result = {"bio-check-message": f"Job for {params['comparison_id']} could not be completed because:\n{str(e)}"}
 
     def _run_comparison(
             self,
@@ -72,12 +72,12 @@ class Worker(BaseClass):
             ground_truth_report_path: str = None
     ) -> Union[UtcComparison, SimulationError]:
         """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
-        out_dir = tempfile.mktemp()
+        out_dir = tempfile.mkdtemp()
 
         # download the omex file from GCS
-        source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
-        local_omex_fp = os.path.join(out_dir, source_blob_name.split('/')[-1])
-        download_blob(BUCKET_NAME, source_blob_name, local_omex_fp)
+        # source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
+        local_omex_fp = os.path.join(out_dir, omex_path.split('/')[-1])
+        download_blob(BUCKET_NAME, omex_path, local_omex_fp)
 
         # download the report file from GCS if applicable
         if ground_truth_report_path is not None:
@@ -246,7 +246,7 @@ class Supervisor(BaseClass):
 
     def _refresh_jobs(self):
         self.jobs = self.get_jobs()
-        self.pending_jobs = self.jobs['pending_jobs']
+        self.pending_jobs = self.pending_jobs()
         self.in_progress_jobs = self.jobs['in_progress_jobs']
         self.completed_jobs = self.jobs['completed_jobs']
 
@@ -309,10 +309,23 @@ class Supervisor(BaseClass):
             pass 
 
         return True
+    
+    def get_jobs_from_collection(self, collection: str):
+        coll = self.db_connector.get_collection(collection_name=collection)
+        return [job for job in coll.find()]
+    
+    def pending_jobs(self):
+        return self.get_jobs_from_collection("pending_jobs")
+    
+    def in_progress_jobs(self):
+        return self.get_jobs_from_collection("in_progress_jobs")
+    
+    def completed_jobs(self):
+        return self.get_jobs_from_collection("completed_jobs")
 
     async def check_jobs(self, max_retries=5, delay=5) -> int:
         """Returns non-zero if max retries reached, zero otherwise."""
-        job_queue = self.pending_jobs
+        job_queue = self.db_connector.pending_jobs()
         n_tries = 0
         n_retries = 0
 
@@ -346,8 +359,7 @@ class Supervisor(BaseClass):
 
             # sleep
             await sleep(delay)
-            await self.refresh_jobs_async()
-            job_queue = self.pending_jobs
+            job_queue = self.pending_jobs()
         else:
             pass 
         return 0

@@ -1,4 +1,4 @@
-.env
+../assets/.env
 __pycache__/
 bio_check/__pycache__
 *.pyc

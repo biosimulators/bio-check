@@ -1,7 +1,7 @@
 import os
 import asyncio
 
-from shared import MongoDbConnector
+from worker.shared import MongoDbConnector
 from jobs import Supervisor
 
 
@@ -15,19 +15,20 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 DB_NAME = "service_requests"
 
+# shared db_connector
+db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+
 
 async def main():
-    # keep in mind that data gets saved to ../data
-
     # set timeout counter
     n_timeouts = 0
 
-    # create connector and supervisor
-    db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+    # create supervisor
     supervisor = Supervisor(db_connector=db_connector)
 
-    run = n_timeouts < MAX_TIMEOUTS
-    while run:
+    # run async loop
+    # run = n_timeouts < MAX_TIMEOUTS
+    while True:
         result = await supervisor.check_jobs(max_retries=MAX_RETRIES, delay=DELAY_TIMER)
         if result > 0:
             n_timeouts += 1
