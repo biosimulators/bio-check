@@ -27,8 +27,8 @@ async def main():
     supervisor = Supervisor(db_connector=db_connector)
 
     # run async loop
-    # run = n_timeouts < MAX_TIMEOUTS
-    while True:
+    run = n_timeouts < MAX_TIMEOUTS
+    while run:
         result = await supervisor.check_jobs(max_retries=MAX_RETRIES, delay=DELAY_TIMER)
         if result > 0:
             n_timeouts += 1
