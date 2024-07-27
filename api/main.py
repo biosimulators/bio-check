@@ -187,7 +187,8 @@ async def utc_comparison(
         # Save uploaded omex file to Google Cloud Storage
         omex_blob_dest = upload_prefix + uploaded_file.filename
         upload_blob(BUCKET_NAME, omex_fp, omex_blob_dest)
-        omex_path = bucket_prefix + uploaded_file.filename
+        # omex_location = bucket_prefix + uploaded_file.filename
+        omex_location = omex_blob_dest
 
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
@@ -202,7 +203,7 @@ async def utc_comparison(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
-            omex_path=omex_path,
+            omex_path=omex_location,
             simulators=simulators,
             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
             timestamp=_time,
