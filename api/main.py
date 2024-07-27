@@ -74,7 +74,7 @@ app.add_middleware(
 
 # -- get mongo db -- #
 
-db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id="service_requests")
+db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 app.mongo_client = db_connector.client
 
 # It will be represented as a `str` on the model so that it can be serialized to JSON. Represents an ObjectId field in the database.

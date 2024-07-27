@@ -7,6 +7,7 @@ __pycache__/
 *.pyc
 worker/handlers/__pycache__/
 *.egg-info/
-.env
+assets/.env_dev
 .bio-check.json
 bucket.sh
+.env_dev

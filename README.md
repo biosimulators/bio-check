@@ -30,8 +30,13 @@ The installation process is outlined as follows:
 1. `git clone https://github.com/biosimulators/bio-check.git`
 2. `cd bio-check/bio_check`
 3. `touch .env`
-4. Enter the following fields into the `.env` file: `MONGO_DB_USERNAME, MONGO_DB_PWD, MONGO_DB_URI`.
-5. **Ensure that your IP address has been authorized in the `bio-check` cluster in Mongo Atlas.**
+4. Enter the following fields into the `.env` file: 
+        
+        MONGO_URI=<uri of your mongo instance. In this case we use the standard mongodb image with the app name bio-check>
+        GOOGLE_APPLICATION_CREDENTIALS=<path to your gcloud credentials .json file. Contact us for access>
+        BUCKET_NAME=bio-check-requests-1  # name of the bucket used in this app
+
+5. **Ensure that your IP address has been authorized in the `bio-check` cluster within Mongo Atlas.**
 
 
 ### Notes:

@@ -1,4 +1,4 @@
-.env
+assets/.env_dev
 bio_check/__pycache__
 *.pyc
 *.pyo
@@ -35,4 +35,6 @@ tests
 !enter.sh
 !add_deps.sh
 bio_check/.env
-
+tests.py
+worker/shared.py
+.env_dev

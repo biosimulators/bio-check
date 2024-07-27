@@ -181,15 +181,24 @@ class DatabaseConnector(ABC, BaseClass):
 class MongoDbConnector(DatabaseConnector):
     def __init__(self, connection_uri: str, database_id: str, connector_id: str = None):
         super().__init__(connection_uri, database_id, connector_id)
-        self.pending_jobs = [j for j in self.db['pending_jobs'].find()]
-        self.in_progress_jobs = self.db['in_progress_jobs']
-        self.completed_jobs = self.db['completed_jobs']
 
     def _get_client(self, *args):
         return MongoClient(args[0])
 
     def _get_database(self, db_id: str) -> Database:
         return self.client.get_database(db_id)
+
+    def _get_jobs_from_collection(self, coll_name: str):
+        return [job for job in self.db[coll_name].find()]
+
+    def pending_jobs(self):
+        return self._get_jobs_from_collection("pending_jobs")
+
+    def in_progress_jobs(self):
+        return self._get_jobs_from_collection("in_progress_jobs")
+
+    def completed_jobs(self):
+        return self._get_jobs_from_collection("completed_jobs")
 
     async def read(self, collection_name: str, **kwargs):
         """Args:
@@ -323,7 +332,7 @@ class MongoDbConnector(DatabaseConnector):
             job = coll.find_one({'comparison_id': comparison_id})
             # case: job exists of some type for that comparison id; return that
             if not isinstance(job, type(None)):
-               return job 
-        
+               return job
+
         # case: no job exists for that id
         return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}

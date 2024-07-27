@@ -6,15 +6,25 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import *
 
-from google.cloud import storage
 from pydantic import BaseModel as _BaseModel, ConfigDict
 from fastapi import UploadFile
+from google.cloud import storage
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
 
 # -- globally-shared content-- #
+
+
+# BUCKET_URL = "gs://bio-check-requests-1/"
+
+
+async def save_uploaded_file(file: UploadFile, destination: str) -> str:
+    file_path = f"{destination}/{file.filename}"
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+    return file_path
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
@@ -40,39 +50,34 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
     blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
 
-    return {
-        'message': f"File {source_file_name} uploaded to {destination_blob_name}."
-    }
+    return {'message': f"File {source_file_name} uploaded to {destination_blob_name}."}
 
 
-def read_uploaded_file(bucket_name, source_blob_name, destination_file_name):
-    download_blob(bucket_name, source_blob_name, destination_file_name)
+def upload_to_gcs(bucket_name, destination_blob_name, content):
+    """Uploads a file to the Google Cloud Storage bucket."""
 
-    with open(destination_file_name, 'r') as f:
-        return f.read()
-
-
-def download_blob(bucket_name, source_blob_name, destination_file_name):
-    """Downloads a blob from the bucket."""
-    # bucket_name = "your-bucket-name"
-    # source_blob_name = "storage-object-name"
-    # destination_file_name = "local/path/to/file"
-
+    # Initialize a storage client
     storage_client = storage.Client()
+
+    # Get the bucket
     bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(source_blob_name)
 
-    # Download the file to a destination
-    blob.download_to_filename(destination_file_name)
+    # Create a blob object from the filepath
+    blob = bucket.blob(destination_blob_name)
+
+    # Upload the content to the blob
+    blob.upload_from_string(content)
+
+    return {'message': f"File {destination_blob_name} uploaded to {bucket_name}."}
 
 
-async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
-    # TODO: replace this with s3 and use save_dest
-    file_path = os.path.join(save_dest, uploaded_file.filename)
-    with open(file_path, 'wb') as file:
-        contents = await uploaded_file.read()
-        file.write(contents)
-    return file_path
+# async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
+#     # TODO: replace this with s3 and use save_dest
+#     file_path = os.path.join(save_dest, uploaded_file.filename)
+#     with open(file_path, 'wb') as file:
+#         contents = await uploaded_file.read()
+#         file.write(contents)
+#     return file_path
 
 
 def make_dir(fp: str):
@@ -90,6 +95,7 @@ class BaseModel(_BaseModel):
 @dataclass
 class BaseClass:
     """Base Python Dataclass multipurpose class with custom app configuration."""
+
     def to_dict(self):
         return asdict(self)
 
@@ -127,6 +133,7 @@ class CompletedJob(Job):
 @dataclass
 class DatabaseConnector(ABC, BaseClass):
     """Abstract class that is both serializable and interacts with the database (of any type). """
+
     def __init__(self, connection_uri: str, database_id: str, connector_id: str):
         self.database_id = database_id
         self.client = self._get_client(connection_uri)
@@ -177,6 +184,7 @@ class DatabaseConnector(ABC, BaseClass):
         pass
 
 
+# TODO: move this to a shared repo and fetch from PyPI for both api and worker
 @dataclass
 class MongoDbConnector(DatabaseConnector):
     def __init__(self, connection_uri: str, database_id: str, connector_id: str = None):
@@ -247,21 +255,6 @@ class MongoDbConnector(DatabaseConnector):
         result = coll.find_one({'comparison_id': comparison_id}) is not None
         return result
 
-    async def insert_pending_job(
-            self,
-            omex_path: str,
-            simulators: List[str],
-            comparison_id: str = None,
-            ground_truth_report_path: str = None,
-            include_outputs: bool = True,
-    ) -> Union[Dict[str, str], Mapping[str, Any]]:
-        pending_coll = self.get_collection("pending_jobs")
-
-
-        specs_coll = self.get_collection("request_specs")
-        results_coll = self.get_collection("results")
-
-
     async def _insert_pending_job(
             self,
             job_id: str,
@@ -271,7 +264,7 @@ class MongoDbConnector(DatabaseConnector):
             comparison_id: str = None,
             ground_truth_report_path: str = None,
             include_outputs: bool = True,
-            ) -> Union[Dict[str, str], Mapping[str, Any]]:
+    ) -> Union[Dict[str, str], Mapping[str, Any]]:
         # get params
         collection_name = "pending_jobs"
         # coll = self.get_collection(collection_name)
@@ -332,7 +325,56 @@ class MongoDbConnector(DatabaseConnector):
             job = coll.find_one({'comparison_id': comparison_id})
             # case: job exists of some type for that comparison id; return that
             if not isinstance(job, type(None)):
-               return job
+                return job
 
-        # case: no job exists for that id
+                # case: no job exists for that id
         return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}
+
+# import redis
+# import pymongo
+# import json
+# from bson import json_util
+# Redis configuration
+# redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+#
+# # MongoDB configuration
+# mongo_client = pymongo.MongoClient('mongodb://localhost:27017/')
+# mongo_db = mongo_client['your_database']
+# mongo_collection = mongo_db['your_collection']
+#
+# # Function to get data from MongoDB
+# def get_data_from_mongo(query):
+#     return mongo_collection.find_one(query)
+#
+# # Function to get data from Redis cache
+# def get_data_from_cache(key):
+#     cached_data = redis_client.get(key)
+#     if cached_data:
+#         return json.loads(cached_data, object_hook=json_util.object_hook)
+#     return None
+#
+# # Function to set data in Redis cache
+# def set_data_in_cache(key, data, ttl=300):
+#     redis_client.set(key, json.dumps(data, default=json_util.default), ex=ttl)
+#
+# # Cache-aside pattern implementation
+# def get_data(query):
+#     # Generate a unique key based on the query for Redis
+#     cache_key = f"mongo_cache:{json.dumps(query, sort_keys=True)}"
+#
+#     # Try to get data from Redis cache
+#     data = get_data_from_cache(cache_key)
+#     if data:
+#         print("Data retrieved from cache")
+#         return data
+#
+#     # If data is not found in cache, get it from MongoDB
+#     data = get_data_from_mongo(query)
+#     if data:
+#         # Store the retrieved data in Redis cache for future requests
+#         set_data_in_cache(cache_key, data)
+#         print("Data retrieved from MongoDB and stored in cache")
+#         return data
+#
+#     print("Data not found")
+#     return None
