@@ -24,7 +24,9 @@ DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 
-def unique_id(): str(uuid.uuid4())
+
+def unique_id():
+    return str(uuid.uuid4())
 
 
 async def load_arrows(timer):
@@ -276,8 +278,8 @@ class Supervisor(BaseClass):
 
     def _refresh_jobs(self):
         self.jobs = self.get_jobs()
-        self.pending_jobs = self.pending_jobs()
-        self.in_progress_jobs = self.jobs['in_progress_jobs']
+        self.pending_jobs = self.db_connector.pending_jobs()
+        self.in_progress_jobs = self.db_connector.in_progress_jobs()
         self.completed_jobs = self.jobs['completed_jobs']
 
     async def refresh_jobs_async(self):
@@ -389,7 +391,7 @@ class Supervisor(BaseClass):
 
             # sleep
             await sleep(delay)
-            job_queue = self.pending_jobs()
+            job_queue = self.db_connector.pending_jobs()
         else:
             pass 
         return 0
