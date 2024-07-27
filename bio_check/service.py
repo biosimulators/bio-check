@@ -21,7 +21,8 @@ class Service:
     def __init__(self):
         """Quasi-Singleton that is used to represent the BioCheck REST API and its methods therein."""
         self.endpoint_root = "https://biochecknet.biosimulations.org"
-        self._test_root()
+        root_response = self._test_root()
+        print(root_response)
 
     def submit(self, omex_filepath: str, simulators: List[str], include_outputs: bool = True, comparison_id: str = None, ground_truth_report_path: Optional[str] = None) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
@@ -91,11 +92,11 @@ class Service:
         if resp.status_code != 200:
             raise Exception(f"Request failed:\n{resp.status_code}\n{resp.text}\n")
     
-    def _test_root(self):
+    def _test_root(self) -> dict:
         try:
             resp = requests.get(self.endpoint_root)
             resp.raise_for_status()
             return resp.json()
         except RequestException as e:
-            print(f"A connection to that endpoint could not be established: {e}")
+            return {'bio-check-error': f"A connection to that endpoint could not be established: {e}"}
 
