@@ -1,6 +1,5 @@
 # Worker microservice
 
-# TODO: Read in from BASE_VERSION.txt aka the most recent stable release
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
 # WORKDIR /app
@@ -8,9 +7,7 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 COPY . /app/worker
 
 RUN pip uninstall biosimulators-utils -y \
-    && echo "\nbiosimulators-utils[logging]==0.1.187" >> /app/assets/requirements.base.txt \
-    && pip install biosimulators-utils[logging]==0.1.187 \
-    && pip install biosimulators-copasi biosimulators-tellurium \
+    && pip install -r /app/worker/requirements.worker.txt \
     && python3 -m pip install --upgrade matplotlib
 
 WORKDIR /app/worker
