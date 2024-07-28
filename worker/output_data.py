@@ -1,8 +1,14 @@
 import os
+import logging
+from tempfile import mkdtemp
 from typing import *
 from importlib import import_module
 
+import tellurium as te
+import libsbml
 import numpy as np
+from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
+from basico import *
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
@@ -11,6 +17,105 @@ from data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.io import standardize_report_outputs
 from io_worker import read_report_outputs
 from shared import make_dir
+
+
+def run_sbml_tellurium(sbml_fp: str, dur, n_steps):
+    simulator = te.loadSBMLModel(sbml_fp)
+    floating_species_list = simulator.getFloatingSpeciesIds()
+    sbml_reader = libsbml.SBMLReader()
+    sbml_doc = sbml_reader.readSBML(sbml_fp)
+    sbml_model_object = sbml_doc.getModel()
+    sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
+    sbml_species_mapping = dict(zip(
+        list(map(lambda s: s.name, sbml_species_ids)),
+        [spec.getId() for spec in sbml_species_ids],
+    ))
+    output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
+
+    result = simulator.simulate(0, dur, n_steps)
+    outputs = {'floating_species': {}}
+    for index, row in enumerate(result.transpose()):
+        for i, name in enumerate(floating_species_list):
+            outputs['floating_species'][output_keys[i]] = row
+
+    return outputs
+
+
+def run_sbml_copasi(sbml_fp: str, dur, n_steps):
+    simulator = load_model(sbml_fp)
+    sbml_reader = libsbml.SBMLReader()
+    sbml_doc = sbml_reader.readSBML(sbml_fp)
+    sbml_model_object = sbml_doc.getModel()
+    sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
+    sbml_species_mapping = dict(zip(
+        list(map(lambda s: s.name, sbml_species_ids)),
+        [spec.getId() for spec in sbml_species_ids],
+    ))
+    basico_species_ids = list(sbml_species_mapping.keys())
+
+    floating_species_list = list(sbml_species_mapping.values())
+    tc = run_time_course(start_time=0, duration=dur, n_steps=n_steps).to_dict()
+    output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
+
+    results = {'floating_species': {}}
+    for i, name in enumerate(floating_species_list):
+        results['floating_species'][output_keys[i]] = np.array(list(tc.get(basico_species_ids[i]).values()))
+
+    return results
+
+
+def run_sbml_amici(sbml_fp: str, dur, n_steps):
+    sbml_reader = libsbml.SBMLReader()
+    sbml_doc = sbml_reader.readSBML(sbml_fp)
+    sbml_model_object = sbml_doc.getModel()
+
+    sbml_importer = SbmlImporter(sbml_fp)
+
+    model_id = "BIOMD0000000012_url"
+    model_output_dir = mkdtemp()
+
+    sbml_importer.sbml2amici(
+        model_id,
+        model_output_dir,
+        verbose=logging.INFO,
+        observables=None,
+        sigmas=None,
+        constant_parameters=None
+    )
+    # model_output_dir = model_id  # mkdtemp()
+    model_module = import_model_module(model_id, model_output_dir)
+    amici_model_object: Model = model_module.getModel()
+
+    floating_species_list = list(amici_model_object.getStateIds())
+    floating_species_initial = list(amici_model_object.getInitialStates())
+    sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
+
+    t = np.linspace(0, dur, n_steps)
+    amici_model_object.setTimepoints(t)
+
+    initial_state = dict(zip(floating_species_list, floating_species_initial))
+    set_values = []
+    for species_id, value in initial_state.items():
+        set_values.append(value)
+    amici_model_object.setInitialStates(set_values)
+
+    sbml_species_mapping = dict(zip(
+        list(map(lambda s: s.name, sbml_species_ids)),
+        [spec.getId() for spec in sbml_species_ids],
+    ))
+
+    method = amici_model_object.getSolver()
+    result_data = runAmiciSimulation(solver=method, model=amici_model_object)
+    output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
+
+    results = {'floating_species': {}}
+    floating_results = dict(zip(
+        output_keys,
+        list(map(lambda x: result_data.by_id(x), floating_species_list))
+    ))
+    results['floating_species'] = floating_results
+
+    return results
 
 
 def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:
