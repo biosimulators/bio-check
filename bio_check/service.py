@@ -26,12 +26,12 @@ class Service:
         root_response = self._test_root()
         print(root_response)
 
-    def submit(self, omex_filepath: str, simulators: List[str], include_outputs: bool = True, comparison_id: str = None, ground_truth_report_path: Optional[str] = None) -> Union[Dict[str, str], RequestError]:
+    def submit(self, omex_filepath: str, simulators: List[str] = None, include_outputs: bool = True, comparison_id: str = None, ground_truth_report_path: Optional[str] = None) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
 
             Args:
                 omex_filepath:`str`: The path to the omex file to submit.
-                simulators:`List[str]`: The list of simulators to include in comparison.
+                simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
                 ground_truth_report_path:`str, optional`: The path to the ground truth report file to include in comparison. Defaults to None.
@@ -43,10 +43,13 @@ class Service:
 
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
+        _omex = (omex_filepath.split('/')[-1], open(omex_filepath, 'rb'), 'application/octet-stream')
         _report = (ground_truth_report_path.split('/')[-1], open(ground_truth_report_path, 'rb'), 'application/octet-stream') if ground_truth_report_path else None
+        sims = simulators or ['amici', 'copasi', 'tellurium']
+
         multidata = MultipartEncoder(fields={
-            'uploaded_file': (omex_filepath.split('/')[-1], open(omex_filepath, 'rb'), 'application/octet-stream'),
-            'simulators': ','.join(simulators),
+            'uploaded_file': _omex,
+            'simulators': ','.join(sims),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
             'ground_truth_report': _report
@@ -83,12 +86,15 @@ class Service:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def fetch(self, comparison_id: str, polling_timer: int = 5, timeout_thresh: int = 10) -> Union[Dict, None]:
+    def fetch(self, comparison_id: str, polling_timer: int = 5, timeout_thresh: int = 50) -> Union[Dict, None]:
         n_tries = 0
         output = None
         while n_tries < timeout_thresh + 1:
             result = self.fetch_result(comparison_id)
-            if result['content']['status'] != 'COMPLETED':
+            status = result['content']['status']
+            print(f"The job status is: {status}")
+
+            if status != 'COMPLETED':
                 n_tries += 1
                 sleep(polling_timer)
             else:
