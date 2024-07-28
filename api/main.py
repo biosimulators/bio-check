@@ -18,7 +18,7 @@ from log_config import setup_logging
 
 # --load env -- #
 
-# dotenv.load_dotenv()
+dotenv.load_dotenv("../assets/.env_dev")
 
 
 # -- constraints -- #
@@ -238,6 +238,8 @@ async def fetch_results(comparison_id: str):
     # resp_content[key] = job[key]
     # return UtcComparisonResult(content=resp_content)
 
+    _id = job["_id"]
+    job["_id"] = str(_id)
     return UtcComparisonResult(content=job)
 
 
