@@ -19,47 +19,48 @@ from io_worker import read_report_outputs
 from shared import make_dir
 
 
-def run_sbml_tellurium(sbml_fp: str, dur, n_steps):
-    simulator = te.loadSBMLModel(sbml_fp)
-    floating_species_list = simulator.getFloatingSpeciesIds()
+def get_sbml_species_mapping(sbml_fp: str):
     sbml_reader = libsbml.SBMLReader()
     sbml_doc = sbml_reader.readSBML(sbml_fp)
     sbml_model_object = sbml_doc.getModel()
     sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
-    sbml_species_mapping = dict(zip(
+    return dict(zip(
         list(map(lambda s: s.name, sbml_species_ids)),
         [spec.getId() for spec in sbml_species_ids],
     ))
+
+
+def run_sbml_tellurium(sbml_fp: str, dur, n_steps):
+    simulator = te.loadSBMLModel(sbml_fp)
+    floating_species_list = simulator.getFloatingSpeciesIds()
+    sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
     result = simulator.simulate(0, dur, n_steps)
-    outputs = {'floating_species': {}}
+    outputs = {}
     for index, row in enumerate(result.transpose()):
         for i, name in enumerate(floating_species_list):
-            outputs['floating_species'][output_keys[i]] = row
+            outputs[output_keys[i]] = row
 
     return outputs
 
 
 def run_sbml_copasi(sbml_fp: str, dur, n_steps):
     simulator = load_model(sbml_fp)
-    sbml_reader = libsbml.SBMLReader()
-    sbml_doc = sbml_reader.readSBML(sbml_fp)
-    sbml_model_object = sbml_doc.getModel()
-    sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
-    sbml_species_mapping = dict(zip(
-        list(map(lambda s: s.name, sbml_species_ids)),
-        [spec.getId() for spec in sbml_species_ids],
-    ))
+    sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     basico_species_ids = list(sbml_species_mapping.keys())
 
     floating_species_list = list(sbml_species_mapping.values())
-    tc = run_time_course(start_time=0, duration=dur, n_steps=n_steps).to_dict()
+
+    t = np.linspace(0, dur, n_steps)
+    reported_outs = [k for k in sbml_species_mapping.keys()]
+
+    tc = run_time_course_with_output(start_time=0, duration=t[-1], values=t, model=simulator, update_model=True, output_selection=reported_outs, use_numbers=True).to_dict()
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
-    results = {'floating_species': {}}
+    results = {}
     for i, name in enumerate(floating_species_list):
-        results['floating_species'][output_keys[i]] = np.array(list(tc.get(basico_species_ids[i]).values()))
+        results[output_keys[i]] = np.array(list(tc.get(basico_species_ids[i]).values()))
 
     return results
 
@@ -99,21 +100,18 @@ def run_sbml_amici(sbml_fp: str, dur, n_steps):
         set_values.append(value)
     amici_model_object.setInitialStates(set_values)
 
-    sbml_species_mapping = dict(zip(
-        list(map(lambda s: s.name, sbml_species_ids)),
-        [spec.getId() for spec in sbml_species_ids],
-    ))
+    sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
 
     method = amici_model_object.getSolver()
     result_data = runAmiciSimulation(solver=method, model=amici_model_object)
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
-    results = {'floating_species': {}}
+    results = {}
     floating_results = dict(zip(
         output_keys,
-        list(map(lambda x: result_data.by_id(x), floating_species_list))
+        np.array(list(map(lambda x: result_data.by_id(x), floating_species_list)))
     ))
-    results['floating_species'] = floating_results
+    results = floating_results
 
     return results
 
@@ -151,9 +149,32 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     return output_data
 
 
+def generate_sbml_utc_outputs(**params):
+    """
+
+    Args:
+        **params:`kwargs`: sbml_fp, dur, n_steps
+
+    """
+    amici_results = run_sbml_amici(**params)
+    copasi_results = run_sbml_copasi(**params)
+    tellurium_results = run_sbml_tellurium(**params)
+    output = {'amici': amici_results, 'copasi': copasi_results, 'tellurium': tellurium_results}
+
+    return output
+
+
 def generate_species_output(omex_fp: str, output_root_dir: str, species_name: str, simulators: list[str] = None) -> np.ndarray:
     outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators=simulators)
     return _get_output_stack(outputs, species_name), outputs
+
+
+def sbml_output_stack(spec_name: str, output):
+    stack = []
+    for simulator_name, simulator_output in output.items():
+        spec_data = simulator_output[spec_name]
+        stack.append(spec_data)
+    return stack
 
 
 def _get_output_stack(outputs: dict, spec_id: str):

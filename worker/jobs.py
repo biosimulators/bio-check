@@ -14,8 +14,7 @@ import pandas as pd
 from shared import BaseClass, MongoDbConnector, download_blob
 from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
-from output_data import generate_biosimulator_utc_outputs, _get_output_stack
-
+from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping
 
 # for dev only
 load_dotenv('../assets/.env_dev')
@@ -55,9 +54,33 @@ class Worker(BaseClass):
     worker_id: Optional[str] = unique_id()
 
     def __post_init__(self):
-        return self._execute_job()
+        input_fp = self.job_params['omex_path']
+        if input_fp.endswith('.omex'):
+            return self._execute_omex_job()
+        elif input_fp.endswith('.xml'):
+            return self._execute_sbml_job()
 
-    def _execute_job(self):
+    def _execute_sbml_job(self):
+        params = None
+        out_dir = tempfile.mkdtemp()
+
+        source_omex_blob_name = self.job_params['omex_path']
+        local_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
+        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_fp)
+
+        try:
+            simulators = self.job_params.get('simulators', [])
+            include_outs = self.job_params.get('include_outputs', False)
+            comparison_id = self.job_params['comparison_id']
+            duration = self.job_params.get('duration', 10)
+            n_steps = self.job_params.get('n_steps', 100)
+
+            result = self.generate_sbml_utc_comparison(sbml_fp=local_fp, dur=duration, n_steps=n_steps)
+            self.job_result = result
+        except Exception as e:
+            self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
+
+    def _execute_omex_job(self):
         params = None
         out_dir = tempfile.mkdtemp()
 
@@ -79,7 +102,7 @@ class Worker(BaseClass):
             simulators = self.job_params.get('simulators', [])
             include_outs = self.job_params.get('include_outputs', False)
             comparison_id = self.job_params['comparison_id']
-            result = self._run_comparison(
+            result = self.run_comparison_from_omex(
                 omex_path=local_omex_fp,
                 simulators=simulators,
                 out_dir=out_dir,
@@ -91,7 +114,7 @@ class Worker(BaseClass):
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
 
-    def _run_comparison(
+    def run_comparison_from_omex(
             self,
             omex_path: str,
             simulators: List[str],
@@ -119,7 +142,7 @@ class Worker(BaseClass):
         comparison_id = comparison_id or 'biosimulators-utc-comparison'
         ground_truth_data = truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals
 
-        comparison = self._generate_utc_comparison(
+        comparison = self.generate_omex_utc_comparison(
             omex_fp=omex_path,  # omex_path,
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
@@ -142,7 +165,7 @@ class Worker(BaseClass):
             id=comparison_id,
             simulators=simulators)
 
-    def _generate_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None):
+    def generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None):
         model_file = get_sbml_model_file_from_archive(omex_fp, out_dir)
         sbml_species_names = get_sbml_species_names(model_file)
         results = {'results': {}, 'comparison_id': comparison_id}
@@ -152,7 +175,7 @@ class Worker(BaseClass):
                 for data in ground_truth['data']:
                     if data['dataset_label'] == species:
                         ground_truth_data = data['data']
-            results['results'][species] = self._generate_utc_species_comparison(
+            results['results'][species] = self.generate_omex_utc_species_comparison(
                 omex_fp=omex_fp,
                 out_dir=out_dir,
                 species_name=species,
@@ -161,7 +184,7 @@ class Worker(BaseClass):
             )
         return results
 
-    def _generate_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None):
+    def generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None):
         output_data = generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
         outputs = _get_output_stack(output_data, species_name)
         methods = ['mse', 'prox']
@@ -175,6 +198,32 @@ class Worker(BaseClass):
             for output in output_data[simulator_name]['data']:
                 if output['dataset_label'] in species_name:
                     results['output_data'][simulator_name] = output['data'].tolist()
+        return results
+
+    def generate_sbml_utc_species_comparison(self, sbml_filepath, dur, n_steps, species_name, simulators=None, ground_truth=None):
+        simulators = simulators or ['amici', 'copasi', 'tellurium']
+        output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, dur=dur, n_steps=n_steps)
+        outputs = sbml_output_stack(species_name, output_data)
+        methods = ['mse', 'prox']
+        matrix_vals = list(map(
+            lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth).to_dict(),
+            methods
+        ))
+        results = dict(zip(methods, matrix_vals))
+        results['output_data'] = {}
+        for simulator_name in output_data.keys():
+            for spec_name, output in output_data[simulator_name].items():
+                if species_name in spec_name:
+                    results['output_data'][simulator_name] = output_data[simulator_name][spec_name].tolist()
+        return results
+
+    def generate_sbml_utc_comparison(self, sbml_fp, dur, n_steps):
+        species_mapping = get_sbml_species_mapping(sbml_fp)
+        results = {}
+        for species_name in species_mapping.keys():
+            species_comparison = self.generate_sbml_utc_species_comparison(sbml_fp, dur, n_steps, species_name)
+            results[species_name] = species_comparison
+
         return results
 
     def _generate_species_comparison_matrix(
