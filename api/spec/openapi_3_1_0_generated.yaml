@@ -128,7 +128,7 @@ components:
           type: string
           format: binary
           title: Uploaded File
-          description: Either a OMEX/COMBINE Archive File or SBML model File.
+          description: 'One of: either an OMEX/COMBINE Archive File or SBML File.'
         ground_truth_report:
           type: string
           format: binary
