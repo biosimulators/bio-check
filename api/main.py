@@ -200,13 +200,18 @@ async def utc_comparison(
         report_location = report_blob_dest
 
         # run insert job
+        if comparison_id is None:
+            _id = f"uniform-time-course-comparison-{job_id}"
+        else:
+            _id = comparison_id
+
         pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
             omex_path=omex_location,
             simulators=simulators,
-            comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
+            comparison_id=_id,
             timestamp=_time,
             ground_truth_report_path=report_location,
             include_outputs=include_outputs)

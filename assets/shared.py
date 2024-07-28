@@ -20,6 +20,14 @@ from pymongo.database import Database
 # BUCKET_URL = "gs://bio-check-requests-1/"
 
 
+def refresh_jobs(conn):
+    def refresh_collection(conn, coll):
+        for job in conn.db[coll].find():
+            conn.db[coll].delete_one(job)
+    for collname in ['completed_jobs', 'in_progress_jobs', 'pending_jobs']:
+        refresh_collection(conn, collname)
+
+
 async def save_uploaded_file(file: UploadFile, destination: str) -> str:
     file_path = f"{destination}/{file.filename}"
     with open(file_path, "wb") as buffer:

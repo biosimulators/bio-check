@@ -1,4 +1,6 @@
 import os
+from time import sleep
+
 import requests
 from uuid import uuid4
 
@@ -59,7 +61,7 @@ class Service:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def fetch(self, comparison_id: str) -> Union[Dict[str, Union[str, Dict]], RequestError]:
+    def fetch_result(self, comparison_id: str) -> Union[Dict[str, Union[str, Dict]], RequestError]:
         """Fetch the current state of the job referenced with `comparison_id`. If the job has not yet been processed, it will return a `status` of `PENDING`. If the job is being processed by
             the service at the time of return, `status` will read `IN_PROGRESS`. If the job is complete, the job state will be returned, optionally with included result data.
 
@@ -80,6 +82,20 @@ class Service:
             return response.json()
         except Exception as e:
             return RequestError(error=str(e))
+
+    def fetch(self, comparison_id: str, polling_timer: int = 5, timeout_thresh: int = 10) -> Union[Dict, None]:
+        n_tries = 0
+        output = None
+        while n_tries < timeout_thresh + 1:
+            result = self.fetch_result(comparison_id)
+            if result['content']['status'] != 'COMPLETED':
+                n_tries += 1
+                sleep(polling_timer)
+            else:
+                output = result
+                break
+
+        return output
 
     def visualize(self):
         # TODO: get results and viz here
