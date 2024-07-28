@@ -41,9 +41,9 @@ class Service:
 
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
-        _report = ('ground_truth_file', open(ground_truth_report_path, 'rb'), 'application/octet-stream') if ground_truth_report_path else None
+        _report = (ground_truth_report_path.split('/')[-1], open(ground_truth_report_path, 'rb'), 'application/octet-stream') if ground_truth_report_path else None
         multidata = MultipartEncoder(fields={
-            'uploaded_file': ('omex_file', open(omex_filepath, 'rb'), 'application/octet-stream'),
+            'uploaded_file': (omex_filepath.split('/')[-1], open(omex_filepath, 'rb'), 'application/octet-stream'),
             'simulators': ','.join(simulators),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
