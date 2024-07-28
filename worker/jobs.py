@@ -56,9 +56,9 @@ class Worker(BaseClass):
     def __post_init__(self):
         input_fp = self.job_params['omex_path']
         if input_fp.endswith('.omex'):
-            return self._execute_omex_job()
+            self._execute_omex_job()
         elif input_fp.endswith('.xml'):
-            return self._execute_sbml_job()
+            self._execute_sbml_job()
 
     def _execute_sbml_job(self):
         params = None

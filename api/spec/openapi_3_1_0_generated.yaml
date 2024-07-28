@@ -54,6 +54,29 @@ paths:
           description: Comparison ID to use.
           title: Comparison Id
         description: Comparison ID to use.
+      - name: duration
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: Duration of the simulation, only if passing an sbml file as
+            uploaded_file
+          title: Duration
+        description: Duration of the simulation, only if passing an sbml file as uploaded_file
+      - name: n_steps
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: Number of simulation steps to run, only if passing an sbml
+            file as uploaded_file
+          title: N Steps
+        description: Number of simulation steps to run, only if passing an sbml file
+          as uploaded_file
       requestBody:
         required: true
         content:
@@ -105,7 +128,7 @@ components:
           type: string
           format: binary
           title: Uploaded File
-          description: OMEX/COMBINE Archive File.
+          description: Either a OMEX/COMBINE Archive File or SBML model File.
         ground_truth_report:
           type: string
           format: binary

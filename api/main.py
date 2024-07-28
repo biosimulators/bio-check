@@ -162,11 +162,13 @@ def root():
     operation_id="utc-comparison",
     summary="Compare UTC outputs from for a deterministic SBML model within a given archive.")
 async def utc_comparison(
-        uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
+        uploaded_file: UploadFile = File(..., description="One of: either an OMEX/COMBINE Archive File or SBML File."),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
-        ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison.")
+        ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
+        duration: Optional[int] = Query(default=None, description="Duration of the simulation, only if passing an sbml file as uploaded_file"),
+        n_steps: Optional[int] = Query(default=None, description="Number of simulation steps to run, only if passing an sbml file as uploaded_file")
         ) -> UtcComparisonSubmission:
     try:
         # request specific params
@@ -181,13 +183,13 @@ async def utc_comparison(
 
         # fix: ephemeral data store
         # save_dest = "/app/uploads"
-        omex_fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
+        fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
-        omex_blob_dest = upload_prefix + omex_fp.split("/")[-1]
-        upload_blob(bucket_name=BUCKET_NAME, source_file_name=omex_fp, destination_blob_name=omex_blob_dest)
+        blob_dest = upload_prefix + fp.split("/")[-1]
+        upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
         # omex_location = bucket_prefix + uploaded_file.filename
-        omex_location = omex_blob_dest
+        uploaded_file_location = blob_dest
 
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
@@ -209,7 +211,7 @@ async def utc_comparison(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
-            omex_path=omex_location,
+            omex_path=uploaded_file_location,
             simulators=simulators,
             comparison_id=_id,
             timestamp=_time,
@@ -217,7 +219,7 @@ async def utc_comparison(
             include_outputs=include_outputs)
 
         # clean up local temp files
-        os.remove(omex_fp)
+        os.remove(fp)
         if report_fp:
             os.remove(report_fp)
 
