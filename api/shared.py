@@ -332,7 +332,7 @@ class MongoDbConnector(DatabaseConnector):
             job = coll.find_one({'comparison_id': comparison_id})
             # case: job exists of some type for that comparison id; return that
             if not isinstance(job, type(None)):
-               return job
+                return job
 
         # case: no job exists for that id
         return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}
