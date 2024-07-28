@@ -227,9 +227,18 @@ async def utc_comparison(
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
 async def fetch_results(comparison_id: str):
-    job = db_connector.fetch_job(comparison_id=comparison_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+    for collection in colls:
+        job = db_connector.db[collection].find_one({'comparison_id': comparison_id})
+        if not type(job) == type(None):
+            _id = job["_id"]
+            job["_id"] = str(_id)
+            return UtcComparisonResult(content=job)
+
+    raise HTTPException(status_code=404, detail="Comparison not found")
+    # job = db_connector.fetch_job(comparison_id=comparison_id)
+    # if not job:
+        # raise HTTPException(status_code=404, detail="Job not found")
 
     # assuming results are stored in the job document. TODO: what if this is not the case?
     # job_id = job["job_id"]
@@ -238,9 +247,9 @@ async def fetch_results(comparison_id: str):
     # resp_content[key] = job[key]
     # return UtcComparisonResult(content=resp_content)
 
-    _id = job["_id"]
-    job["_id"] = str(_id)
-    return UtcComparisonResult(content=job)
+    # _id = job["_id"]
+    # job["_id"] = str(_id)
+    # return UtcComparisonResult(content=job)
 
 
 if __name__ == "__main__":
