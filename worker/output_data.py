@@ -109,7 +109,7 @@ def run_sbml_amici(sbml_fp: str, dur, n_steps):
     results = {}
     floating_results = dict(zip(
         output_keys,
-        np.array(list(map(lambda x: result_data.by_id(x), floating_species_list)))
+        list(map(lambda x: result_data.by_id(x), floating_species_list))
     ))
     results = floating_results
 
