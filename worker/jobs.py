@@ -62,19 +62,18 @@ class Worker(BaseClass):
         out_dir = tempfile.mkdtemp()
 
         # get omex from bucket
-        source_omex_blob = self.job_params['omex_path']
-        local_omex_fp = os.path.join(out_dir, source_omex_blob.split('/')[-1])
-        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob, destination_file_name=local_omex_fp)
+        source_omex_blob_name = self.job_params['omex_path']
+        local_omex_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
+        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_omex_fp)
 
         # get ground truth from bucket if applicable
         ground_truth_report_path = self.job_params['ground_truth_report_path']
+        truth_vals = None
         if ground_truth_report_path is not None:
-            source_report_blob_name = ground_truth_report_path.replace('gs://bio-check-requests-1', '')
-            # local_report_path = os.path.join(out_dir, source_report_blob_name.split('/')[-1])
+            source_report_blob_name = self.job_params['ground_truth_report_path']
             local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
-            truth_vals = read_report_outputs(ground_truth_report_path)
-        else:
-            truth_vals = None
+            download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
+            truth_vals = read_report_outputs(local_report_path)
 
         try:
             simulators = self.job_params.get('simulators', [])
@@ -85,7 +84,9 @@ class Worker(BaseClass):
                 simulators=simulators,
                 out_dir=out_dir,
                 include_outputs=include_outs,
-                comparison_id=comparison_id)
+                comparison_id=comparison_id,
+                truth_vals=truth_vals
+            )
             self.job_result = result.model_dump()
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
@@ -341,19 +342,17 @@ class Supervisor(BaseClass):
             pass 
 
         return True
-    
-    def get_jobs_from_collection(self, collection: str):
-        coll = self.db_connector.get_collection(collection_name=collection)
-        return [job for job in coll.find()]
-    
-    def pending_jobs(self):
-        return self.get_jobs_from_collection("pending_jobs")
-    
-    def in_progress_jobs(self):
-        return self.get_jobs_from_collection("in_progress_jobs")
-    
-    def completed_jobs(self):
-        return self.get_jobs_from_collection("completed_jobs")
+
+    def exists_in_next_queue(self, current_queue: list[dict], next_queue: list[dict]) -> bool:
+        if len(current_queue) > 0:
+            for current_job in current_queue:
+                current_job_id = current_job['job_id']
+                if len(next_queue) > 0:
+                    for next_job in next_queue:
+                        if current_job_id == next_job['job_id']:
+                            return True
+
+        return False
 
     async def check_jobs(self, max_retries=5, delay=5) -> int:
         """Returns non-zero if max retries reached, zero otherwise."""
