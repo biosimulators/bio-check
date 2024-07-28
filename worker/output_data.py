@@ -156,10 +156,11 @@ def generate_sbml_utc_outputs(**params):
         **params:`kwargs`: sbml_fp, dur, n_steps
 
     """
-    amici_results = run_sbml_amici(**params)
+    # amici_results = run_sbml_amici(**params)
     copasi_results = run_sbml_copasi(**params)
     tellurium_results = run_sbml_tellurium(**params)
-    output = {'amici': amici_results, 'copasi': copasi_results, 'tellurium': tellurium_results}
+    # output = {'amici': amici_results, 'copasi': copasi_results, 'tellurium': tellurium_results}
+    output = {'copasi': copasi_results, 'tellurium': tellurium_results}
 
     return output
 

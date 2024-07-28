@@ -201,7 +201,10 @@ class Worker(BaseClass):
         return results
 
     def generate_sbml_utc_species_comparison(self, sbml_filepath, dur, n_steps, species_name, simulators=None, ground_truth=None):
-        simulators = simulators or ['amici', 'copasi', 'tellurium']
+        simulators = simulators or ['copasi', 'tellurium']
+        if "amici" in simulators:
+            simulators.remove("amici")
+
         output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, dur=dur, n_steps=n_steps)
         outputs = sbml_output_stack(species_name, output_data)
         methods = ['mse', 'prox']
