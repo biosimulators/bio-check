@@ -15,8 +15,7 @@ paths:
               schema: {}
   /utc-comparison:
     post:
-      summary: Compare UTC outputs from for a deterministic SBML model within a given
-        archive.
+      summary: Compare UTC outputs from a deterministic SBML model.
       operationId: utc-comparison
       parameters:
       - name: simulators

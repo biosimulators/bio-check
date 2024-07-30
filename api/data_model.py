@@ -16,6 +16,10 @@ class PendingJob(Job):
     include_output: Optional[bool] = True
 
 
+class Simulators(BaseModel):
+    simulators: List[str]
+
+
 class UtcComparisonSubmission(PendingJob):
     pass
 

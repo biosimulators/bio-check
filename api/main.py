@@ -6,14 +6,13 @@ from tempfile import mkdtemp
 from typing import *
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission
-from shared import save_uploaded_file, upload_blob
-from shared import MongoDbConnector
+from data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission, Simulators
+from shared import save_uploaded_file, upload_blob, MongoDbConnector
 from log_config import setup_logging
 
 # --load env -- #
@@ -160,9 +159,10 @@ def root():
     response_model=UtcComparisonSubmission,
     name="Uniform Time Course Comparison",
     operation_id="utc-comparison",
-    summary="Compare UTC outputs from for a deterministic SBML model within a given archive.")
+    summary="Compare UTC outputs from a deterministic SBML model.")
 async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="One of: either an OMEX/COMBINE Archive File or SBML File."),
+        # simulators: Simulators = Body(default=Simulators(simulators=["amici", "copasi", "tellurium"])),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
@@ -207,6 +207,8 @@ async def utc_comparison(
         #     _id = f"uniform-time-course-comparison-{job_id}"
         # else:
         #     _id = comparison_id
+
+        # sims = simulators['simulators']
 
         pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
