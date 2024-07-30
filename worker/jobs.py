@@ -430,14 +430,14 @@ class Supervisor(BaseClass):
                 job_comparison_id = job_doc['comparison_id']
                 unique_id_query = {'job_id': job_id}
                 in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
-                _job_exists = partial(self._job_exists, comparison_id=job_id)
+                _job_exists = partial(self._job_exists, job_id=job_id)
 
                 # check for in progress job with same comparison id and make a new one if not
-                in_progress_exists = _job_exists(collection_name='in_progress_jobs')
+                in_progress_exists = _job_exists(collection_name='in_progress_jobs', job_id=job_id)
                 # self._handle_in_progress_job(in_progress_job, job_comparison_id)
                 self._handle_in_progress_job(job_exists=in_progress_exists, job_id=job_id, comparison_id=job_comparison_id)
                 # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
-                completed_exists = _job_exists(collection_name='completed_jobs')
+                completed_exists = _job_exists(collection_name='completed_jobs', job_id=job_id)
                 self._handle_completed_job(job_exists=completed_exists, job_comparison_id=job_comparison_id, job_doc=job_doc, job_id=job_id)
                 
                 # remove the job from queue

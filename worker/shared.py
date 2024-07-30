@@ -1,6 +1,6 @@
 # -- db connectors -- #
 
-import os 
+import os
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -18,16 +18,13 @@ from pymongo.database import Database
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
-    """Uploads a file to the bucket.
-        # The ID of your GCS bucket
-        # bucket_name = "your-bucket-name"
-
-        # The path to your file to upload
-        # source_file_name = "local/path/to/file"
-
-        # The ID of your GCS object
-        # destination_blob_name = "storage-object-name"
-    """
+    """Uploads a file to the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+    # The path to your file to upload
+    # source_file_name = "local/path/to/file"
+    # The ID of your GCS object
+    # destination_blob_name = "storage-object-name"
 
     storage_client = storage.Client('bio-check-428516')
     bucket = storage_client.bucket(bucket_name)
@@ -70,7 +67,7 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
 
 
 async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
-    # TODO: replace this with s3 and use save_dest
+    """Write `fastapi.UploadFile` instance passed by api gateway user to `save_dest`."""
     file_path = os.path.join(save_dest, uploaded_file.filename)
     with open(file_path, 'wb') as file:
         contents = await uploaded_file.read()
@@ -104,16 +101,13 @@ class MultipleConnectorError(Exception):
 
 # -- jobs --
 
-@dataclass
 class Job(BaseModel):
     job_id: str
     status: str
     timestamp: str
-
     comparison_id: str
 
 
-@dataclass
 class InProgressJob(Job):
     job_id: str
     status: str
@@ -122,7 +116,6 @@ class InProgressJob(Job):
     worker_id: str
 
 
-@dataclass
 class CompletedJob(Job):
     job_id: str
     status: str
@@ -131,7 +124,8 @@ class CompletedJob(Job):
     results: Dict
 
 
-class DatabaseConnector(ABC):
+@dataclass
+class DatabaseConnector(ABC, BaseClass):
     """Abstract class that is both serializable and interacts with the database (of any type). """
     def __init__(self, connection_uri: str, database_id: str, connector_id: str):
         self.database_id = database_id
@@ -183,6 +177,7 @@ class DatabaseConnector(ABC):
         pass
 
 
+@dataclass
 class MongoDbConnector(DatabaseConnector):
     def __init__(self, connection_uri: str, database_id: str, connector_id: str = None):
         super().__init__(connection_uri, database_id, connector_id)
@@ -266,7 +261,6 @@ class MongoDbConnector(DatabaseConnector):
         specs_coll = self.get_collection("request_specs")
         results_coll = self.get_collection("results")
 
-
     async def _insert_pending_job(
             self,
             job_id: str,
@@ -337,7 +331,15 @@ class MongoDbConnector(DatabaseConnector):
             job = coll.find_one({'comparison_id': comparison_id})
             # case: job exists of some type for that comparison id; return that
             if not isinstance(job, type(None)):
-               return job
+                return job
 
         # case: no job exists for that id
         return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}
+
+    def refresh_jobs(self):
+        def refresh_collection(coll):
+            for job in self.db[coll].find():
+                self.db[coll].delete_one(job)
+
+        for collname in ['completed_jobs', 'in_progress_jobs', 'pending_jobs']:
+            refresh_collection(collname)
