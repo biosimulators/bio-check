@@ -55,10 +55,27 @@ class Worker(BaseClass):
 
     def __post_init__(self):
         input_fp = self.job_params['omex_path']
+        selection_list = self.job_params.get('selection_list')
+
         if input_fp.endswith('.omex'):
             self._execute_omex_job()
         elif input_fp.endswith('.xml'):
             self._execute_sbml_job()
+
+        if selection_list is not None:
+            self.job_result = self._select_observables(selection_list)
+
+    def _select_observables(self, observables: list[str] = None) -> dict:
+        """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
+            to dicts in which the keys are the simulator names and the values are arrays. The data must have content accessible at: `data['content']['results']`.
+        """
+        outputs = self.job_result.copy()
+        result = {}
+        for name, obs_data in self.job_result['content']['results'].items():
+            if name in observables:
+                result[name] = obs_data
+        outputs['content']['results'] = result
+        return outputs
 
     def _execute_sbml_job(self):
         params = None

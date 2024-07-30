@@ -163,6 +163,18 @@ class Verifier:
         # TODO: get results and viz here
         pass
 
+    def select_observables(self, observables: list[str], data: dict) -> dict:
+        """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
+            to dicts in which the keys are the simulator names and the values are arrays. The data must have content accessible at: `data['content']['results']`.
+        """
+        outputs = data.copy()
+        result = {}
+        for name, obs_data in data['content']['results'].items():
+            if name in observables:
+                result[name] = obs_data
+        outputs['content']['results'] = result
+        return outputs
+
     def _format_endpoint(self, path_piece: str) -> str:
         return f'{self.endpoint_root}/{path_piece}'
 

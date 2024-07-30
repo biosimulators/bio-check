@@ -119,6 +119,7 @@ async def verify_omex(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+        selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
@@ -163,7 +164,8 @@ async def verify_omex(
             ground_truth_report_path=report_location,
             include_outputs=include_outputs,
             rTol=rTol,
-            aTol=aTol
+            aTol=aTol,
+            selection_list=selection_list
         )
 
         # clean up local temp files
@@ -190,7 +192,8 @@ async def verify_sbml(
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
-        aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
+        aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
+        selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
 ) -> UtcComparisonSubmission:
     try:
         # request specific params
@@ -223,7 +226,8 @@ async def verify_sbml(
             n_steps=number_of_steps,
             include_outputs=include_outputs,
             rTol=rTol,
-            aTol=aTol
+            aTol=aTol,
+            selection_list=selection_list
         )
 
         # clean up local temp files
