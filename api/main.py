@@ -172,7 +172,8 @@ async def utc_comparison(
         ) -> UtcComparisonSubmission:
     try:
         # request specific params
-        job_id = (comparison_id or "utc_comparison") + "_" + str(uuid.uuid4())
+        compare_id = comparison_id or "utc_comparison"
+        job_id = compare_id + "_" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
         # bucket params
@@ -213,7 +214,7 @@ async def utc_comparison(
             job_id=job_id,
             omex_path=uploaded_file_location,
             simulators=simulators,
-            # comparison_id=_id,
+            comparison_id=compare_id,
             timestamp=_time,
             ground_truth_report_path=report_location,
             include_outputs=include_outputs)
