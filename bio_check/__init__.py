@@ -1,2 +1,2 @@
-from bio_check.service import Service
+from bio_check.verifier import Service
 

@@ -1,3 +1,4 @@
+import asyncio
 import os
 import logging
 import uuid
@@ -6,7 +7,7 @@ from tempfile import mkdtemp
 from typing import *
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
@@ -291,20 +292,37 @@ async def fetch_results(job_id: str):
 
     raise HTTPException(status_code=404, detail="Comparison not found")
 
-    # job = db_connector.fetch_job(comparison_id=comparison_id)
-    # if not job:
-        # raise HTTPException(status_code=404, detail="Job not found")
 
-    # assuming results are stored in the job document. TODO: what if this is not the case?
-    # job_id = job["job_id"]
-    # resp_content = {"job_id": job_id}
-    # key = "results" if job['status'] == 'COMPLETED' else "status"
-    # resp_content[key] = job[key]
-    # return UtcComparisonResult(content=resp_content)
+@app.get("/status/{job_id}")
+async def get_job_status(job_id: str):
+    job = db_connector.fetch_job(job_id=job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"job_id": job_id, "status": job['status']}
 
-    # _id = job["_id"]
-    # job["_id"] = str(_id)
-    # return UtcComparisonResult(content=job)
+
+@app.post("/cancel/{job_id}")
+async def cancel_job(job_id: str):
+    result = db_connector.update_job_status(job_id=job_id, status="cancelled")
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Job not found or cancellation failed")
+    return {"job_id": job_id, "status": "cancelled"}
+
+
+@app.get("/events/{job_id}", status_code=200)
+async def get_job_events(request: Request, job_id: str):
+    async def event_generator():
+        while True:
+            job = db_connector.fetch_job(job_id=job_id)
+            if job['status'] in ['completed', 'cancelled']:
+                yield f"data: {job['status']}\n\n"
+                break
+            yield f"data: {job['status']}\n\n"
+            await asyncio.sleep(5)
+    return Response(event_generator(), media_type="text/event-stream")
+
+
+
 
 
 if __name__ == "__main__":

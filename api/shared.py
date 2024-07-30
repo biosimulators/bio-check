@@ -323,18 +323,18 @@ class MongoDbConnector(DatabaseConnector):
 
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
-    def fetch_job(self, comparison_id: str) -> Mapping[str, Any]:
+    def fetch_job(self, job_id: str) -> Mapping[str, Any]:
         # try each collection, starting with completed_jobs
         collections = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
         for i, collection in enumerate(collections):
             coll = self.get_collection(collection)
-            job = coll.find_one({'comparison_id': comparison_id})
+            job = coll.find_one({'job_id': job_id})
             # case: job exists of some type for that comparison id; return that
             if not isinstance(job, type(None)):
                 return job
 
         # case: no job exists for that id
-        return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}
+        return {'bio-check-message': f"No job exists for the comparison id: {job_id}"}
 
     def refresh_jobs(self):
         def refresh_collection(coll):
