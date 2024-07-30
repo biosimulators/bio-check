@@ -109,65 +109,21 @@ def root():
     return {'bio-check-message': 'Hello from the Verification Service API!'}
 
 
-# @app.post(
-#     "/utc-comparison",  # "/biosimulators-utc-comparison",
-#     response_model=UtcComparisonSubmission,
-#     name="Uniform Time Course Comparison",
-#     operation_id="utc-comparison",
-#     summary="Compare UTC outputs from for a deterministic SBML model within a given archive.")
-# async def utc_comparison(
-#         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE Archive File."),
-#         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
-#         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
-#         comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
-#         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison.")
-#         ) -> UtcComparisonSubmission:
-#     try:
-#         job_id = str(uuid.uuid4())
-#         _time = db_connector.timestamp()
-#         save_dest = FILE_STORAGE_LOCATION  # tempfile.mktemp()  # TODO: replace with with S3 or google storage.
-#
-#         # TODO: remove this when using a shared filestore
-#         if not os.path.exists(save_dest):
-#             os.mkdir(save_dest)
-#
-#         # save uploaded omex file to shared storage
-#         omex_fp = await save_uploaded_file(uploaded_file, save_dest)
-#
-#         # save uploaded reports file to shared storage if applicable
-#         report_fp = await save_uploaded_file(ground_truth_report, save_dest) if ground_truth_report else None
-#
-#         pending_job_doc = await db_connector.insert_job_async(
-#             collection_name="pending_jobs",
-#             status="PENDING",
-#             job_id=job_id,
-#             omex_path=omex_fp,
-#             simulators=simulators,
-#             comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
-#             timestamp=_time,
-#             ground_truth_report_path=report_fp,
-#             include_outputs=include_outputs)
-#
-#         # TODO: remove this when using shared file store.
-#         # rmtree(save_dest)
-#         return UtcComparisonSubmission(**pending_job_doc)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post(
-    "/utc-comparison-omex",  # "/biosimulators-utc-comparison",
+    "/verify-omex",  # "/biosimulators-utc-comparison",
     response_model=UtcComparisonSubmission,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
-    operation_id="utc-comparison-comex",
+    operation_id="verify-omex",
     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
-async def utc_comparison_omex(
+async def verify_omex(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
-        ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
-        ) -> UtcComparisonSubmission:
+        truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
+        rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
+        aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
+) -> UtcComparisonSubmission:
     try:
         # request specific params
         compare_id = comparison_id or "utc_comparison"
@@ -180,24 +136,20 @@ async def utc_comparison_omex(
 
         save_dest = mkdtemp()
 
-        # fix: ephemeral data store
-        # save_dest = "/app/uploads"
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
         blob_dest = upload_prefix + fp.split("/")[-1]
         upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-        # omex_location = bucket_prefix + uploaded_file.filename
         uploaded_file_location = blob_dest
 
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
         report_blob_dest = None
-        if ground_truth_report:
-            report_fp = await save_uploaded_file(ground_truth_report, save_dest)
+        if truth:
+            report_fp = await save_uploaded_file(truth, save_dest)
             report_blob_dest = upload_prefix + report_fp.split("/")[-1]
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
-        # report_path = bucket_prefix + ground_truth_report.filename if report_fp else None
         report_location = report_blob_dest
 
         pending_job_doc = await db_connector.insert_job_async(
@@ -209,7 +161,10 @@ async def utc_comparison_omex(
             comparison_id=compare_id,
             timestamp=_time,
             ground_truth_report_path=report_location,
-            include_outputs=include_outputs)
+            include_outputs=include_outputs,
+            rTol=rTol,
+            aTol=aTol
+        )
 
         # clean up local temp files
         os.remove(fp)
@@ -222,19 +177,21 @@ async def utc_comparison_omex(
 
 
 @app.post(
-    "/utc-comparison-sbml",  # "/biosimulators-utc-comparison",
+    "/verify-sbml",
     response_model=UtcComparisonSubmission,
     name="Uniform Time Course Comparison from SBML file",
-    operation_id="utc-comparison-sbml",
+    operation_id="verify-sbml",
     summary="Compare UTC outputs from a deterministic SBML model.")
-async def utc_comparison_sbml(
+async def verify_sbml(
         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
         duration: int = Query(..., description="Duration of the simulation"),
         number_of_steps: int = Query(..., description="Number of simulation steps to run"),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
-        ) -> UtcComparisonSubmission:
+        rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
+        aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
+) -> UtcComparisonSubmission:
     try:
         # request specific params
         compare_id = comparison_id or "utc_comparison"
@@ -247,14 +204,11 @@ async def utc_comparison_sbml(
 
         save_dest = mkdtemp()
 
-        # fix: ephemeral data store
-        # save_dest = "/app/uploads"
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
         blob_dest = upload_prefix + fp.split("/")[-1]
         upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-        # omex_location = bucket_prefix + uploaded_file.filename
         uploaded_file_location = blob_dest
 
         pending_job_doc = await db_connector.insert_job_async(
@@ -267,7 +221,10 @@ async def utc_comparison_sbml(
             timestamp=_time,
             duration=duration,
             n_steps=number_of_steps,
-            include_outputs=include_outputs)
+            include_outputs=include_outputs,
+            rTol=rTol,
+            aTol=aTol
+        )
 
         # clean up local temp files
         os.remove(fp)
@@ -282,7 +239,7 @@ async def utc_comparison_sbml(
     response_model=UtcComparisonResult,
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
-async def fetch_results(job_id: str):
+async def fetch_results(job_id: str) -> UtcComparisonResult:
     colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
     for collection in colls:
         job = db_connector.db[collection].find_one({'job_id': job_id})
@@ -293,36 +250,18 @@ async def fetch_results(job_id: str):
     raise HTTPException(status_code=404, detail="Comparison not found")
 
 
-@app.get("/status/{job_id}")
-async def get_job_status(job_id: str):
-    job = db_connector.fetch_job(job_id=job_id)
-    if job is None:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return {"job_id": job_id, "status": job['status']}
-
-
-@app.post("/cancel/{job_id}")
-async def cancel_job(job_id: str):
-    result = db_connector.update_job_status(job_id=job_id, status="cancelled")
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Job not found or cancellation failed")
-    return {"job_id": job_id, "status": "cancelled"}
-
-
-@app.get("/events/{job_id}", status_code=200)
-async def get_job_events(request: Request, job_id: str):
-    async def event_generator():
-        while True:
-            job = db_connector.fetch_job(job_id=job_id)
-            if job['status'] in ['completed', 'cancelled']:
-                yield f"data: {job['status']}\n\n"
-                break
-            yield f"data: {job['status']}\n\n"
-            await asyncio.sleep(5)
-    return Response(event_generator(), media_type="text/event-stream")
-
-
-
+# TODO: eventually implement this
+# @app.get("/events/{job_id}", status_code=200)
+# async def get_job_events(request: Request, job_id: str):
+#     async def event_generator():
+#         while True:
+#             job = db_connector.fetch_job(job_id=job_id)
+#             if job['status'] in ['completed', 'cancelled']:
+#                 yield f"data: {job['status']}\n\n"
+#                 break
+#             yield f"data: {job['status']}\n\n"
+#             await asyncio.sleep(5)
+#     return Response(event_generator(), media_type="text/event-stream")
 
 
 if __name__ == "__main__":

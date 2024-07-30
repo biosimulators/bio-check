@@ -19,7 +19,6 @@ class RequestError:
         return asdict(self)
 
 
-# TODO: Change the name of this
 class Verifier:
      # TODO: add antimony conversion to sbml here
 
@@ -29,7 +28,7 @@ class Verifier:
         root_response = self._test_root()
         print(root_response)
 
-    def new_comparison_omex(
+    def verify_omex(
             self,
             omex_filepath: str,
             simulators: List[str] = None,
@@ -74,7 +73,7 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def new_comparison_sbml(
+    def verify_sbml(
             self,
             sbml_filepath: str,
             duration: int,
@@ -184,12 +183,12 @@ class Verifier:
 
 def test_service():
     # TODO: replace this
-    service = Service()
+    verifier = Verifier()
     simulators = ['copasi', 'tellurium']
     sbml_fp = "../model-examples/sbml-core/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml"
     duration = 10
     n_steps = 100
 
-    sbml_submission = service.new_comparison_sbml(sbml_filepath=sbml_fp, number_of_steps=n_steps, duration=duration, simulators=simulators, comparison_id="notebook_test1")
+    sbml_submission = verifier.verify_sbml(sbml_filepath=sbml_fp, number_of_steps=n_steps, duration=duration, simulators=simulators, comparison_id="notebook_test1")
     print(sbml_submission)
 
