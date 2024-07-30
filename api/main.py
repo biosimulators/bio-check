@@ -155,20 +155,17 @@ def root():
 
 
 @app.post(
-    "/utc-comparison",  # "/biosimulators-utc-comparison",
+    "/utc-comparison-omex",  # "/biosimulators-utc-comparison",
     response_model=UtcComparisonSubmission,
-    name="Uniform Time Course Comparison",
-    operation_id="utc-comparison",
-    summary="Compare UTC outputs from a deterministic SBML model.")
-async def utc_comparison(
-        uploaded_file: UploadFile = File(..., description="One of: either an OMEX/COMBINE Archive File or SBML File."),
-        # simulators: Simulators = Body(default=Simulators(simulators=["amici", "copasi", "tellurium"])),
+    name="Uniform Time Course Comparison from OMEX/COMBINE archive",
+    operation_id="utc-comparison-comex",
+    summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
+async def utc_comparison_omex(
+        uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
-        duration: Optional[int] = Query(default=None, description="Duration of the simulation, only if passing an sbml file as uploaded_file"),
-        n_steps: Optional[int] = Query(default=None, description="Number of simulation steps to run, only if passing an sbml file as uploaded_file")
         ) -> UtcComparisonSubmission:
     try:
         # request specific params
@@ -202,14 +199,6 @@ async def utc_comparison(
         # report_path = bucket_prefix + ground_truth_report.filename if report_fp else None
         report_location = report_blob_dest
 
-        # run insert job
-        # if comparison_id is None:
-        #     _id = f"uniform-time-course-comparison-{job_id}"
-        # else:
-        #     _id = comparison_id
-
-        # sims = simulators['simulators']
-
         pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
             status="PENDING",
@@ -225,6 +214,62 @@ async def utc_comparison(
         os.remove(fp)
         if report_fp:
             os.remove(report_fp)
+
+        return UtcComparisonSubmission(**pending_job_doc)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/utc-comparison-sbml",  # "/biosimulators-utc-comparison",
+    response_model=UtcComparisonSubmission,
+    name="Uniform Time Course Comparison from SBML file",
+    operation_id="utc-comparison-sbml",
+    summary="Compare UTC outputs from a deterministic SBML model.")
+async def utc_comparison_sbml(
+        uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
+        duration: int = Query(..., description="Duration of the simulation"),
+        number_of_steps: int = Query(..., description="Number of simulation steps to run"),
+        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+        include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+        comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
+        ) -> UtcComparisonSubmission:
+    try:
+        # request specific params
+        compare_id = comparison_id or "utc_comparison"
+        job_id = compare_id + "_" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+
+        # bucket params
+        upload_prefix = f"uploads/{job_id}/"
+        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
+
+        save_dest = mkdtemp()
+
+        # fix: ephemeral data store
+        # save_dest = "/app/uploads"
+        fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
+
+        # Save uploaded omex file to Google Cloud Storage
+        blob_dest = upload_prefix + fp.split("/")[-1]
+        upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+        # omex_location = bucket_prefix + uploaded_file.filename
+        uploaded_file_location = blob_dest
+
+        pending_job_doc = await db_connector.insert_job_async(
+            collection_name="pending_jobs",
+            status="PENDING",
+            job_id=job_id,
+            omex_path=uploaded_file_location,
+            simulators=simulators,
+            comparison_id=compare_id,
+            timestamp=_time,
+            duration=duration,
+            n_steps=number_of_steps,
+            include_outputs=include_outputs)
+
+        # clean up local temp files
+        os.remove(fp)
 
         return UtcComparisonSubmission(**pending_job_doc)
     except Exception as e:
