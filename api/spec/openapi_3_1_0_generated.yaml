@@ -13,10 +13,11 @@ paths:
           content:
             application/json:
               schema: {}
-  /utc-comparison:
+  /utc-comparison-omex:
     post:
-      summary: Compare UTC outputs from a deterministic SBML model.
-      operationId: utc-comparison
+      summary: Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE
+        archive.
+      operationId: utc-comparison-comex
       parameters:
       - name: simulators
         in: query
@@ -53,35 +54,87 @@ paths:
           description: Descriptive prefix to be added to this submission's job ID.
           title: Comparison Id
         description: Descriptive prefix to be added to this submission's job ID.
-      - name: duration
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          description: Duration of the simulation, only if passing an sbml file as
-            uploaded_file
-          title: Duration
-        description: Duration of the simulation, only if passing an sbml file as uploaded_file
-      - name: n_steps
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          description: Number of simulation steps to run, only if passing an sbml
-            file as uploaded_file
-          title: N Steps
-        description: Number of simulation steps to run, only if passing an sbml file
-          as uploaded_file
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_utc-comparison'
+              $ref: '#/components/schemas/Body_utc-comparison-comex'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtcComparisonSubmission'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /utc-comparison-sbml:
+    post:
+      summary: Compare UTC outputs from a deterministic SBML model.
+      operationId: utc-comparison-sbml
+      parameters:
+      - name: duration
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Duration of the simulation
+          title: Duration
+        description: Duration of the simulation
+      - name: number_of_steps
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Number of simulation steps to run
+          title: Number Of Steps
+        description: Number of simulation steps to run
+      - name: simulators
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          description: List of simulators to compare
+          default:
+          - amici
+          - copasi
+          - tellurium
+          title: Simulators
+        description: List of simulators to compare
+      - name: include_outputs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Whether to include the output data on which the comparison
+            is based.
+          default: true
+          title: Include Outputs
+        description: Whether to include the output data on which the comparison is
+          based.
+      - name: comparison_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Descriptive prefix to be added to this submission's job ID.
+          title: Comparison Id
+        description: Descriptive prefix to be added to this submission's job ID.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_utc-comparison-sbml'
       responses:
         '200':
           description: Successful Response
@@ -121,13 +174,13 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    Body_utc-comparison:
+    Body_utc-comparison-comex:
       properties:
         uploaded_file:
           type: string
           format: binary
           title: Uploaded File
-          description: 'One of: either an OMEX/COMBINE Archive File or SBML File.'
+          description: OMEX/COMBINE archive containing a deterministic SBML model
         ground_truth_report:
           type: string
           format: binary
@@ -137,7 +190,18 @@ components:
       type: object
       required:
       - uploaded_file
-      title: Body_utc-comparison
+      title: Body_utc-comparison-comex
+    Body_utc-comparison-sbml:
+      properties:
+        uploaded_file:
+          type: string
+          format: binary
+          title: Uploaded File
+          description: A deterministic SBML model.
+      type: object
+      required:
+      - uploaded_file
+      title: Body_utc-comparison-sbml
     HTTPValidationError:
       properties:
         detail:
