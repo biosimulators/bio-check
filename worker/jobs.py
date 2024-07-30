@@ -347,17 +347,18 @@ class Supervisor(BaseClass):
 
     # re-create loop here
 
-    def _handle_in_progress_job(self, job_exists: bool, job_comparison_id: str):
+    def _handle_in_progress_job(self, job_exists: bool, job_id: str, comparison_id: str):
         if not job_exists:
             # print(f"In progress job does not yet exist for {job_comparison_id}")
             in_progress_job_id = unique_id()
             worker_id = unique_id()
-            id_kwargs = ['job_id', 'worker_id']
-            in_prog_kwargs = dict(zip(
-                id_kwargs,
-                list(map(lambda k: unique_id(), id_kwargs))
-            ))
-            in_prog_kwargs['comparison_id'] = job_comparison_id
+            # id_kwargs = ['worker_id']
+            # in_prog_kwargs = dict(zip(
+            #     id_kwargs,
+            #     list(map(lambda k: unique_id(), id_kwargs))
+            # ))
+            in_prog_kwargs = {'worker_id': worker_id, 'job_id': job_id, 'comparison_id': comparison_id}
+            # in_prog_kwargs['comparison_id'] = job_comparison_id
 
             self.db_connector.insert_in_progress_job(**in_prog_kwargs)
             # print(f"Successfully created new progress job for {job_comparison_id}")
@@ -368,7 +369,7 @@ class Supervisor(BaseClass):
 
         return True
 
-    def _handle_completed_job(self, job_exists: bool, job_comparison_id: str, job_doc):
+    def _handle_completed_job(self, job_exists: bool, job_comparison_id: str, job_id: str, job_doc):
         if not job_exists:
             # print(f"Completed job does not yet exist for {job_comparison_id}")
             # pop in-progress job from internal queue and use it parameterize the worker
@@ -385,7 +386,7 @@ class Supervisor(BaseClass):
             self.workers.insert(self.preferred_queue_index, worker.worker_id)
 
             # the worker returns the job result to the supervisor who saves it as part of a new completed job in the database
-            completed_doc = self.db_connector.insert_completed_job(job_id=unique_id(), comparison_id=job_comparison_id, results=worker.job_result)
+            completed_doc = self.db_connector.insert_completed_job(job_id=job_id, comparison_id=job_comparison_id, results=worker.job_result)
 
             # release the worker from being busy and refresh jobs
             self.workers.pop(self.preferred_queue_index)
@@ -425,16 +426,19 @@ class Supervisor(BaseClass):
             for i, job in enumerate(job_queue):
                 # get the next job in the queue based on the preferred_queue_index
                 job_doc = job_queue.pop(self.preferred_queue_index)
+                job_id = job_doc['job_id']
                 job_comparison_id = job_doc['comparison_id']
-                unique_id_query = {'comparison_id': job_comparison_id}
+                unique_id_query = {'job_id': job_id}
                 in_progress_job = self.db_connector.db.in_progress_jobs.find_one(unique_id_query) or None
-                _job_exists = partial(self._job_exists, comparison_id=job_comparison_id)
+                _job_exists = partial(self._job_exists, comparison_id=job_id)
+
                 # check for in progress job with same comparison id and make a new one if not
                 in_progress_exists = _job_exists(collection_name='in_progress_jobs')
-                self._handle_in_progress_job(in_progress_job, job_comparison_id)
+                # self._handle_in_progress_job(in_progress_job, job_comparison_id)
+                self._handle_in_progress_job(job_exists=in_progress_exists, job_id=job_id, comparison_id=job_comparison_id)
                 # do the same for completed jobs, which includes running the actual simulation comparison and returnin the results
                 completed_exists = _job_exists(collection_name='completed_jobs')
-                self._handle_completed_job(completed_exists, job_comparison_id, job_doc)
+                self._handle_completed_job(job_exists=completed_exists, job_comparison_id=job_comparison_id, job_doc=job_doc, job_id=job_id)
                 
                 # remove the job from queue
                 # if len(job_queue):
@@ -448,7 +452,7 @@ class Supervisor(BaseClass):
         return 0
 
     def _job_exists(self, **kwargs):
-        unique_id_query = {'comparison_id': kwargs['comparison_id']}
+        unique_id_query = {'job_id': kwargs['job_id']}
         job = self.db_connector.db[kwargs['collection_name']].find_one(unique_id_query) or None
         return job is not None
 
