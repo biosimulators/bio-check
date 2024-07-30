@@ -23,7 +23,7 @@ dotenv.load_dotenv("../assets/.env_dev")
 # -- constraints -- #
 
 APP_TITLE = "bio-check"
-APP_VERSION = "0.0.1"
+APP_VERSION = "1.0.0"
 
 # TODO: update this
 ORIGINS = [
