@@ -14,6 +14,9 @@ class PendingJob(Job):
     comparison_id: Optional[str] = None
     ground_truth_report_path: Optional[str] = None
     include_output: Optional[bool] = True
+    rTol: Optional[float] = None
+    aTol: Optional[float] = None
+    selection_list: Optional[List[str]] = None
 
 
 class Simulators(BaseModel):
