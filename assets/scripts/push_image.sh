@@ -26,7 +26,11 @@ docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulato
 docker push ghcr.io/biosimulators/bio-check-"$lib":latest
 
 # handle version
-VERSION_FILE=./"$lib"/CONTAINER_VERSION.txt
+if [ "$lib" == "base" ]; then
+  VERSION_FILE=./assets/BASE_VERSION.txt
+else
+  VERSION_FILE=./"$lib"/CONTAINER_VERSION.txt
+fi
 
 echo "$version" > "$VERSION_FILE"
 

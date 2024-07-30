@@ -4,16 +4,16 @@
 # Run at root of repo!
 set -e
 
-prune="$1"  # --prune
-version="$2"
-push="$3"
+version="$1"
+push="$2"
+prune="$3"  # --prune
 
 if [ "$prune" == "--prune" ]; then
   docker system prune -a -f
 fi
 
 echo "Building base image..."
-docker build -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base:"$version" .
+docker build --platform linux/amd64 -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base:"$version" .
 echo "Built base image."
 
 if [ "$push" == "--push" ]; then

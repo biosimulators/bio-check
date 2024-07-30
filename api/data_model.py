@@ -8,10 +8,10 @@ class PendingJob(Job):
     job_id: str
     status: str
     timestamp: str
-    comparison_id: str
     omex_path: str
     simulators: List[str]
     timestamp: str
+    comparison_id: Optional[str] = None
     ground_truth_report_path: Optional[str] = None
     include_output: Optional[bool] = True
 

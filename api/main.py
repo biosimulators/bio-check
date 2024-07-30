@@ -165,14 +165,14 @@ async def utc_comparison(
         uploaded_file: UploadFile = File(..., description="One of: either an OMEX/COMBINE Archive File or SBML File."),
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
-        comparison_id: Optional[str] = Query(default=None, description="Comparison ID to use."),
+        comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         ground_truth_report: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
         duration: Optional[int] = Query(default=None, description="Duration of the simulation, only if passing an sbml file as uploaded_file"),
         n_steps: Optional[int] = Query(default=None, description="Number of simulation steps to run, only if passing an sbml file as uploaded_file")
         ) -> UtcComparisonSubmission:
     try:
         # request specific params
-        job_id = str(uuid.uuid4())
+        job_id = (comparison_id or "utc_comparison") + "_" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
         # bucket params
@@ -202,10 +202,10 @@ async def utc_comparison(
         report_location = report_blob_dest
 
         # run insert job
-        if comparison_id is None:
-            _id = f"uniform-time-course-comparison-{job_id}"
-        else:
-            _id = comparison_id
+        # if comparison_id is None:
+        #     _id = f"uniform-time-course-comparison-{job_id}"
+        # else:
+        #     _id = comparison_id
 
         pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
@@ -213,7 +213,7 @@ async def utc_comparison(
             job_id=job_id,
             omex_path=uploaded_file_location,
             simulators=simulators,
-            comparison_id=_id,
+            # comparison_id=_id,
             timestamp=_time,
             ground_truth_report_path=report_location,
             include_outputs=include_outputs)
@@ -229,20 +229,20 @@ async def utc_comparison(
 
 
 @app.get(
-    "/fetch-results/{comparison_id}",
+    "/fetch-results/{job_id}",
     response_model=UtcComparisonResult,
     operation_id='fetch-results',
     summary='Get the results of an existing uniform time course comparison.')
-async def fetch_results(comparison_id: str):
+async def fetch_results(job_id: str):
     colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
     for collection in colls:
-        job = db_connector.db[collection].find_one({'comparison_id': comparison_id})
-        if not type(job) == type(None):
-            _id = job["_id"]
-            job["_id"] = str(_id)
+        job = db_connector.db[collection].find_one({'job_id': job_id})
+        if not isinstance(job, type(None)):
+            job.pop('_id')
             return UtcComparisonResult(content=job)
 
     raise HTTPException(status_code=404, detail="Comparison not found")
+
     # job = db_connector.fetch_job(comparison_id=comparison_id)
     # if not job:
         # raise HTTPException(status_code=404, detail="Job not found")

@@ -261,7 +261,6 @@ class MongoDbConnector(DatabaseConnector):
         specs_coll = self.get_collection("request_specs")
         results_coll = self.get_collection("results")
 
-
     async def _insert_pending_job(
             self,
             job_id: str,
@@ -336,3 +335,11 @@ class MongoDbConnector(DatabaseConnector):
 
         # case: no job exists for that id
         return {'bio-check-message': f"No job exists for the comparison id: {comparison_id}"}
+
+    def refresh_jobs(self):
+        def refresh_collection(coll):
+            for job in self.db[coll].find():
+                self.db[coll].delete_one(job)
+
+        for collname in ['completed_jobs', 'in_progress_jobs', 'pending_jobs']:
+            refresh_collection(collname)

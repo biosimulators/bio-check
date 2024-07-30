@@ -4,8 +4,8 @@ FROM ghcr.io/biosimulators/biosimulators:latest
 LABEL authors="alexanderpatrie"
 
 # TODO: make base version more nuanced
-ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
-ENV BASE_IMAGE="$PACKAGE_ROOT-base
+# ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
+# ENV BASE_IMAGE="$PACKAGE_ROOT-base
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
@@ -31,7 +31,7 @@ RUN chmod +x /app/assets/remove_deps.sh \
     && pip install --upgrade google-cloud-storage
 
 # shared tooling module
-COPY ./assets/shared.py /app/shared.py
+# COPY ./assets/shared.py /app/shared.py
 
 # yes | docker system prune -a && yes | docker buildx prune -a \
 #   && docker build -f ./Dockerfile-base -t "$PKG_ROOT"-base:"$base_version" . \

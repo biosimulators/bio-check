@@ -51,9 +51,9 @@ paths:
           anyOf:
           - type: string
           - type: 'null'
-          description: Comparison ID to use.
+          description: Descriptive prefix to be added to this submission's job ID.
           title: Comparison Id
-        description: Comparison ID to use.
+        description: Descriptive prefix to be added to this submission's job ID.
       - name: duration
         in: query
         required: false
@@ -96,17 +96,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /fetch-results/{comparison_id}:
+  /fetch-results/{job_id}:
     get:
       summary: Get the results of an existing uniform time course comparison.
       operationId: fetch-results
       parameters:
-      - name: comparison_id
+      - name: job_id
         in: path
         required: true
         schema:
           type: string
-          title: Comparison Id
+          title: Job Id
       responses:
         '200':
           description: Successful Response
@@ -168,7 +168,9 @@ components:
           type: string
           title: Timestamp
         comparison_id:
-          type: string
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Comparison Id
         omex_path:
           type: string
@@ -194,7 +196,6 @@ components:
       - job_id
       - status
       - timestamp
-      - comparison_id
       - omex_path
       - simulators
       title: UtcComparisonSubmission
