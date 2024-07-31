@@ -94,7 +94,7 @@ class Worker(BaseClass):
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
 
-            result = self.run_comparison_from_sbml(sbml_fp=local_fp, dur=duration, n_steps=n_steps, rTol=rtol, aTol=atol)
+            result = self._run_comparison_from_sbml(sbml_fp=local_fp, dur=duration, n_steps=n_steps, rTol=rtol, aTol=atol)
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
@@ -124,7 +124,7 @@ class Worker(BaseClass):
             tol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
 
-            result = self.run_comparison_from_omex(
+            result = self._run_comparison_from_omex(
                 omex_path=local_omex_fp,
                 simulators=simulators,
                 out_dir=out_dir,
@@ -136,7 +136,7 @@ class Worker(BaseClass):
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
 
-    def run_comparison_from_omex(
+    def _run_comparison_from_omex(
             self,
             omex_path: str,
             simulators: List[str],
@@ -166,7 +166,7 @@ class Worker(BaseClass):
         comparison_id = comparison_id or 'biosimulators-utc-comparison'
         ground_truth_data = truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals
 
-        comparison = self.generate_omex_utc_comparison(
+        comparison = self._generate_omex_utc_comparison(
             omex_fp=omex_path,  # omex_path,
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
@@ -191,11 +191,11 @@ class Worker(BaseClass):
             id=comparison_id,
             simulators=simulators)
 
-    def run_comparison_from_sbml(self, sbml_fp, dur, n_steps, rTol=None, aTol=None, simulators=None):
+    def _run_comparison_from_sbml(self, sbml_fp, dur, n_steps, rTol=None, aTol=None, simulators=None):
         species_mapping = get_sbml_species_mapping(sbml_fp)
         results = {}
         for species_name in species_mapping.keys():
-            species_comparison = self.generate_sbml_utc_species_comparison(
+            species_comparison = self._generate_sbml_utc_species_comparison(
                 sbml_filepath=sbml_fp,
                 dur=dur,
                 n_steps=n_steps,
@@ -208,7 +208,7 @@ class Worker(BaseClass):
 
         return results
 
-    def generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
+    def _generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
         model_file = get_sbml_model_file_from_archive(omex_fp, out_dir)
         sbml_species_names = get_sbml_species_names(model_file)
         results = {'results': {}, 'comparison_id': comparison_id}
@@ -218,7 +218,7 @@ class Worker(BaseClass):
                 for data in ground_truth['data']:
                     if data['dataset_label'] == species:
                         ground_truth_data = data['data']
-            results['results'][species] = self.generate_omex_utc_species_comparison(
+            results['results'][species] = self._generate_omex_utc_species_comparison(
                 omex_fp=omex_fp,
                 out_dir=out_dir,
                 species_name=species,
@@ -229,7 +229,7 @@ class Worker(BaseClass):
             )
         return results
 
-    def generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
+    def _generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
         output_data = generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
         outputs = _get_output_stack(output_data, species_name)
         methods = ['mse', 'proximity']
@@ -245,7 +245,7 @@ class Worker(BaseClass):
                     results['output_data'][simulator_name] = output['data'].tolist()
         return results
 
-    def generate_sbml_utc_species_comparison(self, sbml_filepath, dur, n_steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
+    def _generate_sbml_utc_species_comparison(self, sbml_filepath, dur, n_steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
         simulators = simulators or ['copasi', 'tellurium']
         if "amici" in simulators:
             simulators.remove("amici")
