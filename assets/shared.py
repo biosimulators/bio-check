@@ -278,7 +278,7 @@ class MongoDbConnector(DatabaseConnector):
     async def _insert_pending_job(
             self,
             job_id: str,
-            omex_path: str,
+            path: str,
             simulators: List[str],
             timestamp: str,
             comparison_id: str = None,
@@ -297,7 +297,7 @@ class MongoDbConnector(DatabaseConnector):
             pending_job_spec = {
                 "job_id": job_id,
                 "status": "PENDING",
-                "omex_path": omex_path,
+                "path": path,
                 "simulators": simulators,
                 "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
                 "timestamp": _time,
