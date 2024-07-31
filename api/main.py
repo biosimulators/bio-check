@@ -55,8 +55,8 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 # -- handle logging -- #
 
-setup_logging()
-logger = logging.getLogger(__name__)
+# setup_logging()
+# logger = logging.getLogger(__name__)
 
 
 # -- app components -- #
