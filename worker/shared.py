@@ -132,8 +132,7 @@ class CompletedJob(Job):
     results: Dict
 
 
-@dataclass
-class DatabaseConnector(ABC, BaseClass):
+class DatabaseConnector(ABC):
     """Abstract class that is both serializable and interacts with the database (of any type). """
     def __init__(self, connection_uri: str, database_id: str, connector_id: str):
         self.database_id = database_id
@@ -152,40 +151,7 @@ class DatabaseConnector(ABC, BaseClass):
     def _get_database(self, db_id: str):
         pass
 
-    @abstractmethod
-    def read(self, *args, **kwargs):
-        pass
 
-    @abstractmethod
-    def write(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def get_collection(self, **kwargs):
-        pass
-
-    @abstractmethod
-    def insert_job(self, collection_name: str):
-        pass
-
-    @abstractmethod
-    def insert_pending_job(self, **kwargs):
-        return self.insert_job(**kwargs)
-
-    @abstractmethod
-    def insert_in_progress_job(self, **kwargs):
-        return self.insert_job(**kwargs)
-
-    @abstractmethod
-    def insert_completed_job(self, **kwargs):
-        return self.insert_job(**kwargs)
-
-    @abstractmethod
-    def fetch_job(self, **kwargs):
-        pass
-
-
-@dataclass
 class MongoDbConnector(DatabaseConnector):
     def __init__(self, connection_uri: str, database_id: str, connector_id: str = None):
         super().__init__(connection_uri, database_id, connector_id)
@@ -208,35 +174,11 @@ class MongoDbConnector(DatabaseConnector):
     def completed_jobs(self):
         return self._get_jobs_from_collection("completed_jobs")
 
-    async def read(self, collection_name: str, **kwargs):
-        """Args:
-            collection_name: str
-            kwargs: (as in mongodb query)
-        """
-        coll = self.get_collection(collection_name)
-        result = await coll.find_one(kwargs)
-        return result
-
-    async def write(self, coll_name: str, **kwargs):
-        """
-            Args:
-                coll_name: str: collection name in mongodb
-                **kwargs: mongo db `insert_one` query defining the document where the key is as in the key of the document.
-        """
-        coll = self.get_collection(coll_name)
-        result = coll.insert_one(kwargs)
-        return result
-
     def get_collection(self, collection_name: str) -> Collection:
         try:
             return self.db[collection_name]
         except:
             return None
-
-    def get_job(self, collection_name: str, query: dict):
-        coll = self.get_collection(collection_name)
-        job = coll.find_one(query)
-        return job
 
     async def insert_job_async(self, collection_name: str, **kwargs) -> Dict[str, Any]:
         return self.insert_job(collection_name, **kwargs)
@@ -247,87 +189,15 @@ class MongoDbConnector(DatabaseConnector):
         coll.insert_one(job_doc)
         return job_doc
 
-    async def _job_exists(self, comparison_id: str, collection_name: str) -> bool:
-        return self.__job_exists(comparison_id, collection_name)
-
-    def __job_exists(self, comparison_id: str, collection_name: str) -> bool:
-        coll = self.get_collection(collection_name)
-        result = coll.find_one({'comparison_id': comparison_id}) is not None
-        return result
-
-    async def insert_pending_job(
-            self,
-            path: str,
-            simulators: List[str],
-            comparison_id: str = None,
-            ground_truth_report_path: str = None,
-            include_outputs: bool = True,
-    ) -> Union[Dict[str, str], Mapping[str, Any]]:
-        pending_coll = self.get_collection("pending_jobs")
-
-
-        specs_coll = self.get_collection("request_specs")
-        results_coll = self.get_collection("results")
-
-    async def _insert_pending_job(
-            self,
-            job_id: str,
-            path: str,
-            simulators: List[str],
-            timestamp: str,
-            comparison_id: str = None,
-            ground_truth_report_path: str = None,
-            include_outputs: bool = True,
-            ) -> Union[Dict[str, str], Mapping[str, Any]]:
-        # get params
-        collection_name = "pending_jobs"
-        # coll = self.get_collection(collection_name)
-        _time = self.timestamp()
-
-        # check if query already exists
-        # job_query = coll.find_one({"job_id": job_id})
-        job_query = await self.read(collection_name, job_id=job_id)
-        if isinstance(job_query, type(None)):
-            pending_job_spec = {
-                "job_id": job_id,
-                "status": "PENDING",
-                "path": path,
-                "simulators": simulators,
-                "comparison_id": comparison_id or f"uniform-time-course-comparison-{job_id}",
-                "timestamp": _time,
-                "ground_truth_report_path": ground_truth_report_path,
-                "include_outputs": include_outputs
-            }
-
-            # coll.insert_one(pending_job_doc)
-            pending_resp = await self.write(collection_name, **pending_job_spec)
-            specs_resp = await self.write("request_specs", **pending_job_spec)
-
-            return pending_job_spec
-        else:
-            return job_query
-
-    def insert_in_progress_job(self, job_id: str, comparison_id: str, worker_id: str) -> Dict[str, str]:
-        collection_name = "in_progress_jobs"
-        _time = self.timestamp()
-        in_progress_job_doc = {
-            "job_id": job_id,
-            "status": "IN_PROGRESS",
-            "timestamp": _time,
-            "comparison_id": comparison_id,
-            "worker_id": worker_id}
-
-        return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
-
-    def insert_completed_job(self, job_id: str, comparison_id: str, results: Any) -> Dict[str, str]:
+    async def insert_completed_job(self, job_id: str, results: Any, source: str) -> Dict[str, str]:
         collection_name = "completed_jobs"
         _time = self.timestamp()
         in_progress_job_doc = {
             "job_id": job_id,
             "status": "COMPLETED",
             "timestamp": _time,
-            "comparison_id": comparison_id,
-            "results": results}
+            "results": results,
+            "source": source}
 
         return self.insert_job(collection_name=collection_name, **in_progress_job_doc)
 
