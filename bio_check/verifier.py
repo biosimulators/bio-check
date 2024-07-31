@@ -20,7 +20,6 @@ class RequestError:
 
 
 class Verifier:
-     # TODO: add antimony conversion to sbml here
 
     def __init__(self):
         """Quasi-Singleton that is used to represent the BioCheck REST API and its methods therein."""
@@ -50,7 +49,7 @@ class Verifier:
             Returns:
                 A dictionary containing the job submission results. **Note**: the return status should read `PENDING`.
         """
-        endpoint = self._format_endpoint('utc-comparison-omex')
+        endpoint = self._format_endpoint('verify-omex')
 
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
@@ -82,7 +81,10 @@ class Verifier:
             number_of_steps: int,
             simulators: List[str] = None,
             include_outputs: bool = True,
-            comparison_id: str = None
+            comparison_id: str = None,
+            rTol: float = None,
+            aTol: float = None,
+            selection_list: List[str] = None,
     ) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
 
@@ -93,36 +95,47 @@ class Verifier:
                 simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
+                rTol:`float`, optional: The relative tolerance used to determine the relative distance in a pairwise comparison.
+                aTol:`float`L optional: The absolute tolerance used to determine the absolute distance in a pairwise comparison.
+                selection_list:`List[str]`: Observables to include in the output. If passed, all observable names NOT in this list will
+                    be excluded. Defaults to `None` (all observables).
 
             Returns:
                 A dictionary containing the job submission results. **Note**: the return status should read `PENDING`.
         """
-        endpoint = self._format_endpoint('utc-comparison-sbml')
+        endpoint = self._format_endpoint('verify-sbml')
 
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
         sbml_fp = (sbml_filepath.split('/')[-1], open(sbml_filepath, 'rb'), 'application/octet-stream')
         sims = simulators or ['copasi', 'tellurium']
 
-        multidata = MultipartEncoder(fields={
+        # create encoder fields
+        encoder_fields = {
             'uploaded_file': sbml_fp,
             'simulators': ','.join(sims),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
             'duration': str(duration),
-            'number_of_steps': str(number_of_steps)
-        })
+            'number_of_steps': str(number_of_steps),
+            'rTol': str(rTol),
+            'aTol': str(aTol)
+        }
+        if selection_list:
+            encoder_fields['selection_list'] = ','.join(selection_list)
+        multidata = MultipartEncoder(fields=encoder_fields)
+        # TODO: do we need to change the headers?
         headers = {'Content-Type': multidata.content_type}
 
         try:
-            response = requests.post(endpoint, headers=headers, data=multidata)
+            response = requests.post(url=endpoint, headers=headers, data=multidata)
             response.raise_for_status()
             self._check_response(response)
             return response.json()
         except Exception as e:
             return RequestError(error=str(e))
 
-    def fetch(self, job_id: str) -> Union[Dict[str, Union[str, Dict]], RequestError]:
+    def get_verify_output(self, job_id: str) -> Union[Dict[str, Union[str, Dict]], RequestError]:
         """Fetch the current state of the job referenced with `comparison_id`. If the job has not yet been processed, it will return a `status` of `PENDING`. If the job is being processed by
             the service at the time of return, `status` will read `IN_PROGRESS`. If the job is complete, the job state will be returned, optionally with included result data.
 
@@ -148,6 +161,12 @@ class Verifier:
 
     def visualize(self):
         # TODO: get results and viz here
+        pass
+
+    def export_csv(self):
+        pass
+
+    def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
         pass
 
     def select_observables(self, observables: list[str], data: dict) -> dict:
@@ -176,7 +195,6 @@ class Verifier:
             return resp.json()
         except RequestException as e:
             return {'bio-check-error': f"A connection to that endpoint could not be established: {e}"}
-
 
 # tests
 
