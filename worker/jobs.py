@@ -94,7 +94,7 @@ class Worker(BaseClass):
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
 
-            result = self.generate_sbml_utc_comparison(sbml_fp=local_fp, dur=duration, n_steps=n_steps, rTol=rtol, aTol=atol)
+            result = self.run_comparison_from_sbml(sbml_fp=local_fp, dur=duration, n_steps=n_steps, rTol=rtol, aTol=atol)
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
@@ -181,7 +181,7 @@ class Worker(BaseClass):
         for spec_name, comparison_data in comparison['results'].items():
             species_comparison = UtcSpeciesComparison(
                 mse=comparison_data['mse'],
-                proximity=comparison_data['prox'],
+                proximity=comparison_data['proximity'],
                 output_data=comparison_data.get('output_data') if include_outputs else {},
                 species_name=spec_name)
             spec_comparisons.append(species_comparison)
@@ -190,6 +190,23 @@ class Worker(BaseClass):
             results=spec_comparisons,
             id=comparison_id,
             simulators=simulators)
+
+    def run_comparison_from_sbml(self, sbml_fp, dur, n_steps, rTol=None, aTol=None, simulators=None):
+        species_mapping = get_sbml_species_mapping(sbml_fp)
+        results = {}
+        for species_name in species_mapping.keys():
+            species_comparison = self.generate_sbml_utc_species_comparison(
+                sbml_filepath=sbml_fp,
+                dur=dur,
+                n_steps=n_steps,
+                species_name=species_name,
+                rTol=rTol,
+                aTol=aTol,
+                simulators=simulators
+            )
+            results[species_name] = species_comparison
+
+        return results
 
     def generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
         model_file = get_sbml_model_file_from_archive(omex_fp, out_dir)
@@ -215,7 +232,7 @@ class Worker(BaseClass):
     def generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
         output_data = generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
         outputs = _get_output_stack(output_data, species_name)
-        methods = ['mse', 'prox']
+        methods = ['mse', 'proximity']
         matrix_vals = list(map(
             lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth, rtol=rTol, atol=aTol).to_dict(),
             methods
@@ -235,7 +252,7 @@ class Worker(BaseClass):
 
         output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, dur=dur, n_steps=n_steps)
         outputs = sbml_output_stack(species_name, output_data)
-        methods = ['mse', 'prox']
+        methods = ['mse', 'proximity']
         matrix_vals = list(map(
             lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth, rtol=rTol, atol=aTol).to_dict(),
             methods
@@ -248,34 +265,25 @@ class Worker(BaseClass):
                     results['output_data'][simulator_name] = output_data[simulator_name][spec_name].tolist()
         return results
 
-    def generate_sbml_utc_comparison(self, sbml_fp, dur, n_steps, rTol=None, aTol=None):
-        species_mapping = get_sbml_species_mapping(sbml_fp)
-        results = {}
-        for species_name in species_mapping.keys():
-            species_comparison = self.generate_sbml_utc_species_comparison(sbml_fp, dur, n_steps, species_name, rTol, aTol)
-            results[species_name] = species_comparison
-
-        return results
-
     def _generate_species_comparison_matrix(
             self,
             outputs: Union[np.ndarray, List[np.ndarray]],
             simulators: List[str],
-            method: Union[str, any] = 'prox',
+            method: Union[str, any] = 'proximity',
             rtol: float = None,
             atol: float = None,
             ground_truth: np.ndarray = None
     ) -> pd.DataFrame:
         """Generate a Mean Squared Error comparison matrix of arr1 and arr2, indexed by simulators by default,
-            or an AllClose Tolerance routine result if `method` is set to `prox`.
+            or an AllClose Tolerance routine result if `method` is set to `proximity`.
 
             Args:
                 outputs: list of output arrays.
                 simulators: list of simulator names.
                 method: pass one of either: `mse` to perform a mean-squared error calculation
-                    or `prox` to perform a pair-wise proximity tolerance test using `np.allclose(outputs[i], outputs[i+1])`.
-                rtol:`float`: relative tolerance for comparison if `prox` is used.
-                atol:`float`: absolute tolerance for comparison if `prox` is used.
+                    or `proximity` to perform a pair-wise proximity tolerance test using `np.allclose(outputs[i], outputs[i+1])`.
+                rtol:`float`: relative tolerance for comparison if `proximity` is used.
+                atol:`float`: absolute tolerance for comparison if `proximity` is used.
                 ground_truth: If passed, this value is compared against each simulator in simulators. Currently, this
                     field is agnostic to any verified/validated source, and we trust that the user has verified it. Defaults
                     to `None`.
@@ -296,7 +304,7 @@ class Worker(BaseClass):
             _simulators.append('ground_truth')
             _outputs.append(ground_truth)
 
-        use_tol_method = method.lower() == 'prox'
+        use_tol_method = method.lower() == 'proximity'
         matrix_dtype = np.float64 if not use_tol_method else bool
         num_simulators = len(_simulators)
         mse_matrix = np.zeros((num_simulators, num_simulators), dtype=matrix_dtype)
