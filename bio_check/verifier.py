@@ -122,7 +122,7 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def fetch_result(self, job_id: str) -> Union[Dict[str, Union[str, Dict]], RequestError]:
+    def fetch(self, job_id: str) -> Union[Dict[str, Union[str, Dict]], RequestError]:
         """Fetch the current state of the job referenced with `comparison_id`. If the job has not yet been processed, it will return a `status` of `PENDING`. If the job is being processed by
             the service at the time of return, `status` will read `IN_PROGRESS`. If the job is complete, the job state will be returned, optionally with included result data.
 
@@ -145,23 +145,6 @@ class Verifier:
             return data
         except Exception as e:
             return RequestError(error=str(e))
-
-    def fetch(self, job_id: str, polling_timer: int = 5, timeout_thresh: int = 50) -> Union[Dict, None]:
-        n_tries = 0
-        output = None
-        while n_tries < timeout_thresh + 1:
-            result = self.fetch_result(job_id)
-            status = result['content']['status']
-            print(f"The job status is: {status}")
-
-            if status != 'COMPLETED':
-                n_tries += 1
-                sleep(polling_timer)
-            else:
-                output = result
-                break
-
-        return output
 
     def visualize(self):
         # TODO: get results and viz here
