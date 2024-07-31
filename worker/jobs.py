@@ -65,7 +65,7 @@ class Worker:
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         # self.worker_id = unique_id()
 
-    async def run(self) -> Dict:
+    async def run(self, selection_list: List[str] = None) -> Dict:
         input_fp = self.job_params['path']
         selection_list = self.job_params.get('selection_list')
         if input_fp.endswith('.omex'):
@@ -73,9 +73,9 @@ class Worker:
         elif input_fp.endswith('.xml'):
             self._execute_sbml_job()
 
-        selection_list = self.job_params.get("selection_list")
-        if selection_list is not None:
-            self.job_result = self._select_observables(job_result=self.job_result, observables=selection_list)
+        selections = self.job_params.get("selection_list", selection_list)
+        if selections is not None:
+            self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
 
         return self.job_result
 
@@ -375,7 +375,7 @@ class Supervisor:
         self.job_queue = self.db_connector.pending_jobs()
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
 
-    async def check_jobs(self, delay) -> int:
+    async def check_jobs(self, delay: int, n_attempts: int = 2) -> int:
         """Returns non-zero if max retries reached, zero otherwise."""
 
         # 1. For job (i) in job q, check if jobid exists for any job within db_connector.completed_jobs()
@@ -398,10 +398,7 @@ class Supervisor:
                     # check if job id exists in dbconn.completed
                     is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
 
-                    # if so, self.job q .pop
-                    if is_completed:
-                        self.job_queue.pop(i)
-                    else:
+                    if not is_completed:
                         # otherwise: create new worker with job
                         worker = Worker(job=pending_job)
                         result_data = await worker.run()
@@ -411,20 +408,20 @@ class Supervisor:
                             job_id=job_id,
                             results=result_data,
                             source=source
-
                         )
 
-                        # sleep again for a long period
+                    # job is complete, remove job from queue
+                    self.job_queue.pop(i)
 
+        for _ in range(n_attempts):
+            await check()
 
+            # sleep for a long period
+            await sleep(20)
 
+            # refresh job queue
+            self.job_queue = self.db_connector.pending_jobs()
 
-
-
-        check()
-        # sleep
-        # self.job_queue = self.db_connector.pending_jobs()
-        check()
         return 0
 
     def job_exists(self, job_id: str, collection_name: str) -> bool:
