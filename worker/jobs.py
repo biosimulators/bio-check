@@ -115,7 +115,7 @@ class Worker:
         try:
             simulators = self.job_params.get('simulators', [])
             include_outs = self.job_params.get('include_outputs', False)
-            comparison_id = self.job_params['comparison_id']
+            comparison_id = self.job_params.get('job_id')
             duration = self.job_params.get('duration', 10)
             n_steps = self.job_params.get('n_steps', 100)
             rtol = self.job_params.get('rTol')
@@ -147,9 +147,9 @@ class Worker:
         try:
             simulators = self.job_params.get('simulators', [])
             include_outs = self.job_params.get('include_outputs', False)
-            comparison_id = self.job_params['comparison_id']
             tol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
+            comparison_id = self.job_params.get('job_id')
 
             result = self._run_comparison_from_omex(
                 path=local_omex_fp,
@@ -161,7 +161,7 @@ class Worker:
             )
             self.job_result = result
         except Exception as e:
-            self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
+            self.job_result = {"bio-check-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
 
     def _run_comparison_from_omex(
             self,
