@@ -12,4 +12,3 @@ assets/.env_dev
 bucket.sh
 .env_dev
 NOTES
-cd.yaml

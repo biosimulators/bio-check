@@ -1,0 +1,48 @@
+name: Continuous Deployment
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build_containers:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # - name: Set up Python
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: '3.9'
+
+    # this CD assumes that CI has already been run (on each push to main), and thus tests have passed.
+    - name: Build api
+      run: |
+        echo "Run api build script here"
+      # run: ./assets/scripts/build_image.sh api
+
+    - name: Build worker
+      run: |
+        echo "Run worker build script here"
+      # run: ./assets/scripts/build_image.sh worker
+
+  release_new_containers:
+    needs: build_containers
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Release new api container version
+      run: |
+        echo "Run api push script here"
+      # run: ./push.sh
+
+    - name: Release new worker container version
+      run: |
+        echo "Run worker push script here"
+      # run: ./push.sh
+
+    - name: Notify Deployment
+      run: echo "Deployment successful on release ${{ github.ref }}"
