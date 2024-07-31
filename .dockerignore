@@ -22,7 +22,7 @@ coverage.xml
 tmp
 commit.sh
 kustomize
-BASE_VERSION.txt
+.BASE_VERSION
 README.md
 *.yaml
 unused.txt

@@ -27,9 +27,9 @@ docker push ghcr.io/biosimulators/bio-check-"$lib":latest
 
 # handle version
 if [ "$lib" == "base" ]; then
-  VERSION_FILE=./assets/BASE_VERSION.txt
+  VERSION_FILE=./assets/.BASE_VERSION
 else
-  VERSION_FILE=./"$lib"/CONTAINER_VERSION.txt
+  VERSION_FILE=./"$lib"/.CONTAINER_VERSION
 fi
 
 echo "$version" > "$VERSION_FILE"
