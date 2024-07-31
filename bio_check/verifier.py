@@ -21,9 +21,9 @@ class RequestError:
 
 class Verifier:
 
-    def __init__(self):
+    def __init__(self, _endpoint="https://biochecknet.biosimulations.org"):
         """Quasi-Singleton that is used to represent the BioCheck REST API and its methods therein."""
-        self.endpoint_root = "https://biochecknet.biosimulations.org"
+        self.endpoint_root = _endpoint
         root_response = self._test_root()
         print(root_response)
 
@@ -35,7 +35,8 @@ class Verifier:
             simulators: List[str] = None,
             include_outputs: bool = True,
             comparison_id: str = None,
-            ground_truth_report_path: Optional[str] = None
+            truth: str = None,
+            selection_list: List[str] = None,
     ) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
 
@@ -44,7 +45,8 @@ class Verifier:
                 simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
-                ground_truth_report_path:`str, optional`: The path to the ground truth report file to include in comparison. Defaults to None.
+                truth:`str, optional`: The path to the ground truth report file to include in comparison. Defaults to None.
+                selection_list:`List[str], optional`: The list of observables to include in comparison output. Defaults to None (all observables).
 
             Returns:
                 A dictionary containing the job submission results. **Note**: the return status should read `PENDING`.
@@ -54,16 +56,22 @@ class Verifier:
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
         _omex = (omex_filepath.split('/')[-1], open(omex_filepath, 'rb'), 'application/octet-stream')
-        _report = (ground_truth_report_path.split('/')[-1], open(ground_truth_report_path, 'rb'), 'application/octet-stream') if ground_truth_report_path else None
+        _report = (truth.split('/')[-1], open(truth, 'rb'), 'application/octet-stream') if truth else None
         sims = simulators or ['amici', 'copasi', 'tellurium']
 
-        multidata = MultipartEncoder(fields={
+        encoder_fields = {
             'uploaded_file': _omex,
             'simulators': ','.join(sims),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
             'ground_truth_report': _report
-        })
+        }
+
+        if selection_list:
+            encoder_fields['selection_list'] = ','.join(selection_list)
+
+        print(f'Selection list: {selection_list}')
+        multidata = MultipartEncoder(fields=encoder_fields)
         headers = {'Content-Type': multidata.content_type}
 
         try:
@@ -108,22 +116,27 @@ class Verifier:
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
         sbml_fp = (sbml_filepath.split('/')[-1], open(sbml_filepath, 'rb'), 'application/octet-stream')
-        sims = simulators or ['copasi', 'tellurium']
+
+        if simulators is None:
+            simulators = ["copasi", "tellurium"]
 
         # create encoder fields
         encoder_fields = {
             'uploaded_file': sbml_fp,
-            'simulators': ','.join(sims),
+            'simulators': ','.join(simulators),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
             'duration': str(duration),
             'number_of_steps': str(number_of_steps),
-            'rTol': str(rTol),
-            'aTol': str(aTol)
         }
 
         if selection_list:
             encoder_fields['selection_list'] = ','.join(selection_list)
+        if rTol:
+            encoder_fields['rTol'] = str(rTol)
+        if aTol:
+            encoder_fields['aTol'] = str(aTol)
+
         multidata = MultipartEncoder(fields=encoder_fields)
         # TODO: do we need to change the headers?
         headers = {'Content-Type': multidata.content_type}

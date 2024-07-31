@@ -19,6 +19,21 @@ class PendingJob(Job):
     selection_list: Optional[List[str]] = None
 
 
+class PendingSbmlComparison(Job):
+    job_id: str
+    status: str
+    timestamp: str
+    omex_path: str
+    simulators: List[str]
+    timestamp: str
+    comparison_id: Optional[str] = None
+    ground_truth_report_path: Optional[str] = None
+    include_output: Optional[bool] = True
+    rTol: Optional[float] = None
+    aTol: Optional[float] = None
+    selection_list: Optional[List[str]] = None
+
+
 class Simulators(BaseModel):
     simulators: List[str]
 
