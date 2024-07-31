@@ -98,7 +98,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OmexComparisonSubmission'
+                $ref: '#/components/schemas/PendingOmexJob'
         '422':
           description: Validation Error
           content:
@@ -204,7 +204,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SbmlComparisonSubmission'
+                $ref: '#/components/schemas/PendingSbmlJob'
         '422':
           description: Validation Error
           content:
@@ -274,7 +274,7 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    OmexComparisonSubmission:
+    PendingOmexJob:
       properties:
         job_id:
           type: string
@@ -333,8 +333,8 @@ components:
       - timestamp
       - path
       - simulators
-      title: OmexComparisonSubmission
-    SbmlComparisonSubmission:
+      title: PendingOmexJob
+    PendingSbmlJob:
       properties:
         job_id:
           type: string
@@ -396,7 +396,7 @@ components:
       - duration
       - n_steps
       - simulators
-      title: SbmlComparisonSubmission
+      title: PendingSbmlJob
     UtcComparisonResult:
       properties:
         content:

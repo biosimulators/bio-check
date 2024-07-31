@@ -12,7 +12,7 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, OmexComparisonSubmission, SbmlComparisonSubmission
+from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob
 from shared import save_uploaded_file, upload_blob, MongoDbConnector
 from log_config import setup_logging
 
@@ -111,7 +111,7 @@ def root():
 
 @app.post(
     "/verify-omex",  # "/biosimulators-utc-comparison",
-    response_model=OmexComparisonSubmission,
+    response_model=PendingOmexJob,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
@@ -124,10 +124,14 @@ async def verify_omex(
         truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
-) -> OmexComparisonSubmission:
+) -> PendingOmexJob:
     try:
         # request specific params
-        compare_id = comparison_id or "utc_comparison"
+        if comparison_id is None:
+            compare_id = "utc_comparison_omex"
+        else:
+            compare_id = comparison_id
+
         job_id = compare_id + "_" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
@@ -159,7 +163,6 @@ async def verify_omex(
             job_id=job_id,
             path=uploaded_file_location,
             simulators=simulators,
-            comparison_id=compare_id,
             timestamp=_time,
             ground_truth_report_path=report_location,
             include_outputs=include_outputs,
@@ -173,14 +176,14 @@ async def verify_omex(
         if report_fp:
             os.remove(report_fp)
 
-        return OmexComparisonSubmission(**pending_job_doc)
+        return PendingOmexJob(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
     "/verify-sbml",
-    response_model=SbmlComparisonSubmission,
+    response_model=PendingSbmlJob,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
     summary="Compare UTC outputs from a deterministic SBML model.")
@@ -194,10 +197,14 @@ async def verify_sbml(
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
-) -> SbmlComparisonSubmission:
+) -> PendingSbmlJob:
     try:
         # request specific params
-        compare_id = comparison_id or "utc_comparison"
+        if comparison_id is None:
+            compare_id = "utc_comparison_omex"
+        else:
+            compare_id = comparison_id
+
         job_id = compare_id + "_" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
@@ -220,7 +227,6 @@ async def verify_sbml(
             job_id=job_id,
             path=uploaded_file_location,
             simulators=simulators,
-            comparison_id=compare_id,
             timestamp=_time,
             duration=duration,
             n_steps=number_of_steps,
@@ -233,7 +239,7 @@ async def verify_sbml(
         # clean up local temp files
         os.remove(fp)
 
-        return SbmlComparisonSubmission(**pending_job_doc)
+        return PendingSbmlJob(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
