@@ -121,6 +121,7 @@ class Verifier:
             'rTol': str(rTol),
             'aTol': str(aTol)
         }
+
         if selection_list:
             encoder_fields['selection_list'] = ','.join(selection_list)
         multidata = MultipartEncoder(fields=encoder_fields)

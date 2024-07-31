@@ -1,0 +1,5 @@
+requests-toolbelt~=1.0.0
+seaborn~=0.13.2
+pydantic~=2.8.2
+numpy
+pandas 

@@ -20,6 +20,18 @@ from pymongo.database import Database
 # BUCKET_URL = "gs://bio-check-requests-1/"
 
 
+def increment_version(version: str, increment_position: int):
+    """Args:
+        version (str): version to increment by
+        increment_position (int): position to increment by: 0 for major 1 for minor and 2 for patch
+    """
+    parts = [int(n) for n in version.split(".")]
+    new_part = parts[increment_position] + 1
+    parts.remove(parts[increment_position])
+    parts.insert(increment_position, new_part)
+    return ".".join([str(n) for n in parts])
+
+
 def refresh_jobs(conn):
     def refresh_collection(conn, coll):
         for job in conn.db[coll].find():
