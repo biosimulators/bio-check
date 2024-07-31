@@ -1,14 +1,14 @@
 import os
 import asyncio
+import logging
 
-from shared import MongoDbConnector
+from shared import MongoDbConnector, setup_logging
 from jobs import Supervisor
 
 
 # sleep params
-DELAY_TIMER = 5
-MAX_RETRIES = 5
-MAX_TIMEOUTS = 2
+DELAY_TIMER = 20
+MAX_RETRIES = 20
 
 # creds params
 MONGO_URI = os.getenv("MONGO_URI")
@@ -18,20 +18,24 @@ DB_NAME = "service_requests"
 # shared db_connector
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
+setup_logging("biochecknet-worker.log")
+logger = logging.getLogger(__name__)
 
-async def main():
+
+async def main(max_retries=MAX_RETRIES):
     # set timeout counter
-    n_timeouts = 0
+    n_retries = 0
 
     # create supervisor
     supervisor = Supervisor(db_connector=db_connector)
 
-    # run async loop
-    run = n_timeouts < MAX_TIMEOUTS
-    while run:
-        result = await supervisor.check_jobs(max_retries=MAX_RETRIES, delay=DELAY_TIMER)
-        if result > 0:
-            n_timeouts += 1
+    while True:
+        # no job has come in a while
+        if n_retries == MAX_RETRIES:
+            await asyncio.sleep(60)
+
+        await supervisor.check_jobs(delay=DELAY_TIMER)
+        n_retries += 1
 
 
 if __name__ == "__main__":

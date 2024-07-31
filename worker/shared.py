@@ -20,7 +20,7 @@ from pymongo.database import Database
 def setup_logging(fname: str):
     logging.basicConfig(
         filename=fname,
-        level=logging.CRITICAL,
+        level=logging.ERROR,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
