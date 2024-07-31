@@ -1,5 +1,6 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19uxh93pZvhCGXkC7a15SmAx4oH4MV7OJ#scrollTo=j_mN-EE3vanZ)
 ![GitHub CI](https://github.com/biosimulators/bio-check/actions/workflows/ci.yaml/badge.svg)
+![GitHub CD](https://github.com/biosimulators/bio-check/actions/workflows/cd.yaml/badge.svg)
 # BioCheck: A Biological Simulation Verification Service
 #### __This service utilizes separate containers for REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
