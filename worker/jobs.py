@@ -62,7 +62,7 @@ class Worker(BaseClass):
     worker_id: Optional[str] = unique_id()
 
     def __post_init__(self):
-        input_fp = self.job_params['omex_path']
+        input_fp = self.job_params['path']
         selection_list = self.job_params.get('selection_list')
 
         if input_fp.endswith('.omex'):
@@ -102,7 +102,7 @@ class Worker(BaseClass):
         params = None
         out_dir = tempfile.mkdtemp()
 
-        source_omex_blob_name = self.job_params['omex_path']
+        source_omex_blob_name = self.job_params['path']
         local_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
         download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_fp)
 
@@ -125,7 +125,7 @@ class Worker(BaseClass):
         out_dir = tempfile.mkdtemp()
 
         # get omex from bucket
-        source_omex_blob_name = self.job_params['omex_path']
+        source_omex_blob_name = self.job_params['path']
         local_omex_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
         download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_omex_fp)
 
@@ -146,7 +146,7 @@ class Worker(BaseClass):
             atol = self.job_params.get('aTol')
 
             result = self._run_comparison_from_omex(
-                omex_path=local_omex_fp,
+                path=local_omex_fp,
                 simulators=simulators,
                 out_dir=out_dir,
                 include_outputs=include_outs,
@@ -159,7 +159,7 @@ class Worker(BaseClass):
 
     def _run_comparison_from_omex(
             self,
-            omex_path: str,
+            path: str,
             simulators: List[str],
             out_dir: str,
             include_outputs: bool = True,
@@ -170,9 +170,9 @@ class Worker(BaseClass):
     ) -> Dict:
         """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
         # download the omex file from GCS
-        # source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
-        # local_omex_fp = os.path.join(out_dir, omex_path.split('/')[-1])
-        # download_blob(bucket_name=BUCKET_NAME, source_blob_name=omex_path, destination_file_name=local_omex_fp)
+        # source_blob_name = path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
+        # local_omex_fp = os.path.join(out_dir, path.split('/')[-1])
+        # download_blob(bucket_name=BUCKET_NAME, source_blob_name=path, destination_file_name=local_omex_fp)
 
         # download the report file from GCS if applicable
         # if ground_truth_report_path is not None:
@@ -188,7 +188,7 @@ class Worker(BaseClass):
         ground_truth_data = truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals
 
         comparison = self._generate_omex_utc_comparison(
-            omex_fp=omex_path,  # omex_path,
+            omex_fp=path,  # path,
             out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
             simulators=simulators,
             comparison_id=comparison_id,

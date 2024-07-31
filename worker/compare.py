@@ -12,7 +12,7 @@ from output_data import generate_biosimulator_utc_outputs, _get_output_stack
 
 
 def utc_comparison(
-        omex_path: str,
+        path: str,
         simulators: List[str],
         include_outputs: bool = True,
         comparison_id: str = None,
@@ -23,7 +23,7 @@ def utc_comparison(
     truth_vals = read_report_outputs(ground_truth_report_path) if ground_truth_report_path is not None else None
     comparison_id = comparison_id or 'biosimulators-utc-comparison'
     comparison = generate_biosimulators_utc_comparison(
-        omex_fp=omex_path,
+        omex_fp=path,
         out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
         simulators=simulators,
         comparison_id=comparison_id,

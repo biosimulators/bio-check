@@ -35,7 +35,7 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None, simul
     uploaded_file_name = uploaded_file.split('/')[-1]
     omex_fp = uploaded_file
     omex_blob_dest = upload_prefix + uploaded_file_name
-    omex_path = omex_blob_dest  # bucket_prefix + uploaded_file
+    path = omex_blob_dest  # bucket_prefix + uploaded_file
     upload_blob(bucket_name=BUCKET_NAME, source_file_name=omex_fp, destination_blob_name=omex_blob_dest)
 
     # Save uploaded reports file to Google Cloud Storage if applicable
@@ -54,7 +54,7 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None, simul
         collection_name="pending_jobs",
         status="PENDING",
         job_id=job_id,
-        omex_path=omex_path,
+        path=path,
         simulators=simulators,
         comparison_id=comparison_id or f"uniform-time-course-comparison-{job_id}",
         timestamp=_time,
