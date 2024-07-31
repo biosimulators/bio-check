@@ -4,13 +4,12 @@ from typing import List, Optional, Any
 from shared import BaseModel, Job
 
 
-class PendingJob(Job):
+class PendingOmexJob(Job):
     job_id: str
     status: str
     timestamp: str
-    omex_path: str
+    path: str
     simulators: List[str]
-    timestamp: str
     comparison_id: Optional[str] = None
     ground_truth_report_path: Optional[str] = None
     include_output: Optional[bool] = True
@@ -19,27 +18,35 @@ class PendingJob(Job):
     selection_list: Optional[List[str]] = None
 
 
-class PendingSbmlComparison(Job):
+class PendingSbmlJob(Job):
     job_id: str
     status: str
     timestamp: str
-    omex_path: str
+    path: str
+    duration: int
+    n_steps: int
     simulators: List[str]
-    timestamp: str
     comparison_id: Optional[str] = None
-    ground_truth_report_path: Optional[str] = None
     include_output: Optional[bool] = True
     rTol: Optional[float] = None
     aTol: Optional[float] = None
     selection_list: Optional[List[str]] = None
+
+
+class OmexComparisonSubmission(PendingOmexJob):
+    pass
+
+
+class SbmlComparisonSubmission(PendingSbmlJob):
+    pass
 
 
 class Simulators(BaseModel):
     simulators: List[str]
 
 
-class UtcComparisonSubmission(PendingJob):
-    pass
+# class UtcComparisonSubmission(PendingJob):
+    # pass
 
 
 class DbClientResponse(BaseModel):

@@ -12,7 +12,7 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, UtcComparisonSubmission, Simulators
+from data_model import DbClientResponse, UtcComparisonResult, OmexComparisonSubmission, SbmlComparisonSubmission
 from shared import save_uploaded_file, upload_blob, MongoDbConnector
 from log_config import setup_logging
 
@@ -111,7 +111,7 @@ def root():
 
 @app.post(
     "/verify-omex",  # "/biosimulators-utc-comparison",
-    response_model=UtcComparisonSubmission,
+    response_model=OmexComparisonSubmission,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
@@ -124,7 +124,7 @@ async def verify_omex(
         truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
-) -> UtcComparisonSubmission:
+) -> OmexComparisonSubmission:
     try:
         # request specific params
         compare_id = comparison_id or "utc_comparison"
@@ -157,7 +157,7 @@ async def verify_omex(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
-            omex_path=uploaded_file_location,
+            path=uploaded_file_location,
             simulators=simulators,
             comparison_id=compare_id,
             timestamp=_time,
@@ -173,14 +173,14 @@ async def verify_omex(
         if report_fp:
             os.remove(report_fp)
 
-        return UtcComparisonSubmission(**pending_job_doc)
+        return OmexComparisonSubmission(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
     "/verify-sbml",
-    response_model=UtcComparisonSubmission,
+    response_model=SbmlComparisonSubmission,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
     summary="Compare UTC outputs from a deterministic SBML model.")
@@ -194,7 +194,7 @@ async def verify_sbml(
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
-) -> UtcComparisonSubmission:
+) -> SbmlComparisonSubmission:
     try:
         # request specific params
         compare_id = comparison_id or "utc_comparison"
@@ -218,7 +218,7 @@ async def verify_sbml(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
-            omex_path=uploaded_file_location,
+            path=uploaded_file_location,
             simulators=simulators,
             comparison_id=compare_id,
             timestamp=_time,
@@ -233,7 +233,7 @@ async def verify_sbml(
         # clean up local temp files
         os.remove(fp)
 
-        return UtcComparisonSubmission(**pending_job_doc)
+        return SbmlComparisonSubmission(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
