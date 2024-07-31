@@ -1,5 +1,5 @@
 # -- db connectors -- #
-
+import logging
 import os
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, asdict
@@ -15,6 +15,14 @@ from pymongo.database import Database
 
 
 # -- globally-shared content-- #
+
+
+def setup_logging(fname: str):
+    logging.basicConfig(
+        filename=fname,
+        level=logging.CRITICAL,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):

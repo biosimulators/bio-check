@@ -188,7 +188,7 @@ async def verify_sbml(
         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
         duration: int = Query(..., description="Duration of the simulation"),
         number_of_steps: int = Query(..., description="Number of simulation steps to run"),
-        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+        simulators: List[str] = Query(default=["copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),

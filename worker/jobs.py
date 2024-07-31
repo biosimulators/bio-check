@@ -1,7 +1,8 @@
 # -- This should serve as the main file for worker container -- #
 import os
 import tempfile
-import uuid 
+import uuid
+import logging
 from asyncio import sleep
 from dataclasses import dataclass
 from functools import partial
@@ -11,14 +12,21 @@ from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 
-from shared import BaseClass, MongoDbConnector, download_blob
+from shared import BaseClass, MongoDbConnector, download_blob, setup_logging
 from data_model import UtcComparison, SimulationError, UtcSpeciesComparison
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping
 
+
 # for dev only
 load_dotenv('../assets/.env_dev')
 
+# logging
+LOGFILE = "biochecknet_worker.log"
+logger = logging.getLogger(__name__)
+setup_logging(LOGFILE)
+
+# constraints
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
@@ -63,18 +71,31 @@ class Worker(BaseClass):
             self._execute_sbml_job()
 
         if selection_list is not None:
-            self.job_result = self._select_observables(selection_list)
+            self.job_result = self._select_observables(job_result=self.job_result, observables=selection_list)
 
-    def _select_observables(self, observables: list[str] = None) -> dict:
+    def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
             to dicts in which the keys are the simulator names and the values are arrays. The data must have content accessible at: `data['content']['results']`.
         """
-        outputs = self.job_result.copy()
+        outputs = job_result.copy()
         result = {}
-        for name, obs_data in self.job_result['content']['results'].items():
-            if name in observables:
-                result[name] = obs_data
-        outputs['content']['results'] = result
+        data = job_result['results']
+
+        # case: results from sbml
+        if isinstance(data, dict):
+            for name, obs_data in data.items():
+                if name in observables:
+                    result[name] = obs_data
+            outputs['results'] = result
+        # case: results from omex
+        elif isinstance(data, list):
+            for i, datum in enumerate(data):
+                name = datum['species_name']
+                if name not in observables:
+                    print(f'Name: {name} not in observables')
+                    data.pop(i)
+            outputs['results'] = data
+
         return outputs
 
     def _execute_sbml_job(self):
@@ -132,7 +153,7 @@ class Worker(BaseClass):
                 comparison_id=comparison_id,
                 truth_vals=truth_vals
             )
-            self.job_result = result.model_dump()
+            self.job_result = result
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
 
@@ -146,7 +167,7 @@ class Worker(BaseClass):
             truth_vals=None,
             rTol=None,
             aTol=None
-    ) -> Union[UtcComparison, SimulationError]:
+    ) -> Dict:
         """Execute a Uniform Time Course comparison for ODE-based simulators from Biosimulators."""
         # download the omex file from GCS
         # source_blob_name = omex_path.replace('gs://bio-check-requests-1', '')  # Assuming omex_fp is the blob name in GCS
@@ -175,25 +196,25 @@ class Worker(BaseClass):
             rTol=rTol,
             aTol=aTol
         )
-
+        return comparison
         # parse data for return vals
-        spec_comparisons = []
-        for spec_name, comparison_data in comparison['results'].items():
-            species_comparison = UtcSpeciesComparison(
-                mse=comparison_data['mse'],
-                proximity=comparison_data['proximity'],
-                output_data=comparison_data.get('output_data') if include_outputs else {},
-                species_name=spec_name)
-            spec_comparisons.append(species_comparison)
+        # spec_comparisons = []
+        # for spec_name, comparison_data in comparison['results'].items():
+        #     species_comparison = UtcSpeciesComparison(
+        #         mse=comparison_data['mse'],
+        #         proximity=comparison_data['proximity'],
+        #         output_data=comparison_data.get('output_data') if include_outputs else {},
+        #         species_name=spec_name)
+        #     spec_comparisons.append(species_comparison)
+#
+        # return UtcComparison(
+        #     results=spec_comparisons,
+        #     id=comparison_id,
+        #     simulators=simulators)
 
-        return UtcComparison(
-            results=spec_comparisons,
-            id=comparison_id,
-            simulators=simulators)
-
-    def _run_comparison_from_sbml(self, sbml_fp, dur, n_steps, rTol=None, aTol=None, simulators=None):
+    def _run_comparison_from_sbml(self, sbml_fp, dur, n_steps, rTol=None, aTol=None, simulators=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
-        results = {}
+        results = {'results': {}}
         for species_name in species_mapping.keys():
             species_comparison = self._generate_sbml_utc_species_comparison(
                 sbml_filepath=sbml_fp,
@@ -204,7 +225,7 @@ class Worker(BaseClass):
                 aTol=aTol,
                 simulators=simulators
             )
-            results[species_name] = species_comparison
+            results['results'][species_name] = species_comparison
 
         return results
 

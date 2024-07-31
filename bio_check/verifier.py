@@ -28,6 +28,8 @@ class Verifier:
         root_response = self._test_root()
         print(root_response)
 
+        self.data = {}
+
     def verify_omex(
             self,
             omex_filepath: str,
@@ -138,15 +140,17 @@ class Verifier:
         try:
             response = requests.get(endpoint, headers=headers)
             self._check_response(response)
-            return response.json()
+            data = response.json()
+            self.data[job_id] = data
+            return data
         except Exception as e:
             return RequestError(error=str(e))
 
-    def fetch(self, comparison_id: str, polling_timer: int = 5, timeout_thresh: int = 50) -> Union[Dict, None]:
+    def fetch(self, job_id: str, polling_timer: int = 5, timeout_thresh: int = 50) -> Union[Dict, None]:
         n_tries = 0
         output = None
         while n_tries < timeout_thresh + 1:
-            result = self.fetch_result(comparison_id)
+            result = self.fetch_result(job_id)
             status = result['content']['status']
             print(f"The job status is: {status}")
 
