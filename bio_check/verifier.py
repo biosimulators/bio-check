@@ -187,8 +187,8 @@ class Verifier:
             output_end: int,
             num_points: int,
             hue: str = 'simulators',
-            use_grid=False,
-            export_plot=False
+            use_grid: bool = False,
+            save_dest: Optional[str] = None
     ) -> Figure:
         """Visualize simulation output data, not comparison data, with subplots for each species.
 
@@ -202,7 +202,8 @@ class Verifier:
                     If `'simulators'` is passed, each column will be of its own color. If `'species'` is passed, each row will be of its
                     own color.
                 use_grid (bool): whether to use a grid for each subplot. Defaults to False.
-                export_plot (bool): whether to export plots to a pdf file. Defaults to False.
+                save_dest (str, optional): path to save the figure. If a value is passed here, the figure will be saved to this destination as a .pdf file.
+                    Defaults to `None`.
 
         """
         # grid plot params
