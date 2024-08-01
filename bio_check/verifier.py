@@ -209,7 +209,7 @@ class Verifier:
         num_species = len(species_names)
 
         # plot data params
-        t = np.linspace(output_start, output_end, num_points)  # TODO: extract this dynamically.
+        t = np.linspace(output_start, output_end, num_points + 1)  # TODO: extract this dynamically.
         simulator_colors = generate_color_gradient(simulators)
 
         # TODO: extract simulator names dynamically as well.
