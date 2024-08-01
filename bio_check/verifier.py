@@ -257,8 +257,10 @@ class Verifier:
 
         return plt.close(fig)
 
-    def export_csv(self):
-        pass
+    def export_csv(self, data: dict, save_dest: str):
+        species_data_content = data['content']['results']['results']
+        species_names = list(species_data_content.keys())
+        # TODO: Finish this here: one df where rows are num points and cols are each observable: one for each simulator for each species name. Flattened.
 
     def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
         pass
