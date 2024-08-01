@@ -210,7 +210,10 @@ class Verifier:
 
         # plot data params
         t = np.linspace(output_start, output_end, num_points + 1)  # TODO: extract this dynamically.
-        simulator_colors = generate_color_gradient(simulators)
+
+        simulator_hue = hue.lower() == 'simulators'
+        hue_group = simulators if simulator_hue else species_names
+        line_colors = generate_color_gradient(species_names)
 
         # TODO: extract simulator names dynamically as well.
 
@@ -230,7 +233,8 @@ class Verifier:
                 if output_data:
                     # create one plot in each column mapped to each individual simulator output (for clarity :) )
                     simulator_output = output_data[simulator_name]
-                    sns.lineplot(ax=ax, color=simulator_colors[j], x=t, y=simulator_output, label=f"{simulator_name}")
+                    color_index = j if simulator_hue else i
+                    sns.lineplot(ax=ax, color=line_colors[color_index], x=t, y=simulator_output, label=f"{simulator_name}")
 
                     # set row title
                     ax.set_title(f"{species_name} simulation outputs for {simulator_name}")
