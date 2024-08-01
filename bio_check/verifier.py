@@ -198,7 +198,9 @@ class Verifier:
                 output_start (int): start time of simulation output recording.
                 output_end (int): end time of simulation output recording.
                 num_points (int): number of points in simulation output time series.
-                hue (str): hue upon which the linplot colors are based. Options are: `'simulators'` or `'species'`. Defaults to 'simulators'.
+                hue (str): hue upon which the line plot colors are based. Options are: `'simulators'` or `'species'`. Defaults to 'simulators'.
+                    If `'simulators'` is passed, each column will be of its own color. If `'species'` is passed, each row will be of its
+                    own color.
                 use_grid (bool): whether to use a grid for each subplot. Defaults to False.
                 export_plot (bool): whether to export plots to a pdf file. Defaults to False.
 
