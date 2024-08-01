@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import seaborn as sns
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.figure import Figure
 from requests import Response
 from requests.exceptions import RequestException
@@ -249,6 +250,12 @@ class Verifier:
         plt.show()
 
         return fig
+
+    def save_plot(self, fig: Figure, save_dest: str) -> None:
+        with PdfPages(save_dest) as pdf:
+            pdf.savefig(fig)
+
+        return plt.close(fig)
 
     def export_csv(self):
         pass
