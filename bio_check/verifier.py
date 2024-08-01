@@ -1,14 +1,19 @@
 import os
 from time import sleep
 
+import numpy as np
 import requests
 from uuid import uuid4
 
+import seaborn as sns
+from matplotlib import pyplot as plt
 from requests import Response
 from requests.exceptions import RequestException
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from typing import *
 from dataclasses import dataclass, asdict
+
+from processing_tools import generate_color_gradient
 
 
 @dataclass
@@ -173,9 +178,65 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def visualize(self):
-        # TODO: get results and viz here
-        pass
+    def visualize(
+            self,
+            data: dict,
+            simulators: list[str],
+            output_start: int,
+            output_end: int,
+            num_points: int,
+            hue: str = 'simulators',
+            use_grid=False
+    ) -> None:
+        """Visualize simulation output data, not comparison data, with subplots for each species.
+
+            Args:
+                data (dict): simulation output data
+                simulators (list[str]): list of simulators
+                output_start (int): start time of simulation output recording.
+                output_end (int): end time of simulation output recording.
+                num_points (int): number of points in simulation output time series.
+                hue (str): hue upon which the linplot colors are based. Options are: `'simulators'` or `'species'`. Defaults to 'simulators'.
+                use_grid (bool): whether to use a grid for each subplot. Defaults to False.
+
+        """
+        # grid plot params
+        species_data_content = data['content']['results']['results']
+        species_names = list(species_data_content.keys())
+        num_species = len(species_names)
+
+        # plot data params
+        t = np.linspace(output_start, output_end, num_points)  # TODO: extract this dynamically.
+        simulator_colors = generate_color_gradient(simulators)
+
+        # TODO: extract simulator names dynamically as well.
+
+        fig, axes = plt.subplots(nrows=num_species, ncols=3, figsize=(20, 6 * num_species))
+
+        if num_species == 1:
+            axes = [axes]
+
+        # iterate over grid rows
+        for i, species_name in enumerate(species_names):
+            # iterate over grid cols
+            for j, simulator_name in enumerate(simulators):
+                ax = axes[i][j]
+                species_data = data['content']['results']['results'][species_name]
+                output_data = species_data.get('output_data')
+
+                if output_data:
+                    # create one plot in each column mapped to each individual simulator output (for clarity :) )
+                    simulator_output = output_data[simulator_name]
+                    sns.lineplot(ax=ax, color=simulator_colors[j], data=simulator_output, label=f"{simulator_name}")
+
+                    # set row title
+                    ax.set_title(f"{species_name} simulation outputs for {simulator_name}")
+                    ax.legend()
+                    ax.grid(use_grid)
+
+        # TODO: adjust this
+        plt.tight_layout()
+        plt.show()
 
     def export_csv(self):
         pass
