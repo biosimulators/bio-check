@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def generate_color_gradient(self, simulator_names) -> list[str]:
+def generate_color_gradient(simulator_names) -> list[str]:
     """Generate a gradient of colors from red to green to blue for a list of simulator names."""
     num_simulators = len(simulator_names)
 

@@ -7,13 +7,14 @@ from uuid import uuid4
 
 import seaborn as sns
 from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 from requests import Response
 from requests.exceptions import RequestException
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from typing import *
 from dataclasses import dataclass, asdict
 
-from processing_tools import generate_color_gradient
+from bio_check.processing_tools import generate_color_gradient
 
 
 @dataclass
@@ -186,8 +187,9 @@ class Verifier:
             output_end: int,
             num_points: int,
             hue: str = 'simulators',
-            use_grid=False
-    ) -> None:
+            use_grid=False,
+            export_plot=False
+    ) -> Figure:
         """Visualize simulation output data, not comparison data, with subplots for each species.
 
             Args:
@@ -198,6 +200,7 @@ class Verifier:
                 num_points (int): number of points in simulation output time series.
                 hue (str): hue upon which the linplot colors are based. Options are: `'simulators'` or `'species'`. Defaults to 'simulators'.
                 use_grid (bool): whether to use a grid for each subplot. Defaults to False.
+                export_plot (bool): whether to export plots to a pdf file. Defaults to False.
 
         """
         # grid plot params
@@ -227,7 +230,7 @@ class Verifier:
                 if output_data:
                     # create one plot in each column mapped to each individual simulator output (for clarity :) )
                     simulator_output = output_data[simulator_name]
-                    sns.lineplot(ax=ax, color=simulator_colors[j], data=simulator_output, label=f"{simulator_name}")
+                    sns.lineplot(ax=ax, color=simulator_colors[j], x=t, y=simulator_output, label=f"{simulator_name}")
 
                     # set row title
                     ax.set_title(f"{species_name} simulation outputs for {simulator_name}")
@@ -237,6 +240,8 @@ class Verifier:
         # TODO: adjust this
         plt.tight_layout()
         plt.show()
+
+        return fig
 
     def export_csv(self):
         pass
