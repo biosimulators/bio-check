@@ -122,7 +122,7 @@ class Verifier:
         endpoint = self._format_endpoint('verify-sbml')
 
         # TODO: fix and remove this
-        raise NotImplementedError("This feature is currently under development.")
+        raise NotImplementedError("Submission of jobs with a SBML file is currently under development.")
 
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
