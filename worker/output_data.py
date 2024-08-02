@@ -55,7 +55,7 @@ def run_sbml_copasi(sbml_fp: str, start, dur, steps):
     t = np.linspace(start, dur, steps + 1)
     reported_outs = [k for k in sbml_species_mapping.keys()]
 
-    tc = run_time_course_with_output(start_time=0, end=t[-1], values=t, model=simulator, update_model=True, output_selection=reported_outs, use_numbers=True).to_dict()
+    tc = run_time_course_with_output(start_time=t[0], end=t[-1], values=t, model=simulator, update_model=True, output_selection=reported_outs, use_numbers=True).to_dict()
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
     results = {}

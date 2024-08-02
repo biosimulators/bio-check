@@ -226,6 +226,7 @@ async def verify_sbml(
             collection_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
+            comparison_id=compare_id,
             path=uploaded_file_location,
             simulators=simulators,
             timestamp=_time,
