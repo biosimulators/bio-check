@@ -28,15 +28,19 @@ class RequestError:
 
 
 class Verifier:
+    endpoint_root: str
+    data: Dict
+    submitted_jobs: List[Dict]
 
     def __init__(self, _endpoint="https://biochecknet.biosimulations.org"):
-        """Quasi-Singleton that is used to represent the BioCheck REST API and its methods therein."""
+        """Quasi-proxy object that is used to represent the content of the BioCheck REST API and its methods therein."""
         self.endpoint_root = _endpoint
         root_response = self._test_root()
         print(root_response)
+        self.data: Dict = {}
+        self.submitted_jobs: List[Dict] = []
 
-        self.data = {}
-
+    # -- api calls
     def verify_omex(
             self,
             omex_filepath: str,
@@ -86,7 +90,9 @@ class Verifier:
             response = requests.post(endpoint, headers=headers, data=multidata)
             response.raise_for_status()
             self._check_response(response)
-            return response.json()
+            output = response.json()
+            self.submitted_jobs.append(output)
+            return output
         except Exception as e:
             return RequestError(error=str(e))
 
@@ -160,7 +166,9 @@ class Verifier:
             response = requests.post(url=endpoint, headers=headers, data=multidata, params=query_params)
             response.raise_for_status()
             self._check_response(response)
-            return response.json()
+            output = response.json()
+            self.submitted_jobs.append(output)
+            return output
         except Exception as e:
             return RequestError(error=str(e))
 
@@ -188,6 +196,7 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
+    # -- visualizations
     def visualize_outputs(
             self,
             data: dict,
@@ -263,7 +272,7 @@ class Verifier:
         species_names = list(species_data_content.keys())
         num_species = len(species_names)
 
-        fig, axes = plt.subplots(nrows=num_species, figsize=(20, 6 * num_species))
+        fig, axes = plt.subplots(nrows=num_species, figsize=(12, 2 * num_species))
         true_color = '#228B22'
         false_color = '#DC143C'
 
@@ -290,13 +299,14 @@ class Verifier:
 
         return fig
 
-    def save_plot(self, fig: Figure, save_dest: str) -> None:
+    def export_plot(self, fig: Figure, save_dest: str) -> None:
         with PdfPages(save_dest) as pdf:
             pdf.savefig(fig)
 
         return plt.close(fig)
 
-    def observables_dataframe(self, data: dict, simulators: list[str]):
+    # -- csv and observables
+    def get_observables(self, data: dict, simulators: list[str]):
         dataframe = {}
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
@@ -314,8 +324,12 @@ class Verifier:
         return pd.DataFrame(dataframe)
 
     def export_csv(self, data: dict, save_dest: str, simulators: list[str]):
-        return self.observables_dataframe(data, simulators).to_csv(save_dest)
+        return self.get_observables(data, simulators).to_csv(save_dest, index=False)
 
+    def read_observables(self, csv_path: str):
+        return pd.read_csv(csv_path)
+
+    # -- tools
     def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
         pass
 
