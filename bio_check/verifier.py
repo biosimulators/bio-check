@@ -193,7 +193,6 @@ class Verifier:
             num_points: int,
             hue: str = 'simulators',
             use_grid: bool = False,
-            save_dest: Optional[str] = None
     ) -> Figure:
         """Visualize simulation output data, not comparison data, with subplots for each species.
 
@@ -207,8 +206,6 @@ class Verifier:
                     If `'simulators'` is passed, each column will be of its own color. If `'species'` is passed, each row will be of its
                     own color.
                 use_grid (bool): whether to use a grid for each subplot. Defaults to False.
-                save_dest (str, optional): path to save the figure. If a value is passed here, the figure will be saved to this destination as a .pdf file.
-                    Defaults to `None`.
 
         """
         # grid plot params
@@ -256,6 +253,7 @@ class Verifier:
         return fig
 
     def visualize_comparison(self, data: dict, simulators: list, comparison_type='proximity') -> Figure:
+        """Visualize simulation comparison matrix in the form of a heatmap."""
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
         num_species = len(species_names)
@@ -293,7 +291,7 @@ class Verifier:
 
         return plt.close(fig)
 
-    def export_csv(self, data: dict, save_dest: str, simulators: list[str]):
+    def observables_dataframe(self, data: dict, simulators: list[str]):
         dataframe = {}
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
@@ -308,11 +306,10 @@ class Verifier:
                     colname = f"{species_name}_{simulator_name}"
                     dataframe[colname] = simulator_output
 
-        print(pd.DataFrame(dataframe))
-        return pd.DataFrame(dataframe).to_csv(save_dest)
+        return pd.DataFrame(dataframe)
 
-
-        # TODO: Finish this here: one df where rows are num points and cols are each observable: one for each simulator for each species name. Flattened.
+    def export_csv(self, data: dict, save_dest: str, simulators: list[str]):
+        return self.observables_dataframe(data, simulators).to_csv(save_dest)
 
     def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
         pass
