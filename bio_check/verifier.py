@@ -213,17 +213,18 @@ class Verifier:
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
         num_species = len(species_names)
+        num_simulators = len(simulators)
 
         # plot data params
         t = np.linspace(output_start, output_end, num_points + 1)  # TODO: extract this dynamically.
 
         simulator_hue = hue.lower() == 'simulators'
         hue_group = simulators if simulator_hue else species_names
-        line_colors = generate_color_gradient(species_names)
+        line_colors = generate_color_gradient(hue_group)
 
         # TODO: extract simulator names dynamically as well.
 
-        fig, axes = plt.subplots(nrows=num_species, ncols=3, figsize=(20, 6 * num_species))
+        fig, axes = plt.subplots(nrows=num_species, ncols=num_simulators, figsize=(20, 6 * num_species))
 
         if num_species == 1:
             axes = [axes]
