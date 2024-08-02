@@ -345,6 +345,10 @@ class Verifier:
         outputs['content']['results'] = result
         return outputs
 
+    def _antimony_to_sbml(self, antimony_string: str):
+        # TODO: Do we want to import tellurium with this package?
+        pass
+
     def _format_endpoint(self, path_piece: str) -> str:
         return f'{self.endpoint_root}/{path_piece}'
 
