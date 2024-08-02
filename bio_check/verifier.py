@@ -121,6 +121,9 @@ class Verifier:
         """
         endpoint = self._format_endpoint('verify-sbml')
 
+        # TODO: fix and remove this
+        raise NotImplementedError("This feature is currently under development.")
+
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
         sbml_fp = (sbml_filepath.split('/')[-1], open(sbml_filepath, 'rb'), 'application/octet-stream')
