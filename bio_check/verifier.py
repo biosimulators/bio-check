@@ -28,13 +28,16 @@ class RequestError:
 
 
 class Verifier:
+    """Quasi-proxy object that is used to represent the content of the BioCheck REST API and its methods therein."""
     endpoint_root: str
     data: Dict
     submitted_jobs: List[Dict]
 
-    def __init__(self, _endpoint="https://biochecknet.biosimulations.org"):
-        """Quasi-proxy object that is used to represent the content of the BioCheck REST API and its methods therein."""
-        self.endpoint_root = _endpoint
+    def __init__(self):
+        """A new instance of the Verifier class. NOTE: this may clash with your record keeping in a notebook, so it is highly recommended that users
+            treat instances of this class as quasi-singletons, although not necessary for fundamental interaction.
+        """
+        self.endpoint_root = "https://biochecknet.biosimulations.org"
         root_response = self._test_root()
         print(root_response)
         self.data: Dict = {}
@@ -231,6 +234,9 @@ class Verifier:
                     own color.
                 use_grid (bool): whether to use a grid for each subplot. Defaults to False.
 
+            Returns:
+                matplotlib.pyplot.Figure of a plot grid
+
         """
         # grid plot params
         species_data_content = data['content']['results']['results']
@@ -278,7 +284,18 @@ class Verifier:
         return fig
 
     def visualize_comparison(self, data: dict, simulators: list, comparison_type='proximity') -> Figure:
-        """Visualize simulation comparison matrix in the form of a heatmap."""
+        """Visualize simulation comparison matrix in the form of a heatmap.
+
+            Args:
+                data (dict): simulation output data
+                simulators (list[str]): list of simulators
+                comparison_type (str): type of comparison. Defaults to `'proximity'`.
+
+            Returns:
+                matplotlib.pyplot.Figure of a plot grid
+
+
+        """
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
         num_species = len(species_names)
@@ -310,14 +327,31 @@ class Verifier:
 
         return fig
 
-    def export_plot(self, fig: Figure, save_dest: str) -> None:
+    def export_plot(self, fig: Figure, save_dest: str):
+        """Save a `matplotlib.pyplot.Figure` instance generated from one of this class' `visualize_` methods, as a PDF file.
+
+            Args:
+                fig (matplotlib.pyplot.Figure): Figure instance generated from either `Verifier.visualize_comparison()` or `Verifier.visualize_outputs()`.
+                save_dest (str): Destination path to save the plot to.
+        """
         with PdfPages(save_dest) as pdf:
             pdf.savefig(fig)
 
         return plt.close(fig)
 
     # -- csv and observables
-    def get_observables(self, data: dict, simulators: list[str]):
+    def get_observables(self, data: dict, simulators: list[str]) -> pd.DataFrame:
+        """Get the observables passed within `data` as a flattened dataframe in which each column is: `<SPECIES NAME>_<SIMULATOR>` for each
+            species name and simulator involved within the comparison.
+
+            Args:
+                data (dict): simulation output data generated from `Verifier.get_verify_output()`. This method assumes a resulting job status from the aforementioned
+                    `get` method as being `'COMPLETED'`. Tip: if the `data` does not yet have a completed status, try again.
+                simulators (list[str]): list of simulators to include in the dataframe.
+
+            Returns:
+                pd.DataFrame of observables.
+        """
         dataframe = {}
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
@@ -335,14 +369,22 @@ class Verifier:
         return pd.DataFrame(dataframe)
 
     def export_csv(self, data: dict, save_dest: str, simulators: list[str]):
+        """Export the content passed in `data` as a CSV file.
+
+            Args:
+                data (dict): simulation output data generated from `Verifier.get_verify_output()`.
+                save_dest (str): Destination path to save the CSV file.
+                simulators (list[str]): list of simulators to include in the dataframe.
+        """
         return self.get_observables(data, simulators).to_csv(save_dest, index=False)
 
-    def read_observables(self, csv_path: str):
+    def read_observables(self, csv_path: str) -> pd.DataFrame:
+        """Read in a dataframe generated from `Verifier.export_csv()`."""
         return pd.read_csv(csv_path)
 
     # -- tools
     def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
-        pass
+        raise NotImplementedError("This method is not yet implement and currently under development.")
 
     def select_observables(self, observables: list[str], data: dict) -> dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
@@ -358,7 +400,7 @@ class Verifier:
 
     def _antimony_to_sbml(self, antimony_string: str):
         # TODO: Do we want to import tellurium with this package?
-        pass
+        raise NotImplementedError("This method is not yet implement and currently under development.")
 
     def _format_endpoint(self, path_piece: str) -> str:
         return f'{self.endpoint_root}/{path_piece}'
