@@ -2,6 +2,7 @@ import os
 from time import sleep
 
 import numpy as np
+import pandas as pd
 import requests
 from uuid import uuid4
 
@@ -299,6 +300,15 @@ class Verifier:
             for j, simulator_name in enumerate(simulators):
                 species_data = data['content']['results']['results'][species_name]
                 output_data = species_data.get('output_data')
+                if output_data:
+                    simulator_output = output_data[simulator_name]
+                    colname = f"{species_name}_{simulator_name}"
+                    dataframe[colname] = simulator_output
+
+        print(pd.DataFrame(dataframe))
+        return pd.DataFrame(dataframe).to_csv(save_dest)
+
+
         # TODO: Finish this here: one df where rows are num points and cols are each observable: one for each simulator for each species name. Flattened.
 
     def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
