@@ -49,6 +49,7 @@ class Verifier:
             comparison_id: str = None,
             truth: str = None,
             selection_list: List[str] = None,
+            _steady_state: bool = False
     ) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
 
@@ -59,10 +60,14 @@ class Verifier:
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
                 truth:`str, optional`: The path to the ground truth report file to include in comparison. Defaults to None.
                 selection_list:`List[str], optional`: The list of observables to include in comparison output. Defaults to None (all observables).
-
+                _steady_state:`bool, optional`: Whether to include the steady state analysis job. NOTE: This feature will currently throw an error as it is not
+                    yet implemented.
             Returns:
                 A dictionary containing the job submission results. **Note**: the return status should read `PENDING`.
         """
+        if _steady_state is not False:
+            raise NotImplementedError("The steady state analysis of model files is not yet implemented and currently under development.")
+
         endpoint = self._format_endpoint('verify-omex')
 
         # configure params
@@ -108,6 +113,7 @@ class Verifier:
             rTol: float = None,
             aTol: float = None,
             selection_list: List[str] = None,
+            _steady_state: bool = False
     ) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
 
@@ -123,10 +129,15 @@ class Verifier:
                 aTol:`float`L optional: The absolute tolerance used to determine the absolute distance in a pairwise comparison.
                 selection_list:`List[str]`: Observables to include in the output. If passed, all observable names NOT in this list will
                     be excluded. Defaults to `None` (all observables).
+                _steady_state:`bool, optional`: Whether to include the steady state analysis job. NOTE: This feature will currently throw an error as it is not
+                    yet implemented.
 
             Returns:
                 A dictionary containing the job submission results. **Note**: the return status should read `PENDING`.
         """
+        if _steady_state is not False:
+            raise NotImplementedError("The steady state analysis of model files is not yet implemented and currently under development.")
+
         endpoint = self._format_endpoint('verify-sbml')
 
         # TODO: fix and remove this
