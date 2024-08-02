@@ -93,8 +93,9 @@ class Verifier:
     def verify_sbml(
             self,
             sbml_filepath: str,
+            start: int,
             end: int,
-            number_of_steps: int,
+            steps: int,
             simulators: List[str] = None,
             include_outputs: bool = True,
             comparison_id: str = None,
@@ -106,8 +107,9 @@ class Verifier:
 
             Args:
                 sbml_filepath:`str`: The path to the omex file to submit.
+                start:`int`: The start time of the time course to include in comparison.
                 end: `int`: The end of the comparison job in seconds.
-                number_of_steps: `int`: The number of steps in the comparison job.
+                steps: `int`: The number of steps in the comparison job.
                 simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
@@ -138,8 +140,9 @@ class Verifier:
             'simulators': ','.join(simulators),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
+            'start': str(start),
             'end': str(end),
-            'number_of_steps': str(number_of_steps)
+            'steps': str(steps)
         }
 
         if selection_list:

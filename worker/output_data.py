@@ -36,6 +36,10 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
+    # in the case that the start time is set to a point after the simulation begins
+    if start > 0:
+        simulator.simulate(start=0, end=start)
+
     result = simulator.simulate(start, dur, steps + 1)
     outputs = {}
     for index, row in enumerate(result.transpose()):
