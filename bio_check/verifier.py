@@ -180,7 +180,7 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def visualize(
+    def visualize_outputs(
             self,
             data: dict,
             simulators: list[str],
@@ -251,13 +251,40 @@ class Verifier:
 
         return fig
 
+    def visualize_comparison(self, data: dict, simulators: list[str], comparison_type: str = 'proximity'):
+        # grid plot params
+        species_data_content = data['content']['results']['results']
+        species_names = list(species_data_content.keys())
+        num_species = len(species_names)
+
+        fig, axes = plt.subplots(nrows=num_species, ncols=3, figsize=(20, 6 * num_species))
+
+        if num_species == 1:
+            axes = [axes]
+
+        for i, species_name in enumerate(species_names):
+            for j, simulator_name in enumerate(simulators):
+                ax = axes[i][j]
+                species_data = data['content']['results']['results'][species_name]
+                comparison_data = np.array(list(species_data[comparison_type].values()))
+                print(comparison_data.shape)
+                # sns.heatmap(ax=ax, data=comparison_data, label=f"Comparison matrix for {species_names}")
+                # ax.set_title(f"{species_name} simulation outputs for {simulator_name}")
+                # ax.legend()
+
+        # TODO: adjust this
+        plt.tight_layout()
+        plt.show()
+
+        return fig
+
     def save_plot(self, fig: Figure, save_dest: str) -> None:
         with PdfPages(save_dest) as pdf:
             pdf.savefig(fig)
 
         return plt.close(fig)
 
-    def export_csv(self, data: dict, save_dest: str):
+    def export_csv(self, data: dict, save_dest: str, simulators: list[str]):
         species_data_content = data['content']['results']['results']
         species_names = list(species_data_content.keys())
         # TODO: Finish this here: one df where rows are num points and cols are each observable: one for each simulator for each species name. Flattened.
@@ -292,9 +319,10 @@ class Verifier:
         except RequestException as e:
             return {'bio-check-error': f"A connection to that endpoint could not be established: {e}"}
 
+
 # tests
 
-def test_service():
+def test_verifier():
     # TODO: replace this
     verifier = Verifier()
     simulators = ['copasi', 'tellurium']
