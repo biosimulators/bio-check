@@ -122,7 +122,7 @@ class Verifier:
         endpoint = self._format_endpoint('verify-sbml')
 
         # TODO: fix and remove this
-        raise NotImplementedError("Submission of jobs with a SBML file is currently under development.")
+        # raise NotImplementedError("Submission of jobs with a SBML file is currently under development.")
 
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
@@ -132,28 +132,29 @@ class Verifier:
             simulators = ["copasi", "tellurium"]
 
         # create encoder fields
-        encoder_fields = {
-            'uploaded_file': sbml_fp,
+        encoder_fields = {'uploaded_file': sbml_fp}
+
+        query_params = {
             'simulators': ','.join(simulators),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
             'duration': str(duration),
-            'number_of_steps': str(number_of_steps),
+            'number_of_steps': str(number_of_steps)
         }
 
         if selection_list:
-            encoder_fields['selection_list'] = ','.join(selection_list)
+            query_params['selection_list'] = ','.join(selection_list)
         if rTol:
-            encoder_fields['rTol'] = str(rTol)
+            query_params['rTol'] = str(rTol)
         if aTol:
-            encoder_fields['aTol'] = str(aTol)
+            query_params['aTol'] = str(aTol)
 
         multidata = MultipartEncoder(fields=encoder_fields)
         # TODO: do we need to change the headers?
         headers = {'Content-Type': multidata.content_type}
 
         try:
-            response = requests.post(url=endpoint, headers=headers, data=multidata)
+            response = requests.post(url=endpoint, headers=headers, data=multidata, params=query_params)
             response.raise_for_status()
             self._check_response(response)
             return response.json()
