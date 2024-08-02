@@ -30,13 +30,13 @@ def get_sbml_species_mapping(sbml_fp: str):
     ))
 
 
-def run_sbml_tellurium(sbml_fp: str, dur, n_steps):
+def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     simulator = te.loadSBMLModel(sbml_fp)
     floating_species_list = simulator.getFloatingSpeciesIds()
     sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
-    result = simulator.simulate(0, dur, n_steps)
+    result = simulator.simulate(start, dur, steps + 1)
     outputs = {}
     for index, row in enumerate(result.transpose()):
         for i, name in enumerate(floating_species_list):
@@ -45,17 +45,17 @@ def run_sbml_tellurium(sbml_fp: str, dur, n_steps):
     return outputs
 
 
-def run_sbml_copasi(sbml_fp: str, dur, n_steps):
+def run_sbml_copasi(sbml_fp: str, start, dur, steps):
     simulator = load_model(sbml_fp)
     sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     basico_species_ids = list(sbml_species_mapping.keys())
 
     floating_species_list = list(sbml_species_mapping.values())
 
-    t = np.linspace(0, dur, n_steps)
+    t = np.linspace(start, dur, steps + 1)
     reported_outs = [k for k in sbml_species_mapping.keys()]
 
-    tc = run_time_course_with_output(start_time=0, duration=t[-1], values=t, model=simulator, update_model=True, output_selection=reported_outs, use_numbers=True).to_dict()
+    tc = run_time_course_with_output(start_time=0, end=t[-1], values=t, model=simulator, update_model=True, output_selection=reported_outs, use_numbers=True).to_dict()
     output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
 
     results = {}
@@ -65,7 +65,7 @@ def run_sbml_copasi(sbml_fp: str, dur, n_steps):
     return results
 
 
-def run_sbml_amici(sbml_fp: str, dur, n_steps):
+def run_sbml_amici(sbml_fp: str, start, dur, steps):
     sbml_reader = libsbml.SBMLReader()
     sbml_doc = sbml_reader.readSBML(sbml_fp)
     sbml_model_object = sbml_doc.getModel()
@@ -91,7 +91,7 @@ def run_sbml_amici(sbml_fp: str, dur, n_steps):
     floating_species_initial = list(amici_model_object.getInitialStates())
     sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
 
-    t = np.linspace(0, dur, n_steps)
+    t = np.linspace(start, dur, steps + 1)
     amici_model_object.setTimepoints(t)
 
     initial_state = dict(zip(floating_species_list, floating_species_initial))
@@ -149,18 +149,20 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     return output_data
 
 
-def generate_sbml_utc_outputs(**params):
+def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int) -> dict:
     """
 
     Args:
-        **params:`kwargs`: sbml_fp, dur, n_steps
+       sbml_fp: sbml filepath
+       start: output start time
+       dur: end (output end time)
+       steps: number of points
 
     """
     # amici_results = run_sbml_amici(**params)
-    copasi_results = run_sbml_copasi(**params)
-    tellurium_results = run_sbml_tellurium(**params)
-    # output = {'amici': amici_results, 'copasi': copasi_results, 'tellurium': tellurium_results}
-    output = {'copasi': copasi_results, 'tellurium': tellurium_results}
+    copasi_results = run_sbml_copasi(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+    tellurium_results = run_sbml_tellurium(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+    output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
 
     return output
 

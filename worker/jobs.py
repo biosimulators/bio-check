@@ -116,12 +116,13 @@ class Worker:
             simulators = self.job_params.get('simulators', [])
             include_outs = self.job_params.get('include_outputs', False)
             comparison_id = self.job_params.get('job_id')
-            duration = self.job_params.get('duration', 10)
-            n_steps = self.job_params.get('n_steps', 100)
+            output_start = self.job_params.get('start')
+            end = self.job_params.get('end', 10)
+            steps = self.job_params.get('steps', 100)
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
 
-            result = self._run_comparison_from_sbml(sbml_fp=local_fp, dur=duration, n_steps=n_steps, rTol=rtol, aTol=atol)
+            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol)
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
@@ -218,14 +219,15 @@ class Worker:
         #     id=comparison_id,
         #     simulators=simulators)
 
-    def _run_comparison_from_sbml(self, sbml_fp, dur, n_steps, rTol=None, aTol=None, simulators=None) -> Dict:
+    def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
         results = {'results': {}}
         for species_name in species_mapping.keys():
             species_comparison = self._generate_sbml_utc_species_comparison(
                 sbml_filepath=sbml_fp,
+                start=start,
                 dur=dur,
-                n_steps=n_steps,
+                steps=steps,
                 species_name=species_name,
                 rTol=rTol,
                 aTol=aTol,
@@ -272,12 +274,12 @@ class Worker:
                     results['output_data'][simulator_name] = output['data'].tolist()
         return results
 
-    def _generate_sbml_utc_species_comparison(self, sbml_filepath, dur, n_steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
+    def _generate_sbml_utc_species_comparison(self, sbml_filepath, start, dur, steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
         simulators = simulators or ['copasi', 'tellurium']
         if "amici" in simulators:
             simulators.remove("amici")
 
-        output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, dur=dur, n_steps=n_steps)
+        output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps)
         outputs = sbml_output_stack(species_name, output_data)
         methods = ['mse', 'proximity']
         matrix_vals = list(map(
@@ -417,7 +419,7 @@ class Supervisor:
             await check()
 
             # sleep for a long period
-            await sleep(20)
+            await sleep(10)
 
             # refresh job queue
             self.job_queue = self.db_connector.pending_jobs()

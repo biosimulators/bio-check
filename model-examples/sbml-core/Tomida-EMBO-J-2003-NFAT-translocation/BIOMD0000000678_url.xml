@@ -589,7 +589,7 @@ Oscillation</div>
           </COPASI>
         </annotation>
             </parameter>
-      <parameter constant="true" id="stim_duration" metaid="COPASI14" name="stim_duration" value="1">
+      <parameter constant="true" id="stim_end" metaid="COPASI14" name="stim_end" value="1">
         <annotation>
           <COPASI xmlns="http://www.copasi.org/static/sbml">
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dcterms="http://purl.org/dc/terms/">
@@ -604,9 +604,9 @@ Oscillation</div>
           </COPASI>
         </annotation>
             </parameter>
-      <parameter id="ModelValue_17" metaid="f179a671-0808-4a96-acc0-e791be9ffb8f" name="Initial for stim_duration" value="1">
+      <parameter id="ModelValue_17" metaid="f179a671-0808-4a96-acc0-e791be9ffb8f" name="Initial for stim_end" value="1">
         <annotation>
-          <initialValue xmlns="http://copasi.org/initialValue" parent="stim_duration"/>
+          <initialValue xmlns="http://copasi.org/initialValue" parent="stim_end"/>
         </annotation>
             </parameter>
       <parameter id="ModelValue_13" metaid="_747f60cb-07b1-4a8f-a478-de0411e7bfb0" name="Initial for stim_frequency" value="3">
@@ -618,7 +618,7 @@ Oscillation</div>
     <listOfInitialAssignments>
       <initialAssignment metaid="a648d9e4-51e8-486c-a029-7295b618cc8a" symbol="ModelValue_17">
         <math xmlns="http://www.w3.org/1998/Math/MathML">        
-          <ci> stim_duration </ci>
+          <ci> stim_end </ci>
         </math>
             </initialAssignment>
       <initialAssignment metaid="_9efb51d0-e426-4752-9a1d-afb9a57155f1" symbol="ModelValue_13">

@@ -93,7 +93,7 @@ class Verifier:
     def verify_sbml(
             self,
             sbml_filepath: str,
-            duration: int,
+            end: int,
             number_of_steps: int,
             simulators: List[str] = None,
             include_outputs: bool = True,
@@ -106,7 +106,7 @@ class Verifier:
 
             Args:
                 sbml_filepath:`str`: The path to the omex file to submit.
-                duration: `int`: The duration of the comparison job in seconds.
+                end: `int`: The end of the comparison job in seconds.
                 number_of_steps: `int`: The number of steps in the comparison job.
                 simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
@@ -138,7 +138,7 @@ class Verifier:
             'simulators': ','.join(simulators),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
-            'duration': str(duration),
+            'end': str(end),
             'number_of_steps': str(number_of_steps)
         }
 
@@ -351,9 +351,9 @@ def test_verifier():
     verifier = Verifier()
     simulators = ['copasi', 'tellurium']
     sbml_fp = "../model-examples/sbml-core/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml"
-    duration = 10
-    n_steps = 100
+    end = 10
+    steps = 100
 
-    sbml_submission = verifier.verify_sbml(sbml_filepath=sbml_fp, number_of_steps=n_steps, duration=duration, simulators=simulators, comparison_id="notebook_test1")
+    sbml_submission = verifier.verify_sbml(sbml_filepath=sbml_fp, number_of_steps=steps, end=end, simulators=simulators, comparison_id="notebook_test1")
     print(sbml_submission)
 

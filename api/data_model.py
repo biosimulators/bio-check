@@ -23,8 +23,9 @@ class PendingSbmlJob(Job):
     status: str
     timestamp: str
     path: str
-    duration: int
-    n_steps: int
+    start: int 
+    end: int
+    steps: int
     simulators: List[str]
     comparison_id: Optional[str] = None
     include_output: Optional[bool] = True

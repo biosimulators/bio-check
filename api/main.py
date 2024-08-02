@@ -189,8 +189,9 @@ async def verify_omex(
     summary="Compare UTC outputs from a deterministic SBML model.")
 async def verify_sbml(
         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
-        duration: int = Query(..., description="Duration of the simulation"),
-        number_of_steps: int = Query(..., description="Number of simulation steps to run"),
+        start: int = Query(..., description="Start time of the simulation (output start time)"),
+        end: int = Query(..., description="End time of simulation (end)"),
+        steps: int = Query(..., description="Number of simulation steps to run"),
         simulators: List[str] = Query(default=["copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
@@ -228,8 +229,9 @@ async def verify_sbml(
             path=uploaded_file_location,
             simulators=simulators,
             timestamp=_time,
-            duration=duration,
-            n_steps=number_of_steps,
+            start=start,
+            end=end,
+            steps=steps,
             include_outputs=include_outputs,
             rTol=rTol,
             aTol=aTol,

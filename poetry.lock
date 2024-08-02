@@ -1796,7 +1796,7 @@ test-extra = ["curio", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.22)", "pa
 [[package]]
 name = "isodate"
 version = "0.6.1"
-description = "An ISO 8601 date/time/duration parser and formatter"
+description = "An ISO 8601 date/time/end parser and formatter"
 optional = false
 python-versions = "*"
 files = [
