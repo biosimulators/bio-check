@@ -256,7 +256,7 @@ class Verifier:
         species_names = list(species_data_content.keys())
         num_species = len(species_names)
 
-        fig, axes = plt.subplots(nrows=num_species, ncols=3, figsize=(20, 6 * num_species))
+        fig, axes = plt.subplots(nrows=num_species, figsize=(20, 6 * num_species))
         true_color = '#228B22'
         false_color = '#DC143C'
 
@@ -264,23 +264,19 @@ class Verifier:
             axes = [axes]
 
         for i, species_name in enumerate(species_names):
-            for j, simulator_name in enumerate(simulators):
-                ax = axes[i][j]
-                species_data = species_data_content[species_name]
-                comparison_data = [list(col.values()) for col in list(species_data[comparison_type].values())]
-                sns.heatmap(
-                    data=comparison_data,
-                    ax=ax,
-                    xticklabels=simulators,
-                    yticklabels=simulators,
-                    cmap=[false_color, true_color],
-                    linewidths=1,
-                    vmin=0,
-                    vmax=1
-
-                )
-
-                ax.set_title(f"{species_name} comparison matrix")
+            ax = axes[i]
+            species_data = species_data_content[species_name]
+            comparison_data = [list(col.values()) for col in list(species_data[comparison_type].values())]
+            sns.heatmap(
+                data=comparison_data,
+                ax=ax,
+                annot=True,
+                xticklabels=simulators,
+                yticklabels=simulators,
+                cmap=[false_color, true_color],
+                linewidths=1
+            )
+            ax.set_title(f"{species_name} comparison matrix")
 
         plt.tight_layout()
         plt.show()
