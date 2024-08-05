@@ -41,6 +41,13 @@ spec:
                 name: biochecknet-api
                 port:
                   number: 3001
+          - path: /get-compatible
+            pathType: Prefix
+            backend:
+              service:
+                name: biochecknet-api
+                port:
+                  number: 3001
           - path: /get-verify-output/
             pathType: Prefix
             backend:
