@@ -66,4 +66,14 @@ class UtcComparisonResult(BaseModel):
     content: Any
 
 
+class Simulator(BaseModel):
+    name: str
+    version: Optional[str] = None
+
+
+class CompatibleSimulators(BaseModel):
+    file: str
+    simulators: List[Simulator]
+
+
 

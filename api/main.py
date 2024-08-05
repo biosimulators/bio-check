@@ -12,7 +12,7 @@ from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob
+from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, CompatibleSimulators, Simulator
 from shared import save_uploaded_file, upload_blob, MongoDbConnector
 from log_config import setup_logging
 
@@ -261,6 +261,35 @@ async def fetch_results(job_id: str) -> UtcComparisonResult:
             return UtcComparisonResult(content=job)
 
     raise HTTPException(status_code=404, detail="Comparison not found")
+
+
+@app.post(
+    "/get-compatible",
+    response_model=CompatibleSimulators,
+    operation_id='get-compatible',
+    summary='Get the simulators that are compatible with either a given OMEX/COMBINE archive or SBML model simulation.')
+async def get_compatible(
+        file: UploadFile = File(..., description="Either a COMBINE/OMEX archive or SBML file to be simulated."),
+        versions: bool = Query(default=False, description="Whether to include the simulator versions for each compatible simulator."),
+) -> CompatibleSimulators:
+    try:
+        filename = file.filename
+        compatible_sims = []
+        simulators = [('copasi', '0.71'), ('tellurium', '2.2.10')]  # TODO: dynamically extract this!
+
+        # handle filetype: amici is compatible with omex comparison
+        if filename.endswith(".omex"):
+            simulators.append(('amici', '0.11.21'))
+
+        for data in simulators:
+            name = data[0]
+            version = data[1]
+            sim = Simulator(name=name, version=version if versions is not False else None)
+            compatible_sims.append(sim)
+
+        return CompatibleSimulators(file=file.filename, simulators=compatible_sims)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Comparison not found")
 
 
 # TODO: eventually implement this

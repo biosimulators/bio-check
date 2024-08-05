@@ -1,0 +1,516 @@
+openapi: 3.1.0
+info:
+  title: bio-check
+  version: 1.0.0
+paths:
+  /:
+    get:
+      summary: Root
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /verify-omex:
+    post:
+      summary: Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE
+        archive.
+      operationId: verify-omex
+      parameters:
+      - name: simulators
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          description: List of simulators to compare
+          default:
+          - amici
+          - copasi
+          - tellurium
+          title: Simulators
+        description: List of simulators to compare
+      - name: include_outputs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Whether to include the output data on which the comparison
+            is based.
+          default: true
+          title: Include Outputs
+        description: Whether to include the output data on which the comparison is
+          based.
+      - name: selection_list
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          description: List of observables to include in the return data.
+          title: Selection List
+        description: List of observables to include in the return data.
+      - name: comparison_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Descriptive prefix to be added to this submission's job ID.
+          title: Comparison Id
+        description: Descriptive prefix to be added to this submission's job ID.
+      - name: rTol
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: Relative tolerance to use for proximity comparison.
+          title: Rtol
+        description: Relative tolerance to use for proximity comparison.
+      - name: aTol
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: Absolute tolerance to use for proximity comparison.
+          title: Atol
+        description: Absolute tolerance to use for proximity comparison.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_verify-omex'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingOmexJob'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /verify-sbml:
+    post:
+      summary: Compare UTC outputs from a deterministic SBML model.
+      operationId: verify-sbml
+      parameters:
+      - name: start
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Start time of the simulation (output start time)
+          title: Start
+        description: Start time of the simulation (output start time)
+      - name: end
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: End time of simulation (end)
+          title: End
+        description: End time of simulation (end)
+      - name: steps
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Number of simulation steps to run
+          title: Steps
+        description: Number of simulation steps to run
+      - name: simulators
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          description: List of simulators to compare
+          default:
+          - copasi
+          - tellurium
+          title: Simulators
+        description: List of simulators to compare
+      - name: include_outputs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Whether to include the output data on which the comparison
+            is based.
+          default: true
+          title: Include Outputs
+        description: Whether to include the output data on which the comparison is
+          based.
+      - name: comparison_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Descriptive prefix to be added to this submission's job ID.
+          title: Comparison Id
+        description: Descriptive prefix to be added to this submission's job ID.
+      - name: rTol
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: Relative tolerance to use for proximity comparison.
+          title: Rtol
+        description: Relative tolerance to use for proximity comparison.
+      - name: aTol
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: Absolute tolerance to use for proximity comparison.
+          title: Atol
+        description: Absolute tolerance to use for proximity comparison.
+      - name: selection_list
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          description: List of observables to include in the return data.
+          title: Selection List
+        description: List of observables to include in the return data.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_verify-sbml'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingSbmlJob'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /get-verify-output/{job_id}:
+    get:
+      summary: Get the results of an existing uniform time course comparison.
+      operationId: get-verify-output
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtcComparisonResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /get-compatible:
+    post:
+      summary: Get the simulators that are compatible with either a given OMEX/COMBINE
+        archive or SBML model simulation.
+      operationId: get-compatible
+      parameters:
+      - name: versions
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Whether to include the simulator versions for each compatible
+            simulator.
+          default: false
+          title: Versions
+        description: Whether to include the simulator versions for each compatible
+          simulator.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_get-compatible'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompatibleSimulators'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Body_get-compatible:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Either a COMBINE/OMEX archive or SBML file to be simulated.
+      type: object
+      required:
+      - file
+      title: Body_get-compatible
+    Body_verify-omex:
+      properties:
+        uploaded_file:
+          type: string
+          format: binary
+          title: Uploaded File
+          description: OMEX/COMBINE archive containing a deterministic SBML model
+        truth:
+          type: string
+          format: binary
+          title: Truth
+          description: reports.h5 file defining the 'ground-truth' to be included
+            in the comparison.
+      type: object
+      required:
+      - uploaded_file
+      title: Body_verify-omex
+    Body_verify-sbml:
+      properties:
+        uploaded_file:
+          type: string
+          format: binary
+          title: Uploaded File
+          description: A deterministic SBML model.
+      type: object
+      required:
+      - uploaded_file
+      title: Body_verify-sbml
+    CompatibleSimulators:
+      properties:
+        file:
+          type: string
+          title: File
+        simulators:
+          items:
+            $ref: '#/components/schemas/Simulator'
+          type: array
+          title: Simulators
+      type: object
+      required:
+      - file
+      - simulators
+      title: CompatibleSimulators
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PendingOmexJob:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        status:
+          type: string
+          title: Status
+        timestamp:
+          type: string
+          title: Timestamp
+        comparison_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comparison Id
+        path:
+          type: string
+          title: Path
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+        ground_truth_report_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ground Truth Report Path
+        include_output:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Include Output
+          default: true
+        rTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtol
+        aTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Atol
+        selection_list:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Selection List
+      type: object
+      required:
+      - job_id
+      - status
+      - timestamp
+      - path
+      - simulators
+      title: PendingOmexJob
+    PendingSbmlJob:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        status:
+          type: string
+          title: Status
+        timestamp:
+          type: string
+          title: Timestamp
+        comparison_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comparison Id
+        path:
+          type: string
+          title: Path
+        start:
+          type: integer
+          title: Start
+        end:
+          type: integer
+          title: End
+        steps:
+          type: integer
+          title: Steps
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+        include_output:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Include Output
+          default: true
+        rTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtol
+        aTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Atol
+        selection_list:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Selection List
+      type: object
+      required:
+      - job_id
+      - status
+      - timestamp
+      - path
+      - start
+      - end
+      - steps
+      - simulators
+      title: PendingSbmlJob
+    Simulator:
+      properties:
+        name:
+          type: string
+          title: Name
+        version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Version
+      type: object
+      required:
+      - name
+      title: Simulator
+    UtcComparisonResult:
+      properties:
+        content:
+          title: Content
+      type: object
+      required:
+      - content
+      title: UtcComparisonResult
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
