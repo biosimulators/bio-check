@@ -195,6 +195,7 @@ async def verify_sbml(
         simulators: List[str] = Query(default=["copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
+        truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
@@ -222,6 +223,15 @@ async def verify_sbml(
         upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
         uploaded_file_location = blob_dest
 
+        # Save uploaded reports file to Google Cloud Storage if applicable
+        report_fp = None
+        report_blob_dest = None
+        if truth:
+            report_fp = await save_uploaded_file(truth, save_dest)
+            report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+            upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
+        report_location = report_blob_dest
+
         pending_job_doc = await db_connector.insert_job_async(
             collection_name="pending_jobs",
             status="PENDING",
@@ -234,6 +244,7 @@ async def verify_sbml(
             end=end,
             steps=steps,
             include_outputs=include_outputs,
+            ground_truth_report_path=report_location,
             rTol=rTol,
             aTol=aTol,
             selection_list=selection_list
@@ -269,11 +280,11 @@ async def fetch_results(job_id: str) -> UtcComparisonResult:
     operation_id='get-compatible',
     summary='Get the simulators that are compatible with either a given OMEX/COMBINE archive or SBML model simulation.')
 async def get_compatible(
-        file: UploadFile = File(..., description="Either a COMBINE/OMEX archive or SBML file to be simulated."),
+        uploaded_file: UploadFile = File(..., description="Either a COMBINE/OMEX archive or SBML file to be simulated."),
         versions: bool = Query(default=False, description="Whether to include the simulator versions for each compatible simulator."),
 ) -> CompatibleSimulators:
     try:
-        filename = file.filename
+        filename = uploaded_file.filename
         compatible_sims = []
         simulators = [('copasi', '0.71'), ('tellurium', '2.2.10')]  # TODO: dynamically extract this!
 
@@ -287,7 +298,7 @@ async def get_compatible(
             sim = Simulator(name=name, version=version if versions is not False else None)
             compatible_sims.append(sim)
 
-        return CompatibleSimulators(file=file.filename, simulators=compatible_sims)
+        return CompatibleSimulators(file=uploaded_file.filename, simulators=compatible_sims)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Comparison not found")
 

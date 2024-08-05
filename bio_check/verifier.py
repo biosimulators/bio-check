@@ -210,6 +210,26 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
+    def get_compatible(self, file: str, versions: bool = False):
+        fp = (file.split('/')[-1], open(file, 'rb'), 'application/octet-stream')
+
+        # create encoder fields
+        encoder_fields = {'uploaded_file': fp}
+
+        query_params = {
+            'versions': str(versions).lower(),
+        }
+
+        if selection_list:
+            query_params['selection_list'] = ','.join(selection_list)
+        if rTol:
+            query_params['rTol'] = str(rTol)
+        if aTol:
+            query_params['aTol'] = str(aTol)
+
+        multidata = MultipartEncoder(fields=encoder_fields)
+        # TODO: do we need to change the headers?
+        headers = {'Content-Type': multidata.content_type}
     # -- visualizations
     def visualize_outputs(
             self,

@@ -283,14 +283,14 @@ components:
   schemas:
     Body_get-compatible:
       properties:
-        file:
+        uploaded_file:
           type: string
           format: binary
-          title: File
+          title: Uploaded File
           description: Either a COMBINE/OMEX archive or SBML file to be simulated.
       type: object
       required:
-      - file
+      - uploaded_file
       title: Body_get-compatible
     Body_verify-omex:
       properties:
@@ -460,6 +460,11 @@ components:
             type: array
           - type: 'null'
           title: Selection List
+        ground_truth_report_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ground Truth Report Path
       type: object
       required:
       - job_id
