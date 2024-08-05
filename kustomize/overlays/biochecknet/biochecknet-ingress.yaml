@@ -27,14 +27,21 @@ spec:
                 name: biochecknet-api
                 port:
                   number: 3001
-          - path: /utc-comparison
+          - path: /verify-omex
             pathType: Prefix
             backend:
               service:
                 name: biochecknet-api
                 port:
                   number: 3001
-          - path: /fetch-results/
+          - path: /verify-sbml
+            pathType: Prefix
+            backend:
+              service:
+                name: biochecknet-api
+                port:
+                  number: 3001
+          - path: /get-verify-output/
             pathType: Prefix
             backend:
               service:

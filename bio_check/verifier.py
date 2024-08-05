@@ -196,7 +196,7 @@ class Verifier:
             Returns:
                 The job state of the task referenced by `comparison_id`. If the job has not yet been processed, it will return a `status` of `PENDING`.
         """
-        piece = f'fetch-results/{job_id}'
+        piece = f'get-verify-output/{job_id}'
         endpoint = self._format_endpoint(piece)
 
         headers = {'Accept': 'application/json'}

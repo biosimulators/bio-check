@@ -248,9 +248,9 @@ async def verify_sbml(
 
 
 @app.get(
-    "/fetch-results/{job_id}",
+    "/get-verify-output/{job_id}",
     response_model=UtcComparisonResult,
-    operation_id='fetch-results',
+    operation_id='get-verify-output',
     summary='Get the results of an existing uniform time course comparison.')
 async def fetch_results(job_id: str) -> UtcComparisonResult:
     colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
