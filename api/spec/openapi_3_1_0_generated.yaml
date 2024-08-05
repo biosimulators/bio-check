@@ -316,6 +316,12 @@ components:
           format: binary
           title: Uploaded File
           description: A deterministic SBML model.
+        truth:
+          type: string
+          format: binary
+          title: Truth
+          description: reports.h5 file defining the 'ground-truth' to be included
+            in the comparison.
       type: object
       required:
       - uploaded_file
@@ -437,6 +443,11 @@ components:
             type: string
           type: array
           title: Simulators
+        ground_truth_report_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ground Truth Report Path
         include_output:
           anyOf:
           - type: boolean
@@ -460,11 +471,6 @@ components:
             type: array
           - type: 'null'
           title: Selection List
-        ground_truth_report_path:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Ground Truth Report Path
       type: object
       required:
       - job_id
