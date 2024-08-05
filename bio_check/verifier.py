@@ -210,7 +210,18 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def get_compatible(self, file: str, versions: bool = False):
+    def get_compatible(self, file: str, versions: bool = False) -> Dict:
+        """Get all simulators and optionally their versions for a given file. The File is expected to be either an OMEX/COMBINE archive
+            or SBML file.
+
+            Args:
+                file:`str`: The path to the file to be checked.
+                versions:`bool`: Whether to return the compatible version of the given compatible simulator. Defaults to `False`.
+
+            Returns:
+                A dict of compatible simulators and the referenced file.
+
+        """
         endpoint = self._format_endpoint('get-compatible')
         fp = (file.split('/')[-1], open(file, 'rb'), 'application/octet-stream')
 
