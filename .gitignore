@@ -5,6 +5,7 @@ commit.sh
 env/
 __pycache__/
 *.pyc
+*.log
 worker/handlers/__pycache__/
 *.egg-info/
 assets/.env_dev
