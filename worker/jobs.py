@@ -1,4 +1,5 @@
 # -- This should serve as the main file for worker container -- #
+import math
 import os
 import tempfile
 import uuid
@@ -76,6 +77,22 @@ class Worker:
         selections = self.job_params.get("selection_list", selection_list)
         if selections is not None:
             self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
+
+        self.job_result['rmse'] = {}
+        simulators = self.job_params.get('simulators')
+
+        for simulator in simulators:
+            sum_mse = 0
+            spec_data = self.job_params['results']
+            spec_names = list(spec_data.keys())
+            num_species = len(spec_names)
+            for name in spec_names:
+                spec_mse = spec_data[name]['mse']
+                sum_mse += spec_mse
+
+            avg_mse = sum_mse / num_species
+            simulator_rmse = math.sqrt(avg_mse)
+            self.job_result['rmse'][simulator] = simulator_rmse
 
         return self.job_result
 
