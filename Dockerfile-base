@@ -21,7 +21,11 @@ RUN mkdir /app/data
 
 # copy deps
 COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt /app/assets/
-COPY ./uploads /app/uploads
+# COPY ./uploads /app/uploads
+
+# copy example files TODO: optimize this.
+COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
+COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
 
 RUN chmod +x /app/assets/remove_deps.sh \
     && chmod +x /app/assets/update_deps.sh \
