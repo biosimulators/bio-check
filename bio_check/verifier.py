@@ -211,25 +211,23 @@ class Verifier:
             return RequestError(error=str(e))
 
     def get_compatible(self, file: str, versions: bool = False):
+        endpoint = self._format_endpoint('get-compatible')
         fp = (file.split('/')[-1], open(file, 'rb'), 'application/octet-stream')
 
-        # create encoder fields
         encoder_fields = {'uploaded_file': fp}
-
-        query_params = {
-            'versions': str(versions).lower(),
-        }
-
-        if selection_list:
-            query_params['selection_list'] = ','.join(selection_list)
-        if rTol:
-            query_params['rTol'] = str(rTol)
-        if aTol:
-            query_params['aTol'] = str(aTol)
+        query_params = {'versions': str(versions).lower()}
 
         multidata = MultipartEncoder(fields=encoder_fields)
         # TODO: do we need to change the headers?
         headers = {'Content-Type': multidata.content_type}
+
+        try:
+            response = requests.post(url=endpoint, headers=headers, data=multidata, params=query_params)
+            self._check_response(response)
+            return response.json()
+        except Exception as e:
+            return RequestError(error=str(e))
+
     # -- visualizations
     def visualize_outputs(
             self,
@@ -403,9 +401,6 @@ class Verifier:
         return pd.read_csv(csv_path)
 
     # -- tools
-    def get_compatible(self, file: str, versions: bool) -> List[Tuple[str, str]]:
-        raise NotImplementedError("This method is not yet implement and currently under development.")
-
     def select_observables(self, observables: list[str], data: dict) -> dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
             to dicts in which the keys are the simulator names and the values are arrays. The data must have content accessible at: `data['content']['results']`.
