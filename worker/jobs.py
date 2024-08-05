@@ -67,6 +67,7 @@ class Worker:
         # self.worker_id = unique_id()
 
     async def run(self, selection_list: List[str] = None) -> Dict:
+        # process simulation
         input_fp = self.job_params['path']
         selection_list = self.job_params.get('selection_list')
         if input_fp.endswith('.omex'):
@@ -74,27 +75,40 @@ class Worker:
         elif input_fp.endswith('.xml'):
             self._execute_sbml_job()
 
+        # select data if applicable
         selections = self.job_params.get("selection_list", selection_list)
         if selections is not None:
             self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
 
+        # calculate rmse for each simulator over all observables
         self.job_result['rmse'] = {}
         simulators = self.job_params.get('simulators')
-
         for simulator in simulators:
-            sum_mse = 0
-            spec_data = self.job_params['results']
-            spec_names = list(spec_data.keys())
-            num_species = len(spec_names)
-            for name in spec_names:
-                spec_mse = spec_data[name]['mse']
-                sum_mse += spec_mse
-
-            avg_mse = sum_mse / num_species
-            simulator_rmse = math.sqrt(avg_mse)
-            self.job_result['rmse'][simulator] = simulator_rmse
+            self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
 
         return self.job_result
+
+    def _calculate_inter_simulator_rmse(self, target_simulator):
+        # extract data fields
+        spec_data = self.job_result['results']
+        spec_names = list(spec_data.keys())
+        num_species = len(spec_names)
+
+        squared_differences = []
+        # iterate through observables
+        for observable, sim_details in spec_data.items():
+            mse_data = sim_details['mse'][target_simulator]
+
+            # exclude the self-comparison, calculate squared differences with others
+            for sim, mse in mse_data.items():
+                if sim != target_simulator:
+                    squared_differences.append(mse ** 2)
+
+        # calc mean of squared diffs
+        mean_squared_diff = sum(squared_differences) / len(squared_differences)
+
+        # return the square root of the mean of squared diffs
+        return math.sqrt(mean_squared_diff)
 
     def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
