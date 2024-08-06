@@ -8,7 +8,7 @@ version="$1"
 push="$2"
 prune="$3"  # --prune
 
-if [ "$prune" == "--prune" ]; then
+if [ "$prune" == "--prune" ] || [ "$push" == "--prune" ]; then
   docker system prune -a -f
 fi
 

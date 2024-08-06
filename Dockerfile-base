@@ -3,16 +3,13 @@ FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
 
-# TODO: make base version more nuanced
-# ENV PACKAGE_ROOT=ghcr.io/biosimulators/bio-check
-# ENV BASE_IMAGE="$PACKAGE_ROOT-base
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
+# ENV GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
 
 # handle app creds from google
 RUN mkdir /.google
 COPY ./.bio-check.json /.google/.bio-check.json
-ENV GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
 
 # handle main content
 WORKDIR /app
@@ -27,12 +24,32 @@ COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scr
 COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
 COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
 
-RUN chmod +x /app/assets/remove_deps.sh \
-    && chmod +x /app/assets/update_deps.sh \
-    && pip install --upgrade pip  \
-    && /app/assets/remove_deps.sh \
-    && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
-    && pip install --upgrade google-cloud-storage
+# env specific deps
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    g++ \
+    libhdf5-dev \
+    libboost-all-dev \
+    swig \
+    python3-dev \
+    libatlas-base-dev \
+    libopenblas-dev \
+    liblapack-dev \
+    && apt-get clean
+
+# Install pipenv and set up environment
+RUN pip install pipenv \
+    && pipenv install --system --deploy \
+    # && pipenv install --skip-lock \
+    && pipenv install -r /app/assets/requirements.base.txt
+
+# RUN chmod +x /app/assets/remove_deps.sh \
+#     && chmod +x /app/assets/update_deps.sh \
+#     && pip install --upgrade pip  \
+#     && /app/assets/remove_deps.sh \
+#     && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
+#     && pip install --upgrade google-cloud-storage
 
 # shared tooling module
 # COPY ./assets/shared.py /app/shared.py
