@@ -1,5 +1,6 @@
 .env
 __pycache__/
+__pycache__
 bio_check/__pycache__
 *.pyc
 *.pyo
