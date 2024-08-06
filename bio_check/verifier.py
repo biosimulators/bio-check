@@ -1,5 +1,6 @@
 import os
 from time import sleep
+from typing import Union, List, Tuple, Any
 
 import numpy as np
 import pandas as pd
@@ -210,7 +211,7 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def get_compatible(self, file: str, versions: bool = False) -> Dict:
+    def get_compatible(self, file: str, versions: bool = False) -> Union[list[tuple[Any, ...]], RequestError]:
         """Get all simulators and optionally their versions for a given file. The File is expected to be either an OMEX/COMBINE archive
             or SBML file.
 
@@ -235,7 +236,19 @@ class Verifier:
         try:
             response = requests.post(url=endpoint, headers=headers, data=multidata, params=query_params)
             self._check_response(response)
-            return response.json()
+            response = response.json()
+
+            output = []
+            for sim_data in response['simulators']:
+                name = sim_data['name']
+                version = sim_data.get('version')
+                if version is not None:
+                    data = tuple([name, version])
+                    output.append(data)
+                else:
+                    output.append(name)
+
+            return output
         except Exception as e:
             return RequestError(error=str(e))
 
