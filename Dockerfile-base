@@ -15,23 +15,18 @@ WORKDIR /app
 RUN mkdir /app/data
 
 # copy deps
-# COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt /app/assets/
-COPY ./assets/requirements.base.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt /app/assets/
 
 # copy example files TODO: optimize this.
 COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
 COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
 
-RUN chmod +x /app/assets/install_deps.sh
-
-# CMD ["pip", "install", "-r", "/app/assets/requirements.base.txt"]
-
-# RUN chmod +x /app/assets/remove_deps.sh \
-#     && chmod +x /app/assets/update_deps.sh \
-#     && pip install --upgrade pip  \
-#     && /app/assets/remove_deps.sh \
-#     && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
-#     && pip install --upgrade google-cloud-storage
+RUN chmod +x /app/assets/remove_deps.sh \
+    && chmod +x /app/assets/update_deps.sh \
+    && pip install --upgrade pip  \
+    && /app/assets/remove_deps.sh \
+    && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
+    && pip install --upgrade google-cloud-storage
 
 # shared tooling module
 # COPY ./assets/shared.py /app/shared.py
