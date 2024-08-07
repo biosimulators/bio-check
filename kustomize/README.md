@@ -2,11 +2,10 @@
 
 
 ### Apply biochecknet overlays (commonly used):
+
 ```bash
-cd kustomize
-```
-```bash
-kubectl kustomize overlays/biochecknet | kubectl apply -f -
+cd kustomize \
+  && kubectl kustomize overlays/biochecknet | kubectl apply -f -
 ```
 
 

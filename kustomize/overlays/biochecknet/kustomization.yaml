@@ -8,7 +8,7 @@ images:
 - name: ghcr.io/biosimulators/bio-check-api
   newTag: 1.0.5
 - name: ghcr.io/biosimulators/bio-check-worker
-  newTag: 1.0.7
+  newTag: 1.0.8
 - name: mongo
   newTag: 8.0-rc
 
