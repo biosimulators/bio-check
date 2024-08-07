@@ -1,21 +1,21 @@
 import os
+import tempfile
 from time import sleep
-from typing import Union, List, Tuple, Any
+from typing import *
+from dataclasses import dataclass, asdict
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 import requests
-from uuid import uuid4
-
 import seaborn as sns
+from tellurium import loada
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.figure import Figure
 from requests import Response
 from requests.exceptions import RequestException
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-from typing import *
-from dataclasses import dataclass, asdict
 
 from bio_check.processing_tools import generate_color_gradient
 
@@ -107,7 +107,7 @@ class Verifier:
 
     def verify_sbml(
             self,
-            sbml_filepath: str,
+            entrypoint: str,
             start: int,
             end: int,
             steps: int,
@@ -122,7 +122,7 @@ class Verifier:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
 
             Args:
-                sbml_filepath:`str`: The path to the omex file to submit.
+                entrypoint:`str`: One of either: a path to a sbml OR an antimony model/string that can be converted to SBML.
                 start:`int`: The start time of the time course to include in comparison.
                 end: `int`: The end of the comparison job in seconds.
                 steps: `int`: The number of steps in the comparison job.
@@ -147,10 +147,14 @@ class Verifier:
         # TODO: fix and remove this
         # raise NotImplementedError("Submission of jobs with a SBML file is currently under development.")
 
-        # configure params
-        _id = comparison_id or "bio_check-request-" + str(uuid4())
-        sbml_fp = (sbml_filepath.split('/')[-1], open(sbml_filepath, 'rb'), 'application/octet-stream')
+        # handle entrypoint as antimony
+        if not entrypoint.endswith('.xml'):
+            dest = tempfile.mkdtemp()
+            entrypoint = self._write_antimony_to_sbml(entrypoint, dest)
 
+        sbml_fp = (entrypoint.split('/')[-1], open(entrypoint, 'rb'), 'application/octet-stream')
+
+        _id = comparison_id or "bio_check-request-" + str(uuid4())
         if simulators is None:
             simulators = ["copasi", "tellurium"]
 
@@ -437,9 +441,11 @@ class Verifier:
         outputs['content']['results'] = result
         return outputs
 
-    def _antimony_to_sbml(self, antimony_string: str):
-        # TODO: Do we want to import tellurium with this package?
-        raise NotImplementedError("This method is not yet implement and currently under development.")
+    def _write_antimony_to_sbml(self, antimony_string: str, dest: str):
+        r = loada(antimony_string)
+        file_path = os.path.join(dest, 'model.xml')
+        r.exportToSBML(file_path)
+        return file_path
 
     def _format_endpoint(self, path_piece: str) -> str:
         return f'{self.endpoint_root}/{path_piece}'
