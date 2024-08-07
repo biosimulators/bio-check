@@ -24,9 +24,9 @@ from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sb
 load_dotenv('../assets/.env_dev')
 
 # logging
-# LOGFILE = "biochecknet_worker.log"
-# logger = logging.getLogger(__name__)
-# setup_logging(LOGFILE)
+LOGFILE = "biochecknet_worker.log"
+logger = logging.getLogger(__name__)
+setup_logging(LOGFILE)
 
 # constraints
 DB_TYPE = "mongo"  # ie: postgres, etc
@@ -83,6 +83,8 @@ class Worker:
         # calculate rmse for each simulator over all observables
         self.job_result['rmse'] = {}
         simulators = self.job_params.get('simulators')
+        if self.job_params.get('ground_truth_report_path') is not None:
+            simulators.append('ground_truth')
         for simulator in simulators:
             self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
 
@@ -90,25 +92,29 @@ class Worker:
 
     def _calculate_inter_simulator_rmse(self, target_simulator):
         # extract data fields
-        spec_data = self.job_result['results']
-        spec_names = list(spec_data.keys())
-        num_species = len(spec_names)
+        try:
+            spec_data = self.job_result['results']
+            spec_names = list(spec_data.keys())
+            num_species = len(spec_names)
 
-        squared_differences = []
-        # iterate through observables
-        for observable, sim_details in spec_data.items():
-            mse_data = sim_details['mse'][target_simulator]
+            squared_differences = []
+            # iterate through observables
+            for observable, sim_details in spec_data.items():
+                mse_data = sim_details['mse'][target_simulator]
 
-            # exclude the self-comparison, calculate squared differences with others
-            for sim, mse in mse_data.items():
-                if sim != target_simulator:
-                    squared_differences.append(mse ** 2)
+                # exclude the self-comparison, calculate squared differences with others
+                for sim, mse in mse_data.items():
+                    if sim != target_simulator:
+                        squared_differences.append(mse ** 2)
 
-        # calc mean of squared diffs
-        mean_squared_diff = sum(squared_differences) / len(squared_differences)
+            # calc mean of squared diffs
+            mean_squared_diff = sum(squared_differences) / len(squared_differences)
 
-        # return the square root of the mean of squared diffs
-        return math.sqrt(mean_squared_diff)
+            # return the square root of the mean of squared diffs
+            return math.sqrt(mean_squared_diff)
+        except Exception as e:
+            logger.error(msg=e)
+            return None
 
     def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
@@ -139,9 +145,19 @@ class Worker:
         params = None
         out_dir = tempfile.mkdtemp()
 
-        source_omex_blob_name = self.job_params['path']
-        local_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
-        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_fp)
+        # download sbml file
+        source_sbml_blob_name = self.job_params['path']
+        local_fp = os.path.join(out_dir, source_sbml_blob_name.split('/')[-1])
+        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_sbml_blob_name, destination_file_name=local_fp)
+
+        # get ground truth from bucket if applicable
+        ground_truth_report_path = self.job_params.get('ground_truth_report_path')
+        truth_vals = None
+        if ground_truth_report_path is not None:
+            source_report_blob_name = self.job_params['ground_truth_report_path']
+            local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
+            download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
+            ground_truth_report_path = local_report_path
 
         try:
             simulators = self.job_params.get('simulators', [])
@@ -152,9 +168,8 @@ class Worker:
             steps = self.job_params.get('steps', 100)
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
-            truth = self.job_params.get('ground_truth_report_path')
 
-            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=truth)
+            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=ground_truth_report_path)
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}

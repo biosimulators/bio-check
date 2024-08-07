@@ -174,14 +174,15 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, tr
     output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
 
     if truth is not None:
-        output['truth'] = {}
+        output['ground_truth'] = {}
         report_results = read_report_outputs(truth)
         report_data = report_results.to_dict()['data'] if isinstance(report_results, BiosimulationsRunOutputData) else {}
 
         for datum in report_data:
             spec_name = datum['dataset_label']
-            spec_data = datum['data']
-            output['truth'][spec_name] = spec_data
+            if not spec_name.lower() == 'time':
+                spec_data = datum['data']
+                output['ground_truth'][spec_name] = spec_data
 
     return output
 
