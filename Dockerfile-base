@@ -1,11 +1,9 @@
-# This base image is already configured for many purposes LATEST: 0.0.2
 FROM ghcr.io/biosimulators/biosimulators:latest
 
 LABEL authors="alexanderpatrie"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
-# ENV GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
 
 # handle app creds from google
 RUN mkdir /.google
