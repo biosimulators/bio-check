@@ -32,7 +32,7 @@ async def main(max_retries=MAX_RETRIES):
     while True:
         # no job has come in a while
         if n_retries == MAX_RETRIES:
-            await asyncio.sleep(60)
+            await asyncio.sleep(30)
 
         await supervisor.check_jobs(delay=DELAY_TIMER)
         n_retries += 1
