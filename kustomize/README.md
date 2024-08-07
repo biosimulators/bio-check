@@ -5,7 +5,8 @@
 
 ```bash
 cd kustomize \
-  && kubectl kustomize overlays/biochecknet | kubectl apply -f -
+  && kubectl kustomize overlays/biochecknet | kubectl apply -f - \
+  && cd ..
 ```
 
 
