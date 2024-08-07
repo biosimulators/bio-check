@@ -295,7 +295,7 @@ class Verifier:
 
         # TODO: extract simulator names dynamically as well.
 
-        fig, axes = plt.subplots(nrows=num_species, ncols=num_simulators, figsize=(20, 6 * num_species))
+        fig, axes = plt.subplots(nrows=num_species, ncols=num_simulators, figsize=(15, 5 * num_species))
 
         if num_species == 1:
             axes = [axes]
@@ -342,7 +342,7 @@ class Verifier:
         species_names = list(species_data_content.keys())
         num_species = len(species_names)
 
-        fig, axes = plt.subplots(nrows=num_species, figsize=(12, 2 * num_species))
+        fig, axes = plt.subplots(nrows=num_species, figsize=(15, 5 * num_species))
         true_color = '#228B22'
         false_color = '#DC143C'
 
