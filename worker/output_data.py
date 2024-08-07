@@ -182,8 +182,6 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, tr
             spec_name = datum['dataset_label']
             spec_data = datum['data']
             output['truth'][spec_name] = spec_data
-            print(len(spec_data))
-
 
     return output
 

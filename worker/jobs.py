@@ -152,8 +152,9 @@ class Worker:
             steps = self.job_params.get('steps', 100)
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
+            truth = self.job_params.get('ground_truth_report_path')
 
-            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol)
+            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=truth)
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
@@ -250,7 +251,7 @@ class Worker:
         #     id=comparison_id,
         #     simulators=simulators)
 
-    def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None) -> Dict:
+    def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
         results = {'results': {}}
         for species_name in species_mapping.keys():
@@ -262,7 +263,8 @@ class Worker:
                 species_name=species_name,
                 rTol=rTol,
                 aTol=aTol,
-                simulators=simulators
+                simulators=simulators,
+                ground_truth=ground_truth
             )
             results['results'][species_name] = species_comparison
 
@@ -310,7 +312,7 @@ class Worker:
         if "amici" in simulators:
             simulators.remove("amici")
 
-        output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps)
+        output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, truth=ground_truth)
         outputs = sbml_output_stack(species_name, output_data)
         methods = ['mse', 'proximity']
         matrix_vals = list(map(
