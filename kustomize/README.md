@@ -9,11 +9,6 @@ cd kustomize
 kubectl kustomize overlays/biochecknet | kubectl apply -f -
 ```
 
-```python
-from main import db_connector as conn
-conn.refresh_jobs()
-```
-
 
 0. Build base 0.0.2
 0a. Check gcloud creds in base
