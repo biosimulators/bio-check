@@ -65,5 +65,5 @@ rm -r dist
 
 echo "Version v$version has been published on PyPI and has a git tag."
 
-echo "$version" > ./bio_check/.VERSION
+echo "$version" > ./bio_check/VERSION
 
