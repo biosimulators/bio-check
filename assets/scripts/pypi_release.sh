@@ -42,10 +42,12 @@ if [ "$branch" != "main" ]; then
     exit 1
 fi
 
+# update internal version
+echo "$version" > ./bio_check/_VERSION
+
 # Create and push git tag
 git tag -m "Version v$version" "v$version"
 git push --tags
-
 
 # Create and publish package
 function get_pypi_token {
@@ -65,5 +67,5 @@ rm -r dist
 
 echo "Version v$version has been published on PyPI and has a git tag."
 
-echo "$version" > ./bio_check/_VERSION
+
 

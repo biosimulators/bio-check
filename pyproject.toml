@@ -1,7 +1,7 @@
 # This project configuration should relate only to the high level notebook api (as primary deps).
 [tool.poetry]
 name = "bio-check"
-version = "1.3.3"
+version = "1.3.4"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
