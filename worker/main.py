@@ -18,7 +18,7 @@ DB_NAME = "service_requests"
 # shared db_connector
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
-setup_logging("biochecknet-worker.log")
+setup_logging("biochecknet_worker_main.log")
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +32,7 @@ async def main(max_retries=MAX_RETRIES):
     while True:
         # no job has come in a while
         if n_retries == MAX_RETRIES:
-            await asyncio.sleep(15)  # TODO: adjust this for client polling as needed
+            await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
 
         await supervisor.check_jobs(delay=DELAY_TIMER)
         n_retries += 1

@@ -24,7 +24,7 @@ from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sb
 load_dotenv('../assets/.env_dev')
 
 # logging
-LOGFILE = "biochecknet_worker.log"
+LOGFILE = "biochecknet_worker_jobs.log"
 logger = logging.getLogger(__name__)
 setup_logging(LOGFILE)
 

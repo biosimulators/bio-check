@@ -20,14 +20,18 @@ from shared import make_dir
 
 
 def get_sbml_species_mapping(sbml_fp: str):
+    # read file
     sbml_reader = libsbml.SBMLReader()
     sbml_doc = sbml_reader.readSBML(sbml_fp)
     sbml_model_object = sbml_doc.getModel()
+
+    # parse and handle names/ids
     sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
-    return dict(zip(
-        list(map(lambda s: s.name, sbml_species_ids)),
-        [spec.getId() for spec in sbml_species_ids],
-    ))
+    names = list(map(lambda s: s.name, sbml_species_ids))
+    vals = [spec.getId() for spec in sbml_species_ids]
+    keys = vals if '' in names else names
+
+    return dict(zip(keys, vals))
 
 
 def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
