@@ -128,7 +128,7 @@ def run_sbml_amici(sbml_fp: str, start, dur, steps):
     return results
 
 
-def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None) -> Dict:
+def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None, alg_policy="same_framework") -> Dict:
     """Generate the outputs of the standard UTC simulators Copasi, Tellurium, and Amici from the
         biosimulators interface (exec_sedml_docs_in_combine_archive).
     """
@@ -138,7 +138,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     sims = simulators or ['amici', 'copasi', 'tellurium']
     sim_config = Config(
         LOG=False,
-        ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy.ANY,
+        ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy[alg_policy.upper()],
         VERBOSE=False)
     for sim in sims:
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
