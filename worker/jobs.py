@@ -84,7 +84,7 @@ class Worker:
         self.job_result['rmse'] = {}
         simulators = self.job_params.get('simulators')
         if self.job_params.get('expected_results') is not None:
-            simulators.append('ground_truth')
+            simulators.append('expected_results')
         for simulator in simulators:
             self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
 
@@ -378,7 +378,7 @@ class Worker:
             _outputs = _outputs.tolist()
 
         if ground_truth is not None:
-            _simulators.append('ground_truth')
+            _simulators.append('expected_results')
             _outputs.append(ground_truth)
 
         use_tol_method = method.lower() == 'proximity'
