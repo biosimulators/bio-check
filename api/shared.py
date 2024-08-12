@@ -17,6 +17,13 @@ from pymongo.database import Database
 # -- globally-shared content-- #
 
 
+def check_upload_file_extension(file: UploadFile, purpose: str, ext: str) -> bool:
+    if not file.filename.endswith(ext):
+        raise ValueError(f"Files for {purpose} must be passed in {ext} format.")
+    else:
+        return True
+
+
 def setup_logging(fname: str):
     logging.basicConfig(
         filename=fname,

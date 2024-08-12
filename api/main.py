@@ -13,7 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, CompatibleSimulators, Simulator
-from shared import save_uploaded_file, upload_blob, MongoDbConnector
+from shared import save_uploaded_file, upload_blob, MongoDbConnector, check_upload_file_extension
 from log_config import setup_logging
 
 # --load env -- #
@@ -121,7 +121,7 @@ async def verify_omex(
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
-        truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
+        expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
 ) -> PendingOmexJob:
@@ -144,16 +144,22 @@ async def verify_omex(
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
-        blob_dest = upload_prefix + fp.split("/")[-1]
-        upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-        uploaded_file_location = blob_dest
+        uploaded_file_location = None
+        properly_formatted_omex = check_upload_file_extension(uploaded_file, 'uploaded_file', '.omex')
+        if properly_formatted_omex:
+            blob_dest = upload_prefix + fp.split("/")[-1]
+            upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+            uploaded_file_location = blob_dest
 
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
         report_blob_dest = None
-        if truth:
-            report_fp = await save_uploaded_file(truth, save_dest)
-            report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+        if expected_results:
+            # handle incorrect files upload
+            properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
+            if properly_formatted_report:
+                report_fp = await save_uploaded_file(expected_results, save_dest)
+                report_blob_dest = upload_prefix + report_fp.split("/")[-1]
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         report_location = report_blob_dest
 
@@ -164,7 +170,7 @@ async def verify_omex(
             path=uploaded_file_location,
             simulators=simulators,
             timestamp=_time,
-            ground_truth_report_path=report_location,
+            expected_results=report_location,
             include_outputs=include_outputs,
             rTol=rTol,
             aTol=aTol,
@@ -195,7 +201,7 @@ async def verify_sbml(
         simulators: List[str] = Query(default=["copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
-        truth: UploadFile = File(default=None, description="reports.h5 file defining the 'ground-truth' to be included in the comparison."),
+        expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
@@ -219,16 +225,22 @@ async def verify_sbml(
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
-        blob_dest = upload_prefix + fp.split("/")[-1]
-        upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-        uploaded_file_location = blob_dest
+        uploaded_file_location = None
+        properly_formatted_sbml = check_upload_file_extension(uploaded_file, 'uploaded_file', '.xml')
+        if properly_formatted_sbml:
+            blob_dest = upload_prefix + fp.split("/")[-1]
+            upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+            uploaded_file_location = blob_dest
 
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
         report_blob_dest = None
-        if truth:
-            report_fp = await save_uploaded_file(truth, save_dest)
-            report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+        if expected_results:
+            # handle incorrect files upload
+            properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
+            if properly_formatted_report:
+                report_fp = await save_uploaded_file(expected_results, save_dest)
+                report_blob_dest = upload_prefix + report_fp.split("/")[-1]
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         report_location = report_blob_dest
 
@@ -244,7 +256,7 @@ async def verify_sbml(
             end=end,
             steps=steps,
             include_outputs=include_outputs,
-            ground_truth_report_path=report_location,
+            expected_results=report_location,
             rTol=rTol,
             aTol=aTol,
             selection_list=selection_list

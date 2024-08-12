@@ -11,7 +11,7 @@ class PendingOmexJob(Job):
     path: str
     simulators: List[str]
     comparison_id: Optional[str] = None
-    ground_truth_report_path: Optional[str] = None
+    expected_results: Optional[str] = None
     include_output: Optional[bool] = True
     rTol: Optional[float] = None
     aTol: Optional[float] = None
@@ -28,7 +28,7 @@ class PendingSbmlJob(Job):
     steps: int
     simulators: List[str]
     comparison_id: Optional[str] = None
-    ground_truth_report_path: Optional[str] = None
+    expected_results: Optional[str] = None
     include_output: Optional[bool] = True
     rTol: Optional[float] = None
     aTol: Optional[float] = None
