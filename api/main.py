@@ -9,11 +9,12 @@ from typing import *
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
 from pydantic import BeforeValidator
+from sse_starlette import EventSourceResponse
 from starlette.middleware.cors import CORSMiddleware
 
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, CompatibleSimulators, Simulator
-from shared import save_uploaded_file, upload_blob, MongoDbConnector, check_upload_file_extension
+from shared import save_uploaded_file, upload_blob, MongoDbConnector, check_upload_file_extension, find_job
 from log_config import setup_logging
 
 # --load env -- #
@@ -270,20 +271,45 @@ async def verify_sbml(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# @app.get(
+#     "/get-verify-output/{job_id}",
+#     response_model=UtcComparisonResult,
+#     operation_id='get-verify-output',
+#     summary='Get the results of an existing uniform time course comparison.')
+# async def fetch_results(job_id: str) -> UtcComparisonResult:
+#     colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+#     for collection in colls:
+#         job = db_connector.db[collection].find_one({'job_id': job_id})
+#         if not isinstance(job, type(None)):
+#             job.pop('_id')
+#             return UtcComparisonResult(content=job)
+#
+#     raise HTTPException(status_code=404, detail="Comparison not found")
+
+
+async def data_generator(
+        job_id: str,
+        collection_names: List[str] = None,
+        db_conn: MongoDbConnector = db_connector,
+        timeout: int = 10
+):
+    collection_names = collection_names or ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+    for _ in range(timeout):
+        result = find_job(collection_names=collection_names, db_connector=db_conn, job_id=job_id, obj=UtcComparisonResult).model_dump()
+        yield result
+        await asyncio.sleep(5)
+
+
 @app.get(
     "/get-verify-output/{job_id}",
     response_model=UtcComparisonResult,
     operation_id='get-verify-output',
     summary='Get the results of an existing uniform time course comparison.')
-async def fetch_results(job_id: str) -> UtcComparisonResult:
-    colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
-    for collection in colls:
-        job = db_connector.db[collection].find_one({'job_id': job_id})
-        if not isinstance(job, type(None)):
-            job.pop('_id')
-            return UtcComparisonResult(content=job)
-
-    raise HTTPException(status_code=404, detail="Comparison not found")
+async def fetch_results(job_id: str) -> EventSourceResponse:
+    try:
+        return EventSourceResponse(data_generator(job_id=job_id))
+    except:
+        raise HTTPException(status_code=404, detail="Comparison not found")
 
 
 @app.post(

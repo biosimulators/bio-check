@@ -17,6 +17,14 @@ from pymongo.database import Database
 # -- globally-shared content-- #
 
 
+def find_job(collection_names: List[str], db_connector, job_id: str, obj):
+    for collection in collection_names:
+        job = db_connector.db[collection].find_one({'job_id': job_id})
+        if not isinstance(job, type(None)):
+            job.pop('_id')
+            return obj(content=job)
+
+
 def check_upload_file_extension(file: UploadFile, purpose: str, ext: str) -> bool:
     if not file.filename.endswith(ext):
         raise ValueError(f"Files for {purpose} must be passed in {ext} format.")
