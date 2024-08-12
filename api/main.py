@@ -315,6 +315,9 @@ async def get_compatible(
         raise HTTPException(status_code=404, detail="Comparison not found")
 
 
+# TODO: Implement smoldyn simularium execution!
+
+
 # TODO: eventually implement this
 # @app.get("/events/{job_id}", status_code=200)
 # async def get_job_events(request: Request, job_id: str):
