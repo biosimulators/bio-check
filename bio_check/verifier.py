@@ -232,7 +232,7 @@ class Verifier:
         except Exception as e:
             return RequestError(error=str(e))
 
-    def get_compatible(self, file: str, versions: bool = False) -> Union[list[tuple[Any, ...]], RequestError]:
+    def get_compatible(self, file: str, versions: bool = False) -> Union[List[Tuple[Any, ...]], RequestError]:
         """Get all simulators and optionally their versions for a given file. The File is expected to be either an OMEX/COMBINE archive
             or SBML file.
 
@@ -276,13 +276,14 @@ class Verifier:
     # -- visualizations
     def visualize_outputs(
             self,
-            data: dict,
-            simulators: list[str],
+            data: Dict,
+            simulators: List[str],
             output_start: int,
             output_end: int,
             num_points: int,
             hue: str = 'simulators',
             use_grid: bool = False,
+            color_mapping: List[str] = None
     ) -> Figure:
         """Visualize simulation output data, not comparison data, with subplots for each species.
 
@@ -296,6 +297,7 @@ class Verifier:
                     If `'simulators'` is passed, each column will be of its own color. If `'species'` is passed, each row will be of its
                     own color.
                 use_grid (bool): whether to use a grid for each subplot. Defaults to False.
+                color_mapping (list[str]): list of colors to use for each subplot. Defaults to None.
 
             Returns:
                 matplotlib.pyplot.Figure of a plot grid
@@ -312,7 +314,11 @@ class Verifier:
 
         simulator_hue = hue.lower() == 'simulators'
         hue_group = simulators if simulator_hue else species_names
-        line_colors = generate_color_gradient(hue_group)
+
+        if color_mapping is not None:
+            line_colors = color_mapping
+        else:
+            line_colors = generate_color_gradient(hue_group)
 
         # TODO: extract simulator names dynamically as well.
 
@@ -346,13 +352,14 @@ class Verifier:
 
         return fig
 
-    def visualize_comparison(self, data: dict, simulators: list, comparison_type='proximity') -> Figure:
+    def visualize_comparison(self, data: Dict, simulators: List[str], comparison_type='proximity', color_mapping: List[str] = None) -> Figure:
         """Visualize simulation comparison matrix in the form of a heatmap.
 
             Args:
                 data (dict): simulation output data
                 simulators (list[str]): list of simulators
                 comparison_type (str): type of comparison. Defaults to `'proximity'`.
+                color_mapping (list[str]): list of colors to use for True and False responses. Defaults to None.
 
             Returns:
                 matplotlib.pyplot.Figure of a plot grid
@@ -364,8 +371,13 @@ class Verifier:
         num_species = len(species_names)
 
         fig, axes = plt.subplots(nrows=num_species, figsize=(15, 5 * num_species))
-        true_color = '#228B22'
-        false_color = '#DC143C'
+
+        if color_mapping is not None:
+            true_color = color_mapping[0]
+            false_color = color_mapping[1]
+        else:
+            true_color = '#1E3A8A'  # dark blue
+            false_color = '#D97706'  # dark orange
 
         if num_species == 1:
             axes = [axes]
@@ -403,7 +415,7 @@ class Verifier:
         return plt.close(fig)
 
     # -- csv and observables
-    def get_observables(self, data: dict, simulators: list[str]) -> pd.DataFrame:
+    def get_observables(self, data: Dict, simulators: List[str]) -> pd.DataFrame:
         """Get the observables passed within `data` as a flattened dataframe in which each column is: `<SPECIES NAME>_<SIMULATOR>` for each
             species name and simulator involved within the comparison.
 
@@ -431,7 +443,7 @@ class Verifier:
 
         return pd.DataFrame(dataframe)
 
-    def export_csv(self, data: dict, save_dest: str, simulators: list[str]):
+    def export_csv(self, data: Dict, save_dest: str, simulators: List[str]):
         """Export the content passed in `data` as a CSV file.
 
             Args:
@@ -446,7 +458,7 @@ class Verifier:
         return pd.read_csv(csv_path)
 
     # -- tools
-    def select_observables(self, observables: list[str], data: dict) -> dict:
+    def select_observables(self, observables: List[str], data: Dict) -> Dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
             to dicts in which the keys are the simulator names and the values are arrays. The data must have content accessible at: `data['content']['results']`.
         """
@@ -471,7 +483,7 @@ class Verifier:
         if resp.status_code != 200:
             raise Exception(f"Request failed:\n{resp.status_code}\n{resp.text}\n")
     
-    def _test_root(self) -> dict:
+    def _test_root(self) -> Dict:
         try:
             resp = requests.get(self.endpoint_root)
             resp.raise_for_status()
