@@ -11,7 +11,7 @@
 The primary method of user-facing interaction for this service is done through the use of a high-level "notebook" api called `bio_check`. 
 A convenient notebook demonstrating the functionality of this service is hosted on Google Colab and can be accessed by clicking the above "Open In Colab" badge.
 
-[View the template notebook as an image](demos/verification_api_demo.md)
+[View the template notebook as markdown](docs/verification_api_demo.md)
 
 
 Installation of this tooling can be performed using PyPI as such:
