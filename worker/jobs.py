@@ -307,7 +307,7 @@ class Worker:
         return results
 
     def _generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
-        output_data = generate_biosimulator_utc_outputs(omex_fp, out_dir, simulators)
+        output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
         outputs = _get_output_stack(output_data, species_name)
         methods = ['mse', 'proximity']
         matrix_vals = list(map(
