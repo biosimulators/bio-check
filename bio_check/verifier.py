@@ -51,8 +51,10 @@ class Verifier:
             simulators: List[str] = None,
             include_outputs: bool = True,
             comparison_id: str = None,
-            truth: str = None,
+            expected_results: str = None,
             selection_list: List[str] = None,
+            rTol: float = None,
+            aTol: float = None,
             _steady_state: bool = False
     ) -> Union[Dict[str, str], RequestError]:
         """Submit a new uniform time course comparison job to the service and return confirmation of job submission.
@@ -62,8 +64,10 @@ class Verifier:
                 simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
-                truth:`str, optional`: The path to the ground truth report file to include in comparison. Defaults to None.
+                expected_results:`str, optional`: The path to the ground expected_results report file to include in comparison. Defaults to None.
                 selection_list:`List[str], optional`: The list of observables to include in comparison output. Defaults to None (all observables).
+                rTol:`float`, optional: The relative tolerance used to determine the relative distance in a pairwise comparison.
+                aTol:`float`L optional: The absolute tolerance used to determine the absolute distance in a pairwise comparison.
                 _steady_state:`bool, optional`: Whether to include the steady state analysis job. NOTE: This feature will currently throw an error as it is not
                     yet implemented.
             Returns:
@@ -77,26 +81,33 @@ class Verifier:
         # configure params
         _id = comparison_id or "bio_check-request-" + str(uuid4())
         _omex = (omex_filepath.split('/')[-1], open(omex_filepath, 'rb'), 'application/octet-stream')
-        _report = (truth.split('/')[-1], open(truth, 'rb'), 'application/octet-stream') if truth else None
+        _report = (expected_results.split('/')[-1], open(expected_results, 'rb'), 'application/octet-stream') if expected_results else None
         sims = simulators or ['amici', 'copasi', 'tellurium']
 
         encoder_fields = {
             'uploaded_file': _omex,
-            'simulators': ','.join(sims),
+            'expected_results': _report
+        }
+
+        query_params = {
+            'simulators': ','.join(simulators),
             'include_outputs': str(include_outputs).lower(),
             'comparison_id': _id,
-            'ground_truth_report': _report
         }
 
         if selection_list:
-            encoder_fields['selection_list'] = ','.join(selection_list)
+            query_params['selection_list'] = ','.join(selection_list)
+        if rTol:
+            query_params['rTol'] = str(rTol)
+        if aTol:
+            query_params['aTol'] = str(aTol)
 
         print(f'Selection list: {selection_list}')
         multidata = MultipartEncoder(fields=encoder_fields)
         headers = {'Content-Type': multidata.content_type}
 
         try:
-            response = requests.post(endpoint, headers=headers, data=multidata)
+            response = requests.post(endpoint, headers=headers, data=multidata, params=query_params)
             response.raise_for_status()
             self._check_response(response)
             output = response.json()
@@ -114,6 +125,7 @@ class Verifier:
             simulators: List[str] = None,
             include_outputs: bool = True,
             comparison_id: str = None,
+            expected_results: str = None,
             rTol: float = None,
             aTol: float = None,
             selection_list: List[str] = None,
@@ -129,6 +141,7 @@ class Verifier:
                 simulators:`List[str]`: The list of simulators to include in comparison. Defaults to all utc simulators (amici, copasi, tellurium)
                 include_outputs:`bool, optional`: Whether to include the output data used to calculate comparison in the job results on result fetch. Defaults to True.
                 comparison_id:`str, optional`: The unique identifier for the comparison job. Defaults to None. If `None` is passed, a comparison id of `bio_check-request-<UUID>` is generated.
+                expected_results:`str, optional`: The path to the ground expected_results report file to include in comparison. Defaults to None.
                 rTol:`float`, optional: The relative tolerance used to determine the relative distance in a pairwise comparison.
                 aTol:`float`L optional: The absolute tolerance used to determine the absolute distance in a pairwise comparison.
                 selection_list:`List[str]`: Observables to include in the output. If passed, all observable names NOT in this list will
@@ -153,13 +166,17 @@ class Verifier:
             entrypoint = self._write_antimony_to_sbml(entrypoint, dest)
 
         sbml_fp = (entrypoint.split('/')[-1], open(entrypoint, 'rb'), 'application/octet-stream')
+        _report = (expected_results.split('/')[-1], open(expected_results, 'rb'), 'application/octet-stream') if expected_results else None
 
         _id = comparison_id or "bio_check-request-" + str(uuid4())
         if simulators is None:
             simulators = ["copasi", "tellurium"]
 
         # create encoder fields
-        encoder_fields = {'uploaded_file': sbml_fp}
+        encoder_fields = {
+            'uploaded_file': sbml_fp,
+            'expected_results': _report
+        }
 
         query_params = {
             'simulators': ','.join(simulators),
