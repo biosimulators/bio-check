@@ -3,31 +3,8 @@
 
 
 ```python
-!pip install -q bio-check
+# !pip install -q bio-check
 ```
-
-    [?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/54.5 kB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m54.5/54.5 kB[0m [31m2.4 MB/s[0m eta [36m0:00:00[0m
-    [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/294.9 kB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m294.9/294.9 kB[0m [31m11.3 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m568.3/568.3 kB[0m [31m18.2 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m111.6/111.6 kB[0m [31m3.9 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m50.1/50.1 MB[0m [31m10.5 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m122.2/122.2 kB[0m [31m4.9 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m4.5/4.5 MB[0m [31m37.2 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m4.9/4.9 MB[0m [31m48.8 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m61.7/61.7 kB[0m [31m2.7 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m5.5/5.5 MB[0m [31m49.9 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m2.6/2.6 MB[0m [31m32.4 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m2.1/2.1 MB[0m [31m40.2 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m8.0/8.0 MB[0m [31m55.9 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m3.3/3.3 MB[0m [31m45.2 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m3.2/3.2 MB[0m [31m40.2 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m334.7/334.7 kB[0m [31m11.1 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m531.9/531.9 kB[0m [31m16.6 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m137.9/137.9 kB[0m [31m2.9 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m2.0/2.0 MB[0m [31m31.6 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m86.8/86.8 kB[0m [31m4.6 MB/s[0m eta [36m0:00:00[0m
-    [2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m41.7/41.7 kB[0m [31m2.0 MB/s[0m eta [36m0:00:00[0m
-    [?25h
 
 ## **2. Import the `Verifier`:**
 
@@ -44,7 +21,7 @@ f'Current version of bio-check: {__version__}'
 
 
 
-    'Current version of bio-check: 1.3.6'
+    'Current version of bio-check: 1.4.0'
 
 
 
@@ -66,411 +43,12 @@ verifier = Verifier()
 
 #### **NOTE: _For each verification "job", users may also optionally submit an "expected results" file in HDF5 (`.h5`) format defining datasets of expected results to be included in the comparison calculation. Please refer to [the HDF5 documentation](https://docs.h5py.org/en/stable/) for more information on the use of HDF5 with Python._**
 
-
-```python
-import os
-
-from google.colab import files
-
-print('Please upload an OMEX/COMBINE archive for verification.')
-files.upload()
-
-print('Please optionally upload an expected-results results.h5 file.')
-files.upload()
-
-
-print(f'Current Colab session files: {os.listdir("/content")}')
-```
-
-    Please upload an OMEX/COMBINE archive for verification.
-
-
-
-
-     <input type="file" id="files-2f48bd5e-2c1d-4314-b894-2c129703918f" name="files[]" multiple disabled
-        style="border:none" />
-     <output id="result-2f48bd5e-2c1d-4314-b894-2c129703918f">
-      Upload widget is only available when the cell has been executed in the
-      current browser session. Please rerun this cell to enable.
-      </output>
-      <script>// Copyright 2017 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-/**
- * @fileoverview Helpers for google.colab Python module.
- */
-(function(scope) {
-function span(text, styleAttributes = {}) {
-  const element = document.createElement('span');
-  element.textContent = text;
-  for (const key of Object.keys(styleAttributes)) {
-    element.style[key] = styleAttributes[key];
-  }
-  return element;
-}
-
-// Max number of bytes which will be uploaded at a time.
-const MAX_PAYLOAD_SIZE = 100 * 1024;
-
-function _uploadFiles(inputId, outputId) {
-  const steps = uploadFilesStep(inputId, outputId);
-  const outputElement = document.getElementById(outputId);
-  // Cache steps on the outputElement to make it available for the next call
-  // to uploadFilesContinue from Python.
-  outputElement.steps = steps;
-
-  return _uploadFilesContinue(outputId);
-}
-
-// This is roughly an async generator (not supported in the browser yet),
-// where there are multiple asynchronous steps and the Python side is going
-// to poll for completion of each step.
-// This uses a Promise to block the python side on completion of each step,
-// then passes the result of the previous step as the input to the next step.
-function _uploadFilesContinue(outputId) {
-  const outputElement = document.getElementById(outputId);
-  const steps = outputElement.steps;
-
-  const next = steps.next(outputElement.lastPromiseValue);
-  return Promise.resolve(next.value.promise).then((value) => {
-    // Cache the last promise value to make it available to the next
-    // step of the generator.
-    outputElement.lastPromiseValue = value;
-    return next.value.response;
-  });
-}
-
-/**
- * Generator function which is called between each async step of the upload
- * process.
- * @param {string} inputId Element ID of the input file picker element.
- * @param {string} outputId Element ID of the output display.
- * @return {!Iterable<!Object>} Iterable of next steps.
- */
-function* uploadFilesStep(inputId, outputId) {
-  const inputElement = document.getElementById(inputId);
-  inputElement.disabled = false;
-
-  const outputElement = document.getElementById(outputId);
-  outputElement.innerHTML = '';
-
-  const pickedPromise = new Promise((resolve) => {
-    inputElement.addEventListener('change', (e) => {
-      resolve(e.target.files);
-    });
-  });
-
-  const cancel = document.createElement('button');
-  inputElement.parentElement.appendChild(cancel);
-  cancel.textContent = 'Cancel upload';
-  const cancelPromise = new Promise((resolve) => {
-    cancel.onclick = () => {
-      resolve(null);
-    };
-  });
-
-  // Wait for the user to pick the files.
-  const files = yield {
-    promise: Promise.race([pickedPromise, cancelPromise]),
-    response: {
-      action: 'starting',
-    }
-  };
-
-  cancel.remove();
-
-  // Disable the input element since further picks are not allowed.
-  inputElement.disabled = true;
-
-  if (!files) {
-    return {
-      response: {
-        action: 'complete',
-      }
-    };
-  }
-
-  for (const file of files) {
-    const li = document.createElement('li');
-    li.append(span(file.name, {fontWeight: 'bold'}));
-    li.append(span(
-        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +
-        `last modified: ${
-            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :
-                                    'n/a'} - `));
-    const percent = span('0% done');
-    li.appendChild(percent);
-
-    outputElement.appendChild(li);
-
-    const fileDataPromise = new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve(e.target.result);
-      };
-      reader.readAsArrayBuffer(file);
-    });
-    // Wait for the data to be ready.
-    let fileData = yield {
-      promise: fileDataPromise,
-      response: {
-        action: 'continue',
-      }
-    };
-
-    // Use a chunked sending to avoid message size limits. See b/62115660.
-    let position = 0;
-    do {
-      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);
-      const chunk = new Uint8Array(fileData, position, length);
-      position += length;
-
-      const base64 = btoa(String.fromCharCode.apply(null, chunk));
-      yield {
-        response: {
-          action: 'append',
-          file: file.name,
-          data: base64,
-        },
-      };
-
-      let percentDone = fileData.byteLength === 0 ?
-          100 :
-          Math.round((position / fileData.byteLength) * 100);
-      percent.textContent = `${percentDone}% done`;
-
-    } while (position < fileData.byteLength);
-  }
-
-  // All done.
-  yield {
-    response: {
-      action: 'complete',
-    }
-  };
-}
-
-scope.google = scope.google || {};
-scope.google.colab = scope.google.colab || {};
-scope.google.colab._files = {
-  _uploadFiles,
-  _uploadFilesContinue,
-};
-})(self);
-</script> 
-
-
-    Saving Elowitz-Nature-2000-Repressilator.omex to Elowitz-Nature-2000-Repressilator.omex
-    Please optionally upload an expected-results results.h5 file.
-
-
-
-
-     <input type="file" id="files-00e29d33-d843-470f-8be7-2107e0bb27d5" name="files[]" multiple disabled
-        style="border:none" />
-     <output id="result-00e29d33-d843-470f-8be7-2107e0bb27d5">
-      Upload widget is only available when the cell has been executed in the
-      current browser session. Please rerun this cell to enable.
-      </output>
-      <script>// Copyright 2017 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-/**
- * @fileoverview Helpers for google.colab Python module.
- */
-(function(scope) {
-function span(text, styleAttributes = {}) {
-  const element = document.createElement('span');
-  element.textContent = text;
-  for (const key of Object.keys(styleAttributes)) {
-    element.style[key] = styleAttributes[key];
-  }
-  return element;
-}
-
-// Max number of bytes which will be uploaded at a time.
-const MAX_PAYLOAD_SIZE = 100 * 1024;
-
-function _uploadFiles(inputId, outputId) {
-  const steps = uploadFilesStep(inputId, outputId);
-  const outputElement = document.getElementById(outputId);
-  // Cache steps on the outputElement to make it available for the next call
-  // to uploadFilesContinue from Python.
-  outputElement.steps = steps;
-
-  return _uploadFilesContinue(outputId);
-}
-
-// This is roughly an async generator (not supported in the browser yet),
-// where there are multiple asynchronous steps and the Python side is going
-// to poll for completion of each step.
-// This uses a Promise to block the python side on completion of each step,
-// then passes the result of the previous step as the input to the next step.
-function _uploadFilesContinue(outputId) {
-  const outputElement = document.getElementById(outputId);
-  const steps = outputElement.steps;
-
-  const next = steps.next(outputElement.lastPromiseValue);
-  return Promise.resolve(next.value.promise).then((value) => {
-    // Cache the last promise value to make it available to the next
-    // step of the generator.
-    outputElement.lastPromiseValue = value;
-    return next.value.response;
-  });
-}
-
-/**
- * Generator function which is called between each async step of the upload
- * process.
- * @param {string} inputId Element ID of the input file picker element.
- * @param {string} outputId Element ID of the output display.
- * @return {!Iterable<!Object>} Iterable of next steps.
- */
-function* uploadFilesStep(inputId, outputId) {
-  const inputElement = document.getElementById(inputId);
-  inputElement.disabled = false;
-
-  const outputElement = document.getElementById(outputId);
-  outputElement.innerHTML = '';
-
-  const pickedPromise = new Promise((resolve) => {
-    inputElement.addEventListener('change', (e) => {
-      resolve(e.target.files);
-    });
-  });
-
-  const cancel = document.createElement('button');
-  inputElement.parentElement.appendChild(cancel);
-  cancel.textContent = 'Cancel upload';
-  const cancelPromise = new Promise((resolve) => {
-    cancel.onclick = () => {
-      resolve(null);
-    };
-  });
-
-  // Wait for the user to pick the files.
-  const files = yield {
-    promise: Promise.race([pickedPromise, cancelPromise]),
-    response: {
-      action: 'starting',
-    }
-  };
-
-  cancel.remove();
-
-  // Disable the input element since further picks are not allowed.
-  inputElement.disabled = true;
-
-  if (!files) {
-    return {
-      response: {
-        action: 'complete',
-      }
-    };
-  }
-
-  for (const file of files) {
-    const li = document.createElement('li');
-    li.append(span(file.name, {fontWeight: 'bold'}));
-    li.append(span(
-        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +
-        `last modified: ${
-            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :
-                                    'n/a'} - `));
-    const percent = span('0% done');
-    li.appendChild(percent);
-
-    outputElement.appendChild(li);
-
-    const fileDataPromise = new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve(e.target.result);
-      };
-      reader.readAsArrayBuffer(file);
-    });
-    // Wait for the data to be ready.
-    let fileData = yield {
-      promise: fileDataPromise,
-      response: {
-        action: 'continue',
-      }
-    };
-
-    // Use a chunked sending to avoid message size limits. See b/62115660.
-    let position = 0;
-    do {
-      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);
-      const chunk = new Uint8Array(fileData, position, length);
-      position += length;
-
-      const base64 = btoa(String.fromCharCode.apply(null, chunk));
-      yield {
-        response: {
-          action: 'append',
-          file: file.name,
-          data: base64,
-        },
-      };
-
-      let percentDone = fileData.byteLength === 0 ?
-          100 :
-          Math.round((position / fileData.byteLength) * 100);
-      percent.textContent = `${percentDone}% done`;
-
-    } while (position < fileData.byteLength);
-  }
-
-  // All done.
-  yield {
-    response: {
-      action: 'complete',
-    }
-  };
-}
-
-scope.google = scope.google || {};
-scope.google.colab = scope.google.colab || {};
-scope.google.colab._files = {
-  _uploadFiles,
-  _uploadFilesContinue,
-};
-})(self);
-</script> 
-
-
-    Saving reports.h5 to reports.h5
-    Current Colab session files: ['.config', 'Elowitz-Nature-2000-Repressilator.omex', 'reports.h5', 'sample_data']
-
-
 ### **We can use the verifier's `.get_compatible()` method to find which simulators are compatible with our OMEX input file:**
 
 
 ```python
-omex_filepath = '/content/Elowitz-Nature-2000-Repressilator.omex'
-report_filepath = '/content/reports.h5'
+omex_filepath = '../model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex'
+report_filepath = '../model-examples/sbml-core/Elowitz-Nature-2000-Repressilator/reports.h5'
 rel_tol = None
 abs_tol = None
 
@@ -627,7 +205,7 @@ output_plots_simulator_hue = verifier.visualize_outputs(
 
 
     
-![png](verification_api_demo_files/verification_api_demo_26_0.png)
+![png](verification_api_demo_files/verification_api_demo_25_0.png)
     
 
 
@@ -648,7 +226,7 @@ output_plots_species_hue = verifier.visualize_outputs(
 
 
     
-![png](verification_api_demo_files/verification_api_demo_28_0.png)
+![png](verification_api_demo_files/verification_api_demo_27_0.png)
     
 
 
@@ -665,7 +243,7 @@ comparison_plots = verifier.visualize_comparison(
 
 
     
-![png](verification_api_demo_files/verification_api_demo_30_0.png)
+![png](verification_api_demo_files/verification_api_demo_29_0.png)
     
 
 
@@ -681,7 +259,7 @@ comparison_plots_mse = verifier.visualize_comparison(
 
 
     
-![png](verification_api_demo_files/verification_api_demo_31_0.png)
+![png](verification_api_demo_files/verification_api_demo_30_0.png)
     
 
 
