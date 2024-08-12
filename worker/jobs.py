@@ -83,7 +83,7 @@ class Worker:
         # calculate rmse for each simulator over all observables
         self.job_result['rmse'] = {}
         simulators = self.job_params.get('simulators')
-        if self.job_params.get('ground_truth_report_path') is not None:
+        if self.job_params.get('expected_results') is not None:
             simulators.append('ground_truth')
         for simulator in simulators:
             self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
@@ -151,10 +151,10 @@ class Worker:
         download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_sbml_blob_name, destination_file_name=local_fp)
 
         # get ground truth from bucket if applicable
-        ground_truth_report_path = self.job_params.get('ground_truth_report_path')
+        ground_truth_report_path = self.job_params.get('expected_results')
         truth_vals = None
         if ground_truth_report_path is not None:
-            source_report_blob_name = self.job_params['ground_truth_report_path']
+            source_report_blob_name = self.job_params['expected_results']
             local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
             download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
             ground_truth_report_path = local_report_path
@@ -184,10 +184,10 @@ class Worker:
         download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_omex_fp)
 
         # get ground truth from bucket if applicable
-        ground_truth_report_path = self.job_params['ground_truth_report_path']
+        ground_truth_report_path = self.job_params['expected_results']
         truth_vals = None
         if ground_truth_report_path is not None:
-            source_report_blob_name = self.job_params['ground_truth_report_path']
+            source_report_blob_name = self.job_params['expected_results']
             local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
             download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
             truth_vals = read_report_outputs(local_report_path)
