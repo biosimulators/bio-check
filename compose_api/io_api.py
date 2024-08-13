@@ -49,7 +49,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     }
 
 
-async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile) -> str:
+async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile, extension: str) -> str:
     # bucket params
     upload_prefix = f"uploads/{job_id}/"
     bucket_prefix = f"gs://{bucket_name}/" + upload_prefix
@@ -59,7 +59,7 @@ async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: Uplo
 
     # Save uploaded omex file to Google Cloud Storage
     uploaded_file_location = None
-    properly_formatted_omex = check_upload_file_extension(uploaded_file, 'uploaded_file', '.omex')
+    properly_formatted_omex = check_upload_file_extension(uploaded_file, 'uploaded_file', extension)
     if properly_formatted_omex:
         blob_dest = upload_prefix + fp.split("/")[-1]
         upload_blob(bucket_name=bucket_name, source_file_name=fp, destination_blob_name=blob_dest)

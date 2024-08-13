@@ -37,12 +37,12 @@ class PendingSbmlJob(Job):
 
 class PendingSmoldynJob(Job):
     job_id: str 
-    timestamp: str 
-    status: str 
-    path: str 
+    timestamp: str
+    path: str
+    status: str = "PENDING"
     duration: Optional[int] = None
     dt: Optional[float] = None
-    initial_species_counts: Optional[Dict] = None
+    # initial_species_counts: Optional[Dict] = None
 
 
 class PendingUtcJob(Job):

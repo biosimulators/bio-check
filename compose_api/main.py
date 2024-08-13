@@ -114,7 +114,7 @@ def root():
 
 @app.post(
     "/run-smoldyn",  # "/biosimulators-utc-comparison",
-    response_model=PendingSmoldynJob,
+    # response_model=PendingSmoldynJob,
     name="Run a smoldyn simulation",
     operation_id="run-smoldyn",
     tags=["run-simulations"],
@@ -123,12 +123,12 @@ async def run_smoldyn(
         uploaded_file: UploadFile = File(..., description="Smoldyn Configuration File"),
         duration: int = Query(default=None, description="Simulation Duration"),
         dt: float = Query(default=None, description="Interval of step with which simulation runs"),
-        initial_species_counts: Dict = Body(default=None, description="Mapping of species names to initial molecule counts")
-) -> PendingSmoldynJob:
+        # initial_species_counts: List = Body(default=None, description="Mapping of species names to initial molecule counts")
+):
     try:
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
-        uploaded_file_location = write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME)
+        uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
         job_doc = {
             'job_id': job_id,
@@ -137,18 +137,18 @@ async def run_smoldyn(
             'path': uploaded_file_location,
             'duration': duration,
             'dt': dt,
-            'initial_species_counts': initial_species_counts
+            # 'initial_species_counts': initial_species_counts
         }
-        pending_job = db_connector.write(coll_name='pending_jobs', **job_doc)
+        pending_job = await db_connector.write(coll_name='pending_jobs', **job_doc)
 
-        return PendingSmoldynJob(**job_doc)
+        return job_doc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
     "/run-utc",  # "/biosimulators-utc-comparison",
-    response_model=PendingUtcJob,
+    # response_model=PendingUtcJob,
     name="Run an ODE Uniform Time Course simulation",
     operation_id="run-utc",
     tags=["run-simulations"],
@@ -159,11 +159,11 @@ async def run_utc(
         end: int = Query(..., description="Simulation Duration"),
         steps: int = Query(..., description="Number of points for utc"),
         simulator: str = Query(..., description="Simulator to use (one of: amici, copasi, tellurium, vcell)"),
-) -> PendingUtcJob:
+):
     try:
         job_id = str(uuid.uuid4())
         _time = db_connector.timestamp()
-        uploaded_file_location = write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME)
+        uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
 
         job_doc = {
             'job_id': job_id,
@@ -175,9 +175,9 @@ async def run_utc(
             'steps': steps,
             'simulator': simulator
         }
-        pending_job = db_connector.write(coll_name='pending_jobs', **job_doc)
+        pending_job = await db_connector.write(coll_name='pending_jobs', **job_doc)
 
-        return PendingUtcJob(**job_doc)
+        return job_doc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -352,7 +352,7 @@ async def verify_sbml(
     response_model=UtcComparisonResult,
     operation_id='get-verify-output',
     tags=["data"],
-    summary='Get the results of an existing uniform time course comparison.')
+    summary='Get the results of an existing simulation run.')
 async def fetch_results(job_id: str) -> UtcComparisonResult:
     colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
     for collection in colls:

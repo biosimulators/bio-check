@@ -8,6 +8,7 @@ __pycache__/
 *.log
 worker/handlers/__pycache__/
 venv
+smoldyn-2.73-mac.tgz.1
 *.egg-info/
 assets/.env_dev
 .bio-check.json
