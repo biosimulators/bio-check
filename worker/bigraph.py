@@ -15,6 +15,9 @@ except:
     )
 
 
+CORE = ProcessTypes()
+
+
 class SmoldynStep(Step):
     config_schema = {
         'model_filepath': 'string',
@@ -31,7 +34,7 @@ class SmoldynStep(Step):
         # TODO: Add a more nuanced way to describe and configure dynamic difcs given species interaction patterns
     }
 
-    def __init__(self, config: Dict[str, Any] = None, core=None):
+    def __init__(self, config: Dict[str, Any] = None, core=CORE):
         """A new instance of `SmoldynProcess` based on the `config` that is passed. The schema for the config to be passed in
             this object's constructor is as follows:
 
@@ -41,7 +44,7 @@ class SmoldynStep(Step):
 
             # TODO: It would be nice to have classes associated with this.
         """
-        super().__init__(config, core)
+        super().__init__(config=config, core=core)
 
         # specify the model fp for clarity
         self.model_filepath = self.config.get('model_filepath')
@@ -263,7 +266,6 @@ class SimulariumStep(Step):
 
 # register processes
 
-CORE = ProcessTypes()
 REGISTERED_PROCESSES = [
     ('smoldyn_step', SmoldynStep),
     ('simularium_step', SimulariumStep)
