@@ -1,15 +1,14 @@
 import os
 import tempfile
-from time import sleep
 from typing import *
-from dataclasses import dataclass, asdict
 from uuid import uuid4
+from dataclasses import dataclass, asdict
 
 import numpy as np
 import pandas as pd
 import requests
 import seaborn as sns
-from tellurium import loada
+import antimony
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.figure import Figure
@@ -470,11 +469,18 @@ class Verifier:
         outputs['content']['results'] = result
         return outputs
 
-    def _write_antimony_to_sbml(self, antimony_string: str, dest: str):
-        r = loada(antimony_string)
-        file_path = os.path.join(dest, 'model.xml')
-        r.exportToSBML(file_path)
-        return file_path
+    def _write_antimony_to_sbml(self, antimony_string: str, dest: str, model_name: str = None):
+        ant_ret = antimony.loadAntimonyString(antimony_string)
+        if ant_ret == -1:
+            raise IOError(f"This antimony string cannot be converted to SBML by Antimony: {antimony_string}. Please check the model and try again.")
+
+        filename = model_name or 'model.xml'
+        file_path = os.path.join(dest, filename)
+        sbml_ret = antimony.writeSBMLFile(filename=file_path)
+        if sbml_ret > 0:
+            return file_path
+        else:
+            raise IOError(f"This SBML model: {filename} cannot be written to {file_path}. Please check your paths and try again.")
 
     def _format_endpoint(self, path_piece: str) -> str:
         return f'{self.endpoint_root}/{path_piece}'

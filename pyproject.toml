@@ -11,7 +11,7 @@ packages = [{include = "bio_check"}]
 python = ">=3.10"
 requests-toolbelt = "^1.0.0"
 seaborn = "^0.13.2"
-biosimulators-tellurium = "^0.1.42"
+antimony = "^2.15.0"
 
 [tool.poetry.group.dev.dependencies]
 fastapi = "^0.112.0"
