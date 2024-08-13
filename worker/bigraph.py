@@ -106,10 +106,11 @@ class SmoldynStep(Step):
 
         self.output_port_schema = {
             'species_counts': {
-                species_name: 'int'
+                species_name: 'integer'
                 for species_name in self.species_names
             },
-            'molecules': 'tree[string]'  # self.molecules_type
+            'molecules': 'tree[string]',  # self.molecules_type
+            'results_file': 'string'
         }
 
         # set time if applicable
@@ -143,12 +144,12 @@ class SmoldynStep(Step):
         }
 
     def inputs(self):
-        return {'model_filepath': 'string'}
+        return {'species_counts': 'tree[integer]', 'molecules': 'tree[float]'}
 
     def outputs(self):
         return self.output_port_schema
 
-    def update(self, inputs: Dict) -> Dict:
+    def update(self, inputs: Dict = None) -> Dict:
         # reset the molecules, distribute the mols according to self.boundarieså
         # for name in self.species_names:
         #     self.set_uniform(
@@ -191,18 +192,33 @@ class SmoldynStep(Step):
             # self.molecule_ids.append(str(uuid4()))
 
         # get and populate the output molecules
-        mols = []
-        for index, mol_id in enumerate(self.molecule_ids):
-            single_molecule_data = molecules_data[index]
-            single_molecule_species_index = int(single_molecule_data[1]) - 1
-            mols.append(single_molecule_species_index)
+        for i, single_mol_data in enumerate(molecules_data):
+            mol_species_index = int(single_mol_data[1]) - 1
+            mol_id = str(uuid4())
             simulation_state['molecules'][mol_id] = {
-                'coordinates': single_molecule_data[3:6],
-                'species_id': self.species_names[single_molecule_species_index],
-                'state': str(int(single_molecule_data[2]))
+                'coordinates': single_mol_data[3:6],
+                'species_id': self.species_names[mol_species_index],
+                'state': str(int(single_mol_data[2]))
             }
 
+        # mols = []
+        # for index, mol_id in enumerate(self.molecule_ids):
+        #     single_molecule_data = molecules_data[index]
+        #     single_molecule_species_index = int(single_molecule_data[1]) - 1
+        #     mols.append(single_molecule_species_index)
+        #     simulation_state['molecules'][mol_id] = {
+        #         'coordinates': single_molecule_data[3:6],
+        #         'species_id': self.species_names[single_molecule_species_index],
+        #         'state': str(int(single_molecule_data[2]))
+        #     }
+
         # TODO -- post processing to get effective rates
+
+        # TODO: adjust this for a more dynamic dir struct
+        model_dir = os.path.dirname(self.model_filepath)
+        for f in os.listdir(model_dir):
+            if f.endswith('.txt') and 'out' in f:
+                simulation_state['results_file'] = os.path.join(model_dir, f)
 
         return simulation_state
 
