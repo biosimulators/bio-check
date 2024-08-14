@@ -123,7 +123,7 @@ async def run_smoldyn(
         uploaded_file: UploadFile = File(..., description="Smoldyn Configuration File"),
         duration: int = Query(default=None, description="Simulation Duration"),
         dt: float = Query(default=None, description="Interval of step with which simulation runs"),
-        # initial_species_counts: List = Body(default=None, description="Mapping of species names to initial molecule counts")
+        # initial_molecule_state: List = Body(default=None, description="Mapping of species names to initial molecule conditions including counts and location.")
 ):
     try:
         job_id = str(uuid.uuid4())
@@ -137,7 +137,7 @@ async def run_smoldyn(
             'path': uploaded_file_location,
             'duration': duration,
             'dt': dt,
-            # 'initial_species_counts': initial_species_counts
+            # 'initial_molecule_state': initial_molecule_state
         }
         pending_job = await db_connector.write(coll_name='pending_jobs', **job_doc)
 

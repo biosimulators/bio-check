@@ -5,7 +5,7 @@ from pprint import pp
 from dotenv import load_dotenv
 from tempfile import mkdtemp
 
-from jobs import Worker
+from workers import Worker
 from shared import MongoDbConnector, save_uploaded_file, upload_blob
 
 load_dotenv('../assets/.env_dev')
