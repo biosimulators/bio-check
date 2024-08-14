@@ -28,7 +28,6 @@ class Worker(ABC):
 
     def __init__(self, job: Dict):
         """
-
         Args:
             job: job parameters received from the supervisor (who gets it from the db) which is a document from the pending_jobs collection within mongo.
         """
@@ -60,7 +59,7 @@ class SimulationRunWorker(Worker):
             initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
 
             # execute simularium, pointing to a filepath that is out_dir/simulation.simularium
-
+            Generate smoldyn here!
             # write the aforementioned simularium file to the bucket
 
             # write the aforementioned smoldyn output file to the bucket

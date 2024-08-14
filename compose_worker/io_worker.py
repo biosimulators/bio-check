@@ -71,11 +71,16 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     blob.download_to_filename(destination_file_name)
 
 
-async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
+async def save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) -> str:
     """Write `fastapi.UploadFile` instance passed by api gateway user to `save_dest`."""
-    file_path = os.path.join(save_dest, uploaded_file.filename)
+    if isinstance(uploaded_file, UploadFile):
+        filename = uploaded_file.filename
+    else:
+        filename = uploaded_file
+
+    file_path = os.path.join(save_dest, filename)
     with open(file_path, 'wb') as file:
-        contents = await uploaded_file.read()
+        contents = await uploaded_file.read() if isinstance(uploaded_file, UploadFile) else file.read()
         file.write(contents)
     return file_path
 
