@@ -204,11 +204,6 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, tr
     return output
 
 
-def generate_species_output(omex_fp: str, output_root_dir: str, species_name: str, simulators: list[str] = None) -> np.ndarray:
-    outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators=simulators)
-    return _get_output_stack(outputs, species_name), outputs
-
-
 def sbml_output_stack(spec_name: str, output):
     stack = []
     for simulator_name, simulator_output in output.items():
@@ -229,35 +224,3 @@ def _get_output_stack(outputs: dict, spec_id: str):
             else:
                 pass
     return np.stack(output_stack)
-
-
-# def get_species_utc_data(
-#         omex_fp: str,
-#         species_name: str,
-#         output_root_dir: str,
-#         ground_truth_source_fp: str = None,
-#         simulators: list[str] = None,
-#         ) -> pd.DataFrame:
-#     spec_index = 0
-#     simulator_outputs = generate_biosimulator_outputs(omex_fp, output_root_dir, simulators)
-#     for i, spec_name in enumerate(list(simulator_outputs['amici'].keys())):
-#         if species_name.lower() in spec_name.lower():
-#             spec_index += i
-#
-#     outs = [
-#         simulator_outputs['amici']['data'][spec_index]['data'],
-#         simulator_outputs['copasi']['data'][spec_index]['data'],
-#         simulator_outputs['tellurium']['data'][spec_index]['data']
-#     ]
-#     simulator_names = list(simulator_outputs.keys())
-#
-#     if ground_truth_source_fp:
-#         simulator_names.append('ground_truth')
-#         ground_truth_results = standardize_report_outputs(ground_truth_source_fp)
-#         ground_truth = ground_truth_results['floating_species'][species_name]
-#         outs.append(ground_truth)
-#
-#     return pd.DataFrame(data=np.array(outs), columns=simulator_names)
-
-
-

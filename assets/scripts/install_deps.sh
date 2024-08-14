@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 
-pip install -r assets/requirements.base.txt
+requirements_path="$1"
+
+while read -r requirement; do
+    poetry add "$requirement"
+done < "$requirements_path"

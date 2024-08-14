@@ -6,9 +6,11 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 
 COPY . /app/worker
 
-RUN pip uninstall biosimulators-utils -y \
-    && pip install -r /app/worker/requirements.worker.txt \
-    && python3 -m pip install --upgrade matplotlib
+# RUN pip uninstall biosimulators-utils -y \
+#     && pip install -r /app/worker/requirements.worker.txt \
+#     && python3 -m pip install --upgrade matplotlib
+
+RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
 WORKDIR /app/worker
 

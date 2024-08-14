@@ -26,7 +26,7 @@ services:
   worker:
     build:
       context: ..
-      dockerfile: ../worker/Dockerfile-worker
+      dockerfile: ../worker/Dockerfile-composer_worker
     container_name: worker
     environment:
       - MONGO_URI=mongodb://mongo/?retryWrites=true&w=majority&appName=bio-check:27017
