@@ -1,36 +1,30 @@
-import os
-import logging
 from tempfile import mkdtemp
 from typing import *
 from importlib import import_module
 
-import tellurium as te
 import libsbml
-import numpy as np
 from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
 from basico import *
+import tellurium as te
+from smoldyn import Simulation
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
-from biosimulators_simularium import execute as execute_simularium
-from smoldyn import Simulation
+# from biosimulators_simularium import execute as execute_simularium
 
 from data_model import BiosimulationsRunOutputData
-# from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
-# from biosimulator_processes.io import standardize_report_outputs
-from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root
-from shared import make_dir
+from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir
 
 
-def generate_smoldyn_simularium(smoldyn_configuration_file: str, output_dest_dir: str, use_json: bool = True, agent_params=None, box_size=None):
-    # 1. make temp dir with config file written to it and set that as archive root
-    temp_archive_root = mkdtemp()
-    with open(smoldyn_configuration_file, 'r') as fh:
-        smoldyn_config = fh.read()
-
-    with open(os.path.join(temp_archive_root, smoldyn_configuration_file.split('/')[-1]), 'w') as f:
-        f.write(smoldyn_config)
-
-    return execute_simularium(working_dir=temp_archive_root, use_json=use_json, output_dir=output_dest_dir, agent_params=agent_params, box_size=box_size)
+# def generate_smoldyn_simularium(smoldyn_configuration_file: str, output_dest_dir: str, use_json: bool = True, agent_params=None, box_size=None):
+#     # 1. make temp dir with config file written to it and set that as archive root
+#     temp_archive_root = mkdtemp()
+#     with open(smoldyn_configuration_file, 'r') as fh:
+#         smoldyn_config = fh.read()
+#
+#     with open(os.path.join(temp_archive_root, smoldyn_configuration_file.split('/')[-1]), 'w') as f:
+#         f.write(smoldyn_config)
+#
+#     return execute_simularium(working_dir=temp_archive_root, use_json=use_json, output_dir=output_dest_dir, agent_params=agent_params, box_size=box_size)
 
 
 # TODO: should we return the actual data from memory, or that reflected in a smoldyn output txt file or both?

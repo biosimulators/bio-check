@@ -12,7 +12,7 @@ import pandas as pd
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob
-from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, generate_smoldyn_simularium
+from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping,
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
