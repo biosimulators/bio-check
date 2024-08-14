@@ -54,7 +54,7 @@ class SimulationRunWorker(Worker):
         source_fp = self.job_params['path']
         local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
-        # is a smoldyn job
+        # case: is a smoldyn job
         if local_fp.endswith('.txt'):
             duration = self.job_params['duration']
             dt = self.job_params['dt']
@@ -70,8 +70,9 @@ class SimulationRunWorker(Worker):
 
             # set self.job_result to have a {'results': {'results_file': ...}
             self.job_result['results'] = result
-        # is utc job
-        if source_fp.endswith('.xml'):
+
+        # case: is utc job
+        elif source_fp.endswith('.xml'):
             # get sim params from job_params
 
             # execute utc simulation, specifying the simulator referenced in the job_params
