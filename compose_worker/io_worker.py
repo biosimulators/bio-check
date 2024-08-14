@@ -1,4 +1,5 @@
 import os
+from tempfile import mkdtemp
 from typing import Union 
 
 import h5py
@@ -20,6 +21,30 @@ def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
     local_fp = os.path.join(out_dir, source_blob_name.split('/')[-1])
     download_blob(bucket_name=bucket_name, source_blob_name=source_blob_name, destination_file_name=local_fp)
     return local_fp
+
+
+async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile | str, extension: str) -> str:
+    # bucket params
+    upload_prefix = f"uploads/{job_id}/"
+    bucket_prefix = f"gs://{bucket_name}/" + upload_prefix
+
+    save_dest = mkdtemp()
+    fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
+
+    # Save uploaded omex file to Google Cloud Storage
+    purpose = 'uploaded_file'
+    properly_formatted_file = check_upload_file_extension(uploaded_file, purpose, extension)
+    if not properly_formatted_file:
+        raise ValueError(f"Files for {purpose} must be passed in {extension} format.")
+
+    blob_dest = upload_prefix + fp.split("/")[-1]
+    upload_blob(bucket_name=bucket_name, source_file_name=fp, destination_blob_name=blob_dest)
+
+    return blob_dest
+
+
+def check_upload_file_extension(file: UploadFile, purpose: str, ext: str) -> bool:
+    return False if not file.filename.endswith(ext) else True
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):

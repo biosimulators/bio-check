@@ -11,7 +11,7 @@ import pandas as pd
 
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME
-from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob
+from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob, upload_blob, write_uploaded_file
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
 
 
@@ -24,6 +24,7 @@ setup_logging(logger)
 
 class Worker(ABC):
     job_params: Dict
+    job_id: str
     job_result: Dict | None
 
     def __init__(self, job: Dict):
@@ -32,7 +33,8 @@ class Worker(ABC):
             job: job parameters received from the supervisor (who gets it from the db) which is a document from the pending_jobs collection within mongo.
         """
         self.job_params = job
-        self.job_result = None
+        self.job_id = self.job_params['job_id']
+        self.job_result = {'results': {}}
 
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         self.worker_id = unique_id()
@@ -53,19 +55,21 @@ class SimulationRunWorker(Worker):
         local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         # is a smoldyn job
-        if source_fp.endswith('.txt'):
+        if local_fp.endswith('.txt'):
             duration = self.job_params['duration']
             dt = self.job_params['dt']
             initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
 
-            # execute simularium, pointing to a filepath that is out_dir/simulation.simularium
-            self.job_result = run_smoldyn(model_fp=source_fp, duration=duration, dt=dt)
-            # write the aforementioned simularium file to the bucket
+            # execute simularium, pointing to a filepath that is returned by the run smoldyn call
+            result = run_smoldyn(model_fp=local_fp, duration=duration, dt=dt)
 
-            # write the aforementioned smoldyn output file to the bucket
+            # write the aforementioned output file (which is itself locally written to the temp out_dir, to the bucket if applicable
+            results_file = result.get('results_file')
+            if results_file is not None:
+                uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
 
-            # set self.job_result to have a {'results': {'simularium_file': ..., 'smoldyn_output_file': ...}
-
+            # set self.job_result to have a {'results': {'results_file': ...}
+            self.job_result['results'] = result
         # is utc job
         if source_fp.endswith('.xml'):
             # get sim params from job_params
