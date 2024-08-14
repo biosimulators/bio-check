@@ -56,32 +56,37 @@ class SimulationRunWorker(Worker):
 
         # case: is a smoldyn job
         if local_fp.endswith('.txt'):
-            duration = self.job_params['duration']
-            dt = self.job_params['dt']
-            initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
-
-            # execute simularium, pointing to a filepath that is returned by the run smoldyn call
-            result = run_smoldyn(model_fp=local_fp, duration=duration, dt=dt)
-
-            # write the aforementioned output file (which is itself locally written to the temp out_dir, to the bucket if applicable
-            results_file = result.get('results_file')
-            if results_file is not None:
-                uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
-
-            # set self.job_result to have a {'results': {'results_file': ...}
-            self.job_result['results'] = result
-
+            await self.run_smoldyn(local_fp)
         # case: is utc job
-        elif source_fp.endswith('.xml'):
-            # get sim params from job_params
-
-            # execute utc simulation, specifying the simulator referenced in the job_params
-
-            # set self.job_result to have 'results': {spec_name: value for spec_name, value in output.items()}
-
-            pass
+        elif local_fp.endswith('.xml'):
+            await self.run_utc(local_fp)
 
         return self.job_result
+
+    async def run_smoldyn(self, local_fp: str):
+        duration = self.job_params['duration']
+        dt = self.job_params['dt']
+        initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
+
+        # execute simularium, pointing to a filepath that is returned by the run smoldyn call
+        result = run_smoldyn(model_fp=local_fp, duration=duration, dt=dt)
+
+        # write the aforementioned output file (which is itself locally written to the temp out_dir, to the bucket if applicable
+        results_file = result.get('results_file')
+        if results_file is not None:
+            uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
+
+        # set self.job_result to have a {'results': {'results_file': ...}
+        self.job_result['results'] = result
+
+    async def run_utc(self, local_fp: str):
+        start = self.job_params['start']
+        end = self.job_params['end']
+        steps = self.job_params['steps']
+        simulator = self.job_params['simulator']
+
+        result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
+        self.job_result['results'] = result[simulator]
 
 
 class VerificationWorker(Worker):

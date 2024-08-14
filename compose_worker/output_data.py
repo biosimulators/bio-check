@@ -226,7 +226,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     return output_data
 
 
-def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, truth: str = None) -> dict:
+def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, simulators: list[str] = None, truth: str = None) -> dict:
     """
 
     Args:
@@ -234,13 +234,31 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, tr
        start: output start time
        dur: end (output end time)
        steps: number of points
+       simulators: list of simulators to generate output from. Defaults to `None`.
        truth: path to the "ground truth" report file. Defaults to `None`.
 
     """
-    # amici_results = run_sbml_amici(**params)
-    copasi_results = run_sbml_copasi(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-    tellurium_results = run_sbml_tellurium(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-    output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
+    output = {}
+
+    if simulators:
+        for simulator in simulators:
+            simulator = simulator.lower()
+            result = {}
+
+            if simulator == 'amici':
+                result = run_sbml_amici(sbml_fp, start, dur, steps)
+            elif simulator == 'copasi':
+                result = run_sbml_copasi(sbml_fp, start, dur, steps)
+            elif simulator == 'tellurium':
+                result = run_sbml_tellurium(sbml_fp, start, dur, steps)
+
+            output[simulator] = result
+
+    else:
+        # amici_results = run_sbml_amici(**params)
+        copasi_results = run_sbml_copasi(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+        tellurium_results = run_sbml_tellurium(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+        output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
 
     if truth is not None:
         output['ground_truth'] = {}
