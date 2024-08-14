@@ -1,3 +1,5 @@
+amici
+biosimulators-amici
 biosimulators-copasi
 biosimulators-tellurium
 biosimulators-utils[logging]

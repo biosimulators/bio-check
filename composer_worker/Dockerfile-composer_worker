@@ -10,6 +10,11 @@ COPY . /app/worker
 #     && pip install -r /app/worker/requirements.worker.txt \
 #     && python3 -m pip install --upgrade matplotlib
 
+RUN apt-get update \
+    && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
 WORKDIR /app/worker
