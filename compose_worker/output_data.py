@@ -12,6 +12,7 @@ from basico import *
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 from biosimulators_simularium import execute as execute_simularium
+from smoldyn import Simulation
 
 from data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
@@ -31,6 +32,37 @@ def generate_smoldyn_simularium(smoldyn_configuration_file: str, output_dest_dir
 
     return execute_simularium(working_dir=temp_archive_root, use_json=use_json, output_dir=output_dest_dir, agent_params=agent_params, box_size=box_size)
 
+
+def run_smoldyn(model_fp: str, duration: int, dt: float = None):
+    """Run the simulation model found at `model_fp` for the duration
+            specified therein and return a dictionary of a numpy array of the `listmols` command output and the
+            `smoldyn.Simulation` instance used to generate said output.
+            We choose to not specify a duration as this is already required in the SEDML configuration.
+
+            Args:
+                model_fp:`str`: path to the smoldyn configuration. Defaults to `None`.
+                duration:`float`: duration in seconds to run the simulation for.
+                dt:`float`: time step in seconds to run the simulation for. Defaults to None, which uses the built-in simulation dt.
+
+    """
+    simulation = Simulation.fromFile(model_fp)
+
+    # write molcounts to counts dataset at every timestep (shape=(n_timesteps, 1+n_species <-- one for time)): [timestep, countSpec1, countSpec2, ...]
+    simulation.addOutputData('species_counts')
+    simulation.addCommand(cmd='molcount species_counts', cmd_type='E')
+
+    # write spatial output to molecules dataset
+    simulation.addOutputData('molecules')
+    simulation.addCommand(cmd='listmols molecules', cmd_type='E')
+
+    step_size = dt or simulation.dt
+    simulation.run(duration, step_size)
+    # simulation.runSim()
+
+    return {
+        'species_counts': np.array(simulation.getOutputData('species_counts')),
+        'molecules': np.array(simulation.getOutputData('molecules')),
+    }
 
 def get_sbml_species_mapping(sbml_fp: str):
     # read file
