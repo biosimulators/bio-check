@@ -11,6 +11,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, 
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
+from compose_api.compatible import COMPATIBLE_VERIFICATION_SIMS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob
 from shared import upload_blob, MongoDbConnector
@@ -126,7 +127,7 @@ async def run_smoldyn(
         # initial_molecule_state: List = Body(default=None, description="Mapping of species names to initial molecule conditions including counts and location.")
 ):
     try:
-        job_id = str(uuid.uuid4())
+        job_id = "execute-simulations-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
@@ -161,7 +162,7 @@ async def run_utc(
         simulator: str = Query(..., description="Simulator to use (one of: amici, copasi, tellurium, vcell)"),
 ):
     try:
-        job_id = str(uuid.uuid4())
+        job_id = "execute-simulations-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
 
@@ -208,7 +209,7 @@ async def verify_omex(
         else:
             compare_id = comparison_id
 
-        job_id = compare_id + "_" + str(uuid.uuid4())
+        job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
         # bucket params
@@ -290,7 +291,7 @@ async def verify_sbml(
         else:
             compare_id = comparison_id
 
-        job_id = compare_id + "_" + str(uuid.uuid4())
+        job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
         # bucket params
@@ -376,13 +377,15 @@ async def get_compatible_for_verification(
 ) -> CompatibleSimulators:
     try:
         filename = uploaded_file.filename
+        simulators = COMPATIBLE_VERIFICATION_SIMS.copy()  # TODO: dynamically extract this!
+
+        # handle filetype: amici is not compatible with sbml verification at the moment
+        if not filename.endswith(".omex"):
+            for sim in simulators:
+                if sim[0] == 'amici':
+                    simulators.remove(sim)
+
         compatible_sims = []
-        simulators = [('copasi', '0.71'), ('tellurium', '2.2.10')]  # TODO: dynamically extract this!
-
-        # handle filetype: amici is compatible with omex comparison
-        if filename.endswith(".omex"):
-            simulators.append(('amici', '0.11.21'))
-
         for data in simulators:
             name = data[0]
             version = data[1]

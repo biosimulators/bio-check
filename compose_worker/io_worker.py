@@ -3,7 +3,7 @@ from typing import Union
 
 import h5py
 import libsbml
-from biosimulators_utils.combine.io import CombineArchiveReader
+
 from fastapi import UploadFile
 from google.cloud import storage
 

@@ -1,19 +1,10 @@
-import os
-import tempfile
-import uuid
 import logging
 from asyncio import sleep
-from dataclasses import dataclass
-from functools import partial
 from typing import *
 from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
-from process_bigraph import Composite
 
-import numpy as np
-import pandas as pd
-
-from compose_worker.workers import VerificationWorker
+from workers import SimulationRunWorker, VerificationWorker
 from shared import BaseClass, MongoDbConnector, setup_logging, unique_id
 
 
@@ -58,17 +49,19 @@ class Supervisor:
                     # check if job id exists in dbconn.completed
                     is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
 
+                    worker = None
                     if not is_completed:
-                        # otherwise: create new worker with job
-                        worker = VerificationWorker(job=pending_job)
-                        result_data = await worker.run()
+                        # check: run simulations
+                        if job_id.startswith('execute-simulations'):
+                            worker = SimulationRunWorker(job=pending_job)
+                        # check: verifications
+                        elif job_id.startswith('verification'):
+                            # otherwise: create new worker with job
+                            worker = VerificationWorker(job=pending_job)
 
                         # when worker completes, dismiss worker (if in parallel) and create new completed job
-                        completed_job_doc = await self.db_connector.insert_completed_job(
-                            job_id=job_id,
-                            results=result_data,
-                            source=source
-                        )
+                        result_data = await worker.run()
+                        completed_job_doc = await self.db_connector.insert_completed_job(job_id=job_id, results=result_data, source=source)
 
                     # job is complete, remove job from queue
                     self.job_queue.pop(i)
