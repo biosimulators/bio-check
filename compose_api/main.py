@@ -117,7 +117,7 @@ def root():
     # response_model=PendingSmoldynJob,
     name="Run a smoldyn simulation",
     operation_id="run-smoldyn",
-    tags=["execute-simulations"],
+    tags=["Execute Simulations"],
     summary="Run a smoldyn simulation")
 async def run_smoldyn(
         uploaded_file: UploadFile = File(..., description="Smoldyn Configuration File"),
@@ -151,8 +151,8 @@ async def run_smoldyn(
     # response_model=PendingUtcJob,
     name="Run an ODE Uniform Time Course simulation",
     operation_id="run-utc",
-    tags=["execute-simulations"],
-    summary="Run a UTC simulation")
+    tags=["Execute Simulations"],
+    summary="Run a Uniform Time Course simulation")
 async def run_utc(
         uploaded_file: UploadFile = File(..., description="SBML File"),
         start: int = Query(..., description="Starting time for utc"),
@@ -189,7 +189,7 @@ async def run_utc(
     response_model=PendingOmexJob,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
-    tags=["verification"],
+    tags=["Verification"],
     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
 async def verify_omex(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
@@ -268,7 +268,7 @@ async def verify_omex(
     response_model=PendingSbmlJob,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
-    tags=["verification"],
+    tags=["Verification"],
     summary="Compare UTC outputs from a deterministic SBML model.")
 async def verify_sbml(
         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
@@ -351,7 +351,7 @@ async def verify_sbml(
     "/get-output/{job_id}",
     response_model=UtcComparisonResult,
     operation_id='get-verify-output',
-    tags=["data"],
+    tags=["Data"],
     summary='Get the results of an existing simulation run.')
 async def fetch_results(job_id: str) -> UtcComparisonResult:
     colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
@@ -368,7 +368,7 @@ async def fetch_results(job_id: str) -> UtcComparisonResult:
     "/get-compatible-for-verification",
     response_model=CompatibleSimulators,
     operation_id='get-compatible-for-verification',
-    tags=["data"],
+    tags=["Data"],
     summary='Get the simulators that are compatible with either a given OMEX/COMBINE archive or SBML model simulation.')
 async def get_compatible_for_verification(
         uploaded_file: UploadFile = File(..., description="Either a COMBINE/OMEX archive or SBML file to be simulated."),
