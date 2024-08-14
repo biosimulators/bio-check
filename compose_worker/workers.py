@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from log_config import setup_logging
-from shared import unique_id, BUCKET_NAME
+from shared import unique_id, BUCKET_NAME, CORE
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob, upload_blob, write_uploaded_file
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
 
@@ -437,10 +437,20 @@ class VerificationWorker(Worker):
         return np.allclose(arr1, arr2, rtol=rTol, atol=aTol)
 
 
-
 class CompositionWorker(Worker):
     def __init__(self, job):
         super().__init__(job=job)
 
     async def run(self):
-        pass
+        # extract params
+        duration = self.job_params['duration']
+        composite_doc = self.job_params['composite_doc']
+
+        # instantiate composition
+        composition = Composite(config=composite_doc, core=CORE)
+
+        # run composition and set results
+        composition.run(duration)
+        self.job_result['results'] = composition.gather_results()
+
+        return self.job_result

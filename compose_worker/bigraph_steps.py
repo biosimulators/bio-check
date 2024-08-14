@@ -18,8 +18,7 @@ except:
     )
 
 from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-
-CORE = ProcessTypes()
+from shared import CORE
 
 
 class SmoldynStep(Step):

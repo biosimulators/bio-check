@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import *
 
 from google.cloud import storage
+from process_bigraph import ProcessTypes
 from pydantic import BaseModel as _BaseModel, ConfigDict
 from fastapi import UploadFile
 from pymongo import MongoClient
@@ -17,10 +18,10 @@ from pymongo.database import Database
 
 # -- globally-shared content-- #
 
-
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
+CORE = ProcessTypes()
 
 
 def unique_id():
