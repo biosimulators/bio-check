@@ -135,3 +135,15 @@ def read_report_outputs(report_file_path) -> Union[BiosimulationsRunOutputData, 
             return BiosimulationsRunOutputData(report_path=report_file_path, data=outputs)
         else:
             return f"Group '{group_path}' not found in the file."
+
+
+def normalize_smoldyn_output_path_in_root(root_fp) -> str | None:
+    new_path = None
+    for root, dirs, files in os.walk(root_fp):
+        for filename in files:
+            if filename.endswith('out.txt'):
+                original_path = os.path.join(root, filename)
+                new_path = os.path.join(root, 'modelout.txt')
+                os.rename(original_path, new_path)
+
+    return new_path

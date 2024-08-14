@@ -17,7 +17,7 @@ from smoldyn import Simulation
 from data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.data_model.service_data_model import BiosimulationsRunOutputData
 # from biosimulator_processes.io import standardize_report_outputs
-from io_worker import read_report_outputs
+from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root
 from shared import make_dir
 
 
@@ -33,36 +33,61 @@ def generate_smoldyn_simularium(smoldyn_configuration_file: str, output_dest_dir
     return execute_simularium(working_dir=temp_archive_root, use_json=use_json, output_dir=output_dest_dir, agent_params=agent_params, box_size=box_size)
 
 
-def run_smoldyn(model_fp: str, duration: int, dt: float = None):
+# TODO: should we return the actual data from memory, or that reflected in a smoldyn output txt file or both?
+def run_smoldyn(model_fp: str, duration: int, dt: float = None, output_type: str = 'file') -> Dict[str, Union[str, Dict[str, Union[float, List[float]]]]]:
     """Run the simulation model found at `model_fp` for the duration
-            specified therein and return a dictionary of a numpy array of the `listmols` command output and the
-            `smoldyn.Simulation` instance used to generate said output.
-            We choose to not specify a duration as this is already required in the SEDML configuration.
+            specified therein and return a dictionary of an array of the `listmols` as well as `molcount` command outputs.
 
             Args:
                 model_fp:`str`: path to the smoldyn configuration. Defaults to `None`.
                 duration:`float`: duration in seconds to run the simulation for.
                 dt:`float`: time step in seconds to run the simulation for. Defaults to None, which uses the built-in simulation dt.
+                output_type:`str`: type of output to return. Choose either `'file'`(returns traditional Smoldyn output `.txt` file,
+                 or '`Defaults to 'file'.
 
+    For the output, we should read the model file and search for "output_files" to start one of the lines.
+    If it startswith that, then assume a return of the output txt file, if not: then assume a return from ram.
     """
+    # search for output_files in model_fp TODO: optimize this
+    with open(model_fp, 'r') as f:
+        model_content = [line.strip() for line in f.readlines()]
+        use_file_output = 'output_files' in model_content
+        f.close()
+
+    output_data = {}
     simulation = Simulation.fromFile(model_fp)
 
-    # write molcounts to counts dataset at every timestep (shape=(n_timesteps, 1+n_species <-- one for time)): [timestep, countSpec1, countSpec2, ...]
-    simulation.addOutputData('species_counts')
-    simulation.addCommand(cmd='molcount species_counts', cmd_type='E')
+    # case: there is no declaration of output_files in the smoldyn config file, or it is commented out
+    if not use_file_output:
+        # write molcounts to counts dataset at every timestep (shape=(n_timesteps, 1+n_species <-- one for time)): [timestep, countSpec1, countSpec2, ...]
+        simulation.addOutputData('species_counts')
+        simulation.addCommand(cmd='molcount species_counts', cmd_type='E')
 
-    # write spatial output to molecules dataset
-    simulation.addOutputData('molecules')
-    simulation.addCommand(cmd='listmols molecules', cmd_type='E')
+        # write spatial output to molecules dataset
+        simulation.addOutputData('molecules')
+        simulation.addCommand(cmd='listmols molecules', cmd_type='E')
 
-    step_size = dt or simulation.dt
-    simulation.run(duration, step_size)
-    # simulation.runSim()
+        # run simulation for specified time
+        step_size = dt or simulation.dt
+        simulation.run(duration, step_size, overwrite=True)
 
-    return {
-        'species_counts': np.array(simulation.getOutputData('species_counts')),
-        'molecules': np.array(simulation.getOutputData('molecules')),
-    }
+        # return ram data (default dimensions)
+        output_data = {'species_counts': simulation.getOutputData('species_counts'), 'molecules': simulation.getOutputData('molecules')}
+
+    # case: output files are specified, and thus time parameters by which to capture/collect output
+    else:
+        # run simulation with default time params
+        simulation.runSim()
+
+        # change the output filename to a standardized 'modelout.txt' name
+        working_dir = os.path.dirname(model_fp)
+        results_fp = normalize_smoldyn_output_path_in_root(working_dir)
+
+        # return output file
+        output_data = {'results_file': results_fp}
+
+    return output_data
+
 
 def get_sbml_species_mapping(sbml_fp: str):
     # read file
