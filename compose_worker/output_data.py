@@ -28,19 +28,20 @@ from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root
 
 
 # TODO: should we return the actual data from memory, or that reflected in a smoldyn output txt file or both?
-def run_smoldyn(model_fp: str, duration: int, dt: float = None, output_type: str = 'file') -> Dict[str, Union[str, Dict[str, Union[float, List[float]]]]]:
+def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Union[str, Dict[str, Union[float, List[float]]]]]:
     """Run the simulation model found at `model_fp` for the duration
-            specified therein and return a dictionary of an array of the `listmols` as well as `molcount` command outputs.
+        specified therein if output_files are specified in the smoldyn model file and return the aforementioned output file
+        or return a dictionary of an array of the `listmols` as well as `molcount` command outputs. NOTE: The model file is currently
+        searched for this `output_files` value, and if it exists and not commented out, it will scan the root of the model_fp
+        (usually where smoldyn output files are stored, which is the same dir as the model_fp) to retrieve the output file.
 
             Args:
                 model_fp:`str`: path to the smoldyn configuration. Defaults to `None`.
                 duration:`float`: duration in seconds to run the simulation for.
                 dt:`float`: time step in seconds to run the simulation for. Defaults to None, which uses the built-in simulation dt.
-                output_type:`str`: type of output to return. Choose either `'file'`(returns traditional Smoldyn output `.txt` file,
-                 or '`Defaults to 'file'.
 
-    For the output, we should read the model file and search for "output_files" to start one of the lines.
-    If it startswith that, then assume a return of the output txt file, if not: then assume a return from ram.
+        For the output, we should read the model file and search for "output_files" to start one of the lines.
+        If it startswith that, then assume a return of the output txt file, if not: then assume a return from ram.
     """
     # search for output_files in model_fp TODO: optimize this
     with open(model_fp, 'r') as f:

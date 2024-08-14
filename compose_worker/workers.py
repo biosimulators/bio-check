@@ -12,7 +12,7 @@ import pandas as pd
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob
-from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping,
+from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
@@ -59,7 +59,7 @@ class SimulationRunWorker(Worker):
             initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
 
             # execute simularium, pointing to a filepath that is out_dir/simulation.simularium
-            Generate smoldyn here!
+            self.job_result = run_smoldyn(model_fp=source_fp, duration=duration, dt=dt)
             # write the aforementioned simularium file to the bucket
 
             # write the aforementioned smoldyn output file to the bucket
@@ -425,3 +425,12 @@ class VerificationWorker(Worker):
         aTol = atol or max(1e-3, max1 * 1e-5, max2 * 1e-5)
         rTol = rtol or 1e-4
         return np.allclose(arr1, arr2, rtol=rTol, atol=aTol)
+
+
+
+class CompositionWorker(Worker):
+    def __init__(self, job):
+        super().__init__(job=job)
+
+    async def run(self):
+        pass
