@@ -14,7 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 from compose_api.compatible import COMPATIBLE_VERIFICATION_SIMS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob
-from shared import upload_blob, MongoDbConnector
+from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension
 from log_config import setup_logging
 
@@ -48,10 +48,8 @@ ORIGINS = [
     'https://bio.libretexts.org',
 ]
 
-DB_TYPE = "mongo"  # ie: postgres, etc
-DB_NAME = "service_requests"
+
 MONGO_URI = os.getenv("MONGO_URI")
-BUCKET_NAME = os.getenv("BUCKET_NAME") or "bio-check-requests-1"
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 

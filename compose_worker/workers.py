@@ -9,17 +9,17 @@ from process_bigraph import Composite
 import numpy as np
 import pandas as pd
 
-from shared import download_blob, setup_logging, unique_id, BUCKET_NAME
-from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file
+from log_config import setup_logging
+from shared import unique_id, BUCKET_NAME
+from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, generate_smoldyn_simularium
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
 
 # logging
-LOGFILE = "biochecknet_composer_worker.log"
 logger = logging.getLogger(__name__)
-setup_logging(LOGFILE)
+setup_logging(logger)
 
 
 class Worker(ABC):
@@ -56,6 +56,7 @@ class SimulationRunWorker(Worker):
             duration = self.job_params['duration']
             dt = self.job_params['dt']
             initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
+
 
         # is utc job
         if input_file.endswith('.xml'):

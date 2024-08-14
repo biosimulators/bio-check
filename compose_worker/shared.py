@@ -44,16 +44,6 @@ async def load_arrows(timer):
         print(disp)
 
 
-def setup_logging(fname: str):
-    logging.basicConfig(
-        filename=fname,
-        level=logging.ERROR,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-
-
-
-
 # -- base models --
 
 class BaseModel(_BaseModel):
