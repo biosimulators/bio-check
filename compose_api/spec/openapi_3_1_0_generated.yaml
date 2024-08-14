@@ -16,7 +16,7 @@ paths:
   /run-smoldyn:
     post:
       tags:
-      - run-simulations
+      - execute-simulations
       summary: Run a smoldyn simulation
       operationId: run-smoldyn
       parameters:
@@ -57,7 +57,7 @@ paths:
   /run-utc:
     post:
       tags:
-      - run-simulations
+      - execute-simulations
       summary: Run a UTC simulation
       operationId: run-utc
       parameters:

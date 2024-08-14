@@ -145,18 +145,15 @@ class VerificationWorker(Worker):
         params = None
         out_dir = tempfile.mkdtemp()
         source_fp = self.job_params['path']
+        source_report_fp = self.job_params.get('expected_results')
 
         # download sbml file
         local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         # get ground truth from bucket if applicable
-        ground_truth_report_path = self.job_params.get('expected_results')
-        truth_vals = None
-        if ground_truth_report_path is not None:
-            source_report_blob_name = self.job_params['expected_results']
-            local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
-            download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
-            ground_truth_report_path = local_report_path
+        local_report_fp = None
+        if source_report_fp is not None:
+            local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         try:
             simulators = self.job_params.get('simulators', [])
@@ -168,28 +165,26 @@ class VerificationWorker(Worker):
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
 
-            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=ground_truth_report_path)
+            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=local_report_fp)
             self.job_result = result
         except Exception as e:
-            self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
+            self.job_result = {"bio-composer-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
 
     def _execute_omex_job(self):
         params = None
         out_dir = tempfile.mkdtemp()
+        source_fp = self.job_params['path']
+        source_report_fp = self.job_params.get('expected_results')
 
-        # get omex from bucket
-        source_omex_blob_name = self.job_params['path']
-        local_omex_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
-        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_omex_fp)
+        # download sbml file
+        local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         # get ground truth from bucket if applicable
-        ground_truth_report_path = self.job_params['expected_results']
         truth_vals = None
-        if ground_truth_report_path is not None:
-            source_report_blob_name = self.job_params['expected_results']
-            local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
-            download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
-            truth_vals = read_report_outputs(local_report_path)
+        local_report_fp = None
+        if source_report_fp is not None:
+            local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
+            truth_vals = read_report_outputs(local_report_fp)
 
         try:
             simulators = self.job_params.get('simulators', [])
@@ -199,7 +194,7 @@ class VerificationWorker(Worker):
             comparison_id = self.job_params.get('job_id')
 
             result = self._run_comparison_from_omex(
-                path=local_omex_fp,
+                path=local_fp,
                 simulators=simulators,
                 out_dir=out_dir,
                 include_outputs=include_outs,
@@ -208,7 +203,7 @@ class VerificationWorker(Worker):
             )
             self.job_result = result
         except Exception as e:
-            self.job_result = {"bio-check-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
+            self.job_result = {"bio-composer-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
 
     def _run_comparison_from_omex(
             self,

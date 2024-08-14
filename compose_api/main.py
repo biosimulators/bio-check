@@ -117,7 +117,7 @@ def root():
     # response_model=PendingSmoldynJob,
     name="Run a smoldyn simulation",
     operation_id="run-smoldyn",
-    tags=["run-simulations"],
+    tags=["execute-simulations"],
     summary="Run a smoldyn simulation")
 async def run_smoldyn(
         uploaded_file: UploadFile = File(..., description="Smoldyn Configuration File"),
@@ -151,7 +151,7 @@ async def run_smoldyn(
     # response_model=PendingUtcJob,
     name="Run an ODE Uniform Time Course simulation",
     operation_id="run-utc",
-    tags=["run-simulations"],
+    tags=["execute-simulations"],
     summary="Run a UTC simulation")
 async def run_utc(
         uploaded_file: UploadFile = File(..., description="SBML File"),

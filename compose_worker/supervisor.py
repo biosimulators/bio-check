@@ -13,7 +13,7 @@ from process_bigraph import Composite
 import numpy as np
 import pandas as pd
 
-from composer_worker.workers import VerificationWorker
+from compose_worker.workers import VerificationWorker
 from shared import BaseClass, MongoDbConnector, setup_logging, unique_id
 
 
