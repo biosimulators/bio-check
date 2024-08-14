@@ -49,18 +49,35 @@ class SimulationRunWorker(Worker):
 
     async def run(self):
         # check which endpoint methodology to implement
-        input_file = self.job_params['path']
+        out_dir = tempfile.mkdtemp()
+        source_fp = self.job_params['path']
+        local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         # is a smoldyn job
-        if input_file.endswith('.txt'):
+        if source_fp.endswith('.txt'):
             duration = self.job_params['duration']
             dt = self.job_params['dt']
             initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
 
+            # execute simularium, pointing to a filepath that is out_dir/simulation.simularium
+
+            # write the aforementioned simularium file to the bucket
+
+            # write the aforementioned smoldyn output file to the bucket
+
+            # set self.job_result to have a {'results': {'simularium_file': ..., 'smoldyn_output_file': ...}
 
         # is utc job
-        if input_file.endswith('.xml'):
+        if source_fp.endswith('.xml'):
+            # get sim params from job_params
+
+            # execute utc simulation, specifying the simulator referenced in the job_params
+
+            # set self.job_result to have 'results': {spec_name: value for spec_name, value in output.items()}
+
             pass
+
+        return self.job_result
 
 
 class VerificationWorker(Worker):
