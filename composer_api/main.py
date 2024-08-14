@@ -24,7 +24,7 @@ dotenv.load_dotenv("../assets/.env_dev")
 
 # -- constraints -- #
 
-APP_TITLE = "bio-compose"
+APP_TITLE = "bio-composer"
 APP_VERSION = "1.0.0"
 
 # TODO: update this
@@ -107,7 +107,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 @app.get("/")
 def root():
-    return {'bio-check-message': 'Hello from the Verification Service API!'}
+    return {'bio-composer-message': 'Hello from the BioComposer!'}
 
 
 # run simulations

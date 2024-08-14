@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: bio-compose
+  title: bio-composer
   version: 1.0.0
 paths:
   /:
@@ -47,8 +47,7 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PendingSmoldynJob'
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -105,8 +104,7 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PendingUtcJob'
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -327,7 +325,7 @@ paths:
     get:
       tags:
       - data
-      summary: Get the results of an existing uniform time course comparison.
+      summary: Get the results of an existing simulation run.
       operationId: get-verify-output
       parameters:
       - name: job_id
@@ -407,10 +405,6 @@ components:
           format: binary
           title: Uploaded File
           description: Smoldyn Configuration File
-        initial_species_counts:
-          type: object
-          title: Initial Species Counts
-          description: Mapping of species names to initial molecule counts
       type: object
       required:
       - uploaded_file
@@ -616,87 +610,6 @@ components:
       - steps
       - simulators
       title: PendingSbmlJob
-    PendingSmoldynJob:
-      properties:
-        job_id:
-          type: string
-          title: Job Id
-        status:
-          type: string
-          title: Status
-        timestamp:
-          type: string
-          title: Timestamp
-        comparison_id:
-          type: string
-          title: Comparison Id
-        path:
-          type: string
-          title: Path
-        duration:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Duration
-        dt:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Dt
-        initial_species_counts:
-          anyOf:
-          - type: object
-          - type: 'null'
-          title: Initial Species Counts
-      type: object
-      required:
-      - job_id
-      - status
-      - timestamp
-      - comparison_id
-      - path
-      title: PendingSmoldynJob
-    PendingUtcJob:
-      properties:
-        job_id:
-          type: string
-          title: Job Id
-        status:
-          type: string
-          title: Status
-        timestamp:
-          type: string
-          title: Timestamp
-        comparison_id:
-          type: string
-          title: Comparison Id
-        path:
-          type: string
-          title: Path
-        start:
-          type: integer
-          title: Start
-        end:
-          type: integer
-          title: End
-        steps:
-          type: integer
-          title: Steps
-        simulator:
-          type: string
-          title: Simulator
-      type: object
-      required:
-      - job_id
-      - status
-      - timestamp
-      - comparison_id
-      - path
-      - start
-      - end
-      - steps
-      - simulator
-      title: PendingUtcJob
     Simulator:
       properties:
         name:
