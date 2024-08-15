@@ -11,9 +11,9 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, 
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from compose_api.compatible import COMPATIBLE_VERIFICATION_SIMS
+from compose_api.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob
+from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension
 from log_config import setup_logging
@@ -125,7 +125,7 @@ async def run_smoldyn(
         # initial_molecule_state: List = Body(default=None, description="Mapping of species names to initial molecule conditions including counts and location.")
 ):
     try:
-        job_id = "execute-simulations-" + str(uuid.uuid4())
+        job_id = "execute-simulations-smoldyn" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
@@ -160,7 +160,7 @@ async def run_utc(
         simulator: str = Query(..., description="Simulator to use (one of: amici, copasi, tellurium, vcell)"),
 ):
     try:
-        job_id = "execute-simulations-" + str(uuid.uuid4())
+        job_id = "execute-simulations-utc" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
 
@@ -348,17 +348,17 @@ async def verify_sbml(
 
 @app.get(
     "/get-output/{job_id}",
-    response_model=UtcComparisonResult,
+    response_model=OutputData,
     operation_id='get-verify-output',
     tags=["Data"],
     summary='Get the results of an existing simulation run.')
-async def fetch_results(job_id: str) -> UtcComparisonResult:
-    colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+async def fetch_results(job_id: str) -> OutputData:
+    colls = ['completed_jobs', 'pending_jobs']
     for collection in colls:
         job = db_connector.db[collection].find_one({'job_id': job_id})
         if not isinstance(job, type(None)):
             job.pop('_id')
-            return UtcComparisonResult(content=job)
+            return OutputData(content=job)
 
     raise HTTPException(status_code=404, detail="Comparison not found")
 
@@ -375,7 +375,7 @@ async def get_compatible_for_verification(
 ) -> CompatibleSimulators:
     try:
         filename = uploaded_file.filename
-        simulators = COMPATIBLE_VERIFICATION_SIMS.copy()  # TODO: dynamically extract this!
+        simulators = COMPATIBLE_VERIFICATION_SIMULATORS.copy()  # TODO: dynamically extract this!
 
         # handle filetype: amici is not compatible with sbml verification at the moment
         if not filename.endswith(".omex"):

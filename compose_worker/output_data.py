@@ -24,6 +24,7 @@ from biosimulators_utils.config import Config
 # from biosimulators_simularium import execute as execute_simularium
 
 from data_model import BiosimulationsRunOutputData
+from compatible import COMPATIBLE_UTC_SIMULATORS
 from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir
 
 
@@ -238,6 +239,13 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     return output_data
 
 
+# TODO: add Vcell and pysces here
+SBML_EXECUTORS = dict(zip(
+    [data[0] for data in COMPATIBLE_UTC_SIMULATORS],
+    [run_sbml_amici, run_sbml_copasi, run_sbml_tellurium]
+))
+
+
 def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, simulators: list[str] = None, truth: str = None) -> dict:
     """
 
@@ -252,25 +260,20 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     """
     output = {}
 
-    if simulators:
-        for simulator in simulators:
-            simulator = simulator.lower()
-            result = {}
+    # TODO: add VCELL and pysces here
+    simulators = simulators or ['amici', 'copasi', 'tellurium']
+    for simulator in simulators:
+        simulator = simulator.lower()
+        result = {}
+        simulation_executor = SBML_EXECUTORS[simulator]
+        result = simulation_executor(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+        output[simulator] = result
 
-            if simulator == 'amici':
-                result = run_sbml_amici(sbml_fp, start, dur, steps)
-            elif simulator == 'copasi':
-                result = run_sbml_copasi(sbml_fp, start, dur, steps)
-            elif simulator == 'tellurium':
-                result = run_sbml_tellurium(sbml_fp, start, dur, steps)
-
-            output[simulator] = result
-
-    else:
-        # amici_results = run_sbml_amici(**params)
-        copasi_results = run_sbml_copasi(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-        tellurium_results = run_sbml_tellurium(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-        output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
+    # else:
+    #     # amici_results = run_sbml_amici(**params)
+    #     copasi_results = run_sbml_copasi(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+    #     tellurium_results = run_sbml_tellurium(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+    #     output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
 
     if truth is not None:
         output['ground_truth'] = {}

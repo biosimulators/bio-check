@@ -84,8 +84,12 @@ class UtcComparisonRequestParams(BaseModel):
     comparison_id: Optional[str] = None
 
 
-class UtcComparisonResult(BaseModel):
+class OutputData(BaseModel):
     content: Any
+
+
+class UtcComparisonResult(OutputData):
+    pass
 
 
 class Simulator(BaseModel):
