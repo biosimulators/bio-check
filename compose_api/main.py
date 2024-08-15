@@ -14,7 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData
+from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
@@ -378,39 +378,43 @@ async def fetch_results(job_id: str) -> Union[OutputData, FileResponse]:
 
 @app.post(
     "/generate-simularium-file",
-    # response_model=FileResponse,
+    response_model=PendingSimulariumJob,
     operation_id='generate-simularium-file',
     tags=["Files"],
     summary='Generate a simularium file with a compatible simulation results file from either Smoldyn, SpringSaLaD, or ReaDDy.')
 async def generate_simularium_file(
         uploaded_file: UploadFile = File(..., description="A file containing results that can be parse by Simularium (spatial)."),
         filename: str = Query(default=None, description="Name desired for the simularium file. NOTE: pass only the file name without an extension."),
-):  # -> FileResponse:
-    try:
-        job_id = "files-generate-simularium-file" + str(uuid.uuid4())
-        _time = db_connector.timestamp()
+) -> PendingSimulariumJob:
+    e = NotImplementedError("This feature is for demonstration purposes only and currently under development.")
+    raise HTTPException(status_code=501, detail=str(e))
+    # try:
+    #     job_id = "files-generate-simularium-file" + str(uuid.uuid4())
+    #     _time = db_connector.timestamp()
 
-        # bucket params
-        upload_prefix = f"uploads/{job_id}/"
-        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
+    #     # bucket params
+    #     upload_prefix = f"uploads/{job_id}/"
+    #     bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
-        # write uploaded file to bucket
-        uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
+    #     # write uploaded file to bucket
+    #     uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
-        # new simularium job in db
-        if filename is None:
-            filename = 'simulation.simularium'
+    #     # new simularium job in db
+    #     if filename is None:
+    #         filename = 'simulation.simularium'
 
-        new_job_submission = await db_connector.write(
-            collection_name=DatabaseCollections.PENDING_JOBS,
-            status=JobStatus.PENDING,
-            job_id=job_id,
-            path=uploaded_file_location,
-            filename=filename
-        )
-        # raise NotImplementedError("This feature is for demonstration purposes only and currently under development.")
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
+    #     new_job_submission = await db_connector.write(
+    #         collection_name=DatabaseCollections.PENDING_JOBS,
+    #         status=JobStatus.PENDING,
+    #         job_id=job_id,
+    #         timestamp=_time,
+    #         input_file=uploaded_file_location,
+    #         filename=filename
+    #     )
+
+    #     return PendingSimulariumJob(**new_job_submission)
+    # except Exception as e:
+    #     raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
 
 
 @app.post(

@@ -56,6 +56,14 @@ class PendingUtcJob(Job):
     simulator: str
 
 
+class PendingSimulariumJob(Job):
+    job_id: str
+    timestamp: str
+    input_file: str
+    filename: str
+    status: str = "PENDING"
+
+
 class OmexComparisonSubmission(PendingOmexJob):
     pass
 
