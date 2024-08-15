@@ -66,3 +66,29 @@ async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: Uplo
         uploaded_file_location = blob_dest
 
     return uploaded_file_location
+
+
+def download_blob(bucket_name, source_blob_name, destination_file_name):
+    """Downloads a blob from the bucket."""
+    # bucket_name = "your-bucket-name"
+    # source_blob_name = "storage-object-name"
+    # destination_file_name = "local/path/to/file"
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(source_blob_name)
+
+    # Download the file to a destination
+    blob.download_to_filename(destination_file_name)
+
+
+def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
+    """Download any file specified in a given job_params (mongo db collection document) which is saved in the bucket to out_dir. The file is assumed to originate from bucket_name.
+
+        Returns:
+            filepath (`str`) of the downloaded file.
+    """
+    source_blob_name = source_blob_path
+    local_fp = os.path.join(out_dir, source_blob_name.split('/')[-1])
+    download_blob(bucket_name=bucket_name, source_blob_name=source_blob_name, destination_file_name=local_fp)
+    return local_fp

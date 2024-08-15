@@ -8,6 +8,7 @@ from typing import *
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
+from fastapi.responses import FileResponse
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
@@ -15,7 +16,7 @@ from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME
-from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension
+from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file
 from log_config import setup_logging
 
 # --load env -- #
@@ -238,8 +239,8 @@ async def verify_omex(
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         report_location = report_blob_dest
 
-        pending_job_doc = await db_connector.insert_job_async(
-            collection_name="pending_jobs",
+        pending_job_doc = await db_connector.write(
+            coll_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
             path=uploaded_file_location,
@@ -320,8 +321,8 @@ async def verify_sbml(
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         report_location = report_blob_dest
 
-        pending_job_doc = await db_connector.insert_job_async(
-            collection_name="pending_jobs",
+        pending_job_doc = await db_connector.write(
+            coll_name="pending_jobs",
             status="PENDING",
             job_id=job_id,
             comparison_id=compare_id,
@@ -352,13 +353,23 @@ async def verify_sbml(
     operation_id='get-verify-output',
     tags=["Data"],
     summary='Get the results of an existing simulation run.')
-async def fetch_results(job_id: str) -> OutputData:
+async def fetch_results(job_id: str) -> Union[OutputData, FileResponse]:
     colls = ['completed_jobs', 'pending_jobs']
     for collection in colls:
-        job = db_connector.db[collection].find_one({'job_id': job_id})
+        job = await db_connector.read(collection_name=collection, job_id=job_id)
         if not isinstance(job, type(None)):
             job.pop('_id')
-            return OutputData(content=job)
+
+            # check for a downloadable file in results
+            job_data = job['content']['results']['results']
+            if "results_file" in job_data.keys():
+                remote_fp = job_data['results_file']
+                temp_dest = mkdtemp()
+                local_fp = download_file(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+
+                return FileResponse(path=local_fp)
+            else:
+                return OutputData(content=job)
 
     raise HTTPException(status_code=404, detail="Comparison not found")
 

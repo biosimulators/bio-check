@@ -45,8 +45,9 @@ async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: Uplo
     return blob_dest
 
 
-def check_upload_file_extension(file: UploadFile, purpose: str, ext: str) -> bool:
-    return False if not file.filename.endswith(ext) else True
+def check_upload_file_extension(file: UploadFile | str, purpose: str, ext: str) -> bool:
+    fname = file.filename if isinstance(file, UploadFile) else file
+    return False if not fname.endswith(ext) else True
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
@@ -106,9 +107,18 @@ async def save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) ->
         filename = uploaded_file
 
     file_path = os.path.join(save_dest, filename)
-    with open(file_path, 'wb') as file:
-        contents = await uploaded_file.read() if isinstance(uploaded_file, UploadFile) else file.read()
-        file.write(contents)
+    # case: is a fastapi upload
+    if isinstance(uploaded_file, UploadFile):
+        with open(file_path, 'wb') as file:
+            contents = await uploaded_file.read()
+            file.write(contents)
+    # case: is a string
+    else:
+        with open(uploaded_file, 'r') as fp:
+            contents = fp.read()
+        with open(file_path, 'w') as f:
+            f.write(contents)
+
     return file_path
 
 

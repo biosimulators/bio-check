@@ -82,9 +82,9 @@ class SimulationRunWorker(Worker):
         results_file = result.get('results_file')
         if results_file is not None:
             uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
-
-        # set self.job_result to have a {'results': {'results_file': ...}
-        self.job_result['results'] = result
+            self.job_result['results'] = {'results_file': uploaded_file_location}
+        else:
+            self.job_result['results'] = result
 
     async def run_utc(self, local_fp: str):
         start = self.job_params['start']

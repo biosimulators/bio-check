@@ -27,7 +27,7 @@ class Supervisor:
         self.job_queue = self.db_connector.pending_jobs()
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
 
-    async def check_jobs(self, delay: int, n_attempts: int = 2) -> int:
+    async def check_jobs(self) -> int:
         """Returns non-zero if max retries reached, zero otherwise."""
 
         # 1. For job (i) in job q, check if jobid exists for any job within db_connector.completed_jobs()
@@ -40,41 +40,30 @@ class Supervisor:
         # 6. Sleep for a larger period of time
         # 7. At the end of check_jobs, run self.job_queue = self.db_connector.pending_jobs() (refresh)
 
-        async def check():
-            if len(self.job_queue):
-                for i, pending_job in enumerate(self.job_queue):
-                    # get job id
-                    job_id = pending_job.get('job_id')
-                    source = pending_job.get('path')
+        for i, pending_job in enumerate(self.job_queue):
+            # get job id
+            job_id = pending_job.get('job_id')
+            source = pending_job.get('path')
 
-                    # check if job id exists in dbconn.completed
-                    is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
+            # check if job id exists in dbconn.completed
+            is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
+            worker = None
+            if not is_completed:
+                # check: run simulations
+                if job_id.startswith('execute-simulations'):
+                    worker = SimulationRunWorker(job=pending_job)
+                # check: verifications
+                elif job_id.startswith('verification'):
+                    # otherwise: create new worker with job
+                    worker = VerificationWorker(job=pending_job)
 
-                    worker = None
-                    if not is_completed:
-                        # check: run simulations
-                        if job_id.startswith('execute-simulations'):
-                            worker = SimulationRunWorker(job=pending_job)
-                        # check: verifications
-                        elif job_id.startswith('verification'):
-                            # otherwise: create new worker with job
-                            worker = VerificationWorker(job=pending_job)
+                # when worker completes, dismiss worker (if in parallel) and create new completed job
+                await worker.run()
+                result_data = worker.job_result
+                await self.db_connector.write(coll_name="completed_jobs", job_id=job_id, results=result_data, source=source)
 
-                        # when worker completes, dismiss worker (if in parallel) and create new completed job
-                        result_data = await worker.run()
-                        completed_job_doc = await self.db_connector.insert_completed_job(job_id=job_id, results=result_data, source=source)
-
-                    # job is complete, remove job from queue
-                    self.job_queue.pop(i)
-
-        for _ in range(n_attempts):
-            await check()
-
-            # sleep for a long period
-            await sleep(10)
-
-            # refresh job queue
-            # self.job_queue = self.db_connector.pending_jobs()
+        # scan is complete, now refresh jobs
+        self.job_queue = self.db_connector.pending_jobs()
 
         return 0
 

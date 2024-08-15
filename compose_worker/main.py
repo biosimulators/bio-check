@@ -39,7 +39,8 @@ async def main(max_retries=MAX_RETRIES):
         if n_retries == MAX_RETRIES:
             await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
 
-        await supervisor.check_jobs(delay=DELAY_TIMER)
+        await supervisor.check_jobs()
+        await asyncio.sleep(3)
         n_retries += 1
 
 
