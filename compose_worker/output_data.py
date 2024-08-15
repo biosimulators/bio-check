@@ -3,10 +3,22 @@ from typing import *
 from importlib import import_module
 
 import libsbml
-from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
-from basico import *
-import tellurium as te
-from smoldyn import Simulation
+try:
+    from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
+except ImportError as e:
+    print(e)
+try:
+    from basico import *
+except ImportError as e:
+    print(e)
+try:
+    import tellurium as te
+except ImportError as e:
+    print(e)
+try:
+    from smoldyn import Simulation
+except ImportError as e:
+    print(e)
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 # from biosimulators_simularium import execute as execute_simularium
@@ -111,7 +123,7 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
 
     result = simulator.simulate(start, dur, steps + 1)
     outputs = {}
-    for index, row in enumerate(result.transpose()):
+    for index, row in enumerate(result.transpose().tolist()):
         for i, name in enumerate(floating_species_list):
             outputs[output_keys[i]] = row
 
@@ -137,7 +149,7 @@ def run_sbml_copasi(sbml_fp: str, start, dur, steps):
 
     results = {}
     for i, name in enumerate(floating_species_list):
-        results[output_keys[i]] = np.array(list(tc.get(basico_species_ids[i]).values()))
+        results[output_keys[i]] = list(tc.get(basico_species_ids[i]).values())
 
     return results
 

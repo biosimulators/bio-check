@@ -7,6 +7,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import *
 
+from dotenv import load_dotenv
 from google.cloud import storage
 from process_bigraph import ProcessTypes
 from pydantic import BaseModel as _BaseModel, ConfigDict
@@ -17,6 +18,8 @@ from pymongo.database import Database
 
 
 # -- globally-shared content-- #
+
+load_dotenv('../assets/.env_dev')
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"

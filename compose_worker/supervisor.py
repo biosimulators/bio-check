@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
 
 from workers import SimulationRunWorker, VerificationWorker
-from shared import BaseClass, MongoDbConnector, setup_logging, unique_id
+from shared import BaseClass, MongoDbConnector, unique_id
+from log_config import setup_logging
 
 
 # for dev only
@@ -14,8 +15,8 @@ load_dotenv('../assets/.env_dev')
 
 # logging
 LOGFILE = "biochecknet_composer_worker_supervisor.log"
-logger = logging.getLogger(__name__)
-setup_logging(LOGFILE)
+# logger = logging.getLogger(__name__)
+# setup_logging(logger)
 
 
 class Supervisor:

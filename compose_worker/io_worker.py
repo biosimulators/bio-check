@@ -1,6 +1,7 @@
 import os
+import re
 from tempfile import mkdtemp
-from typing import Union 
+from typing import Union, List
 
 import h5py
 import libsbml
@@ -172,3 +173,47 @@ def normalize_smoldyn_output_path_in_root(root_fp) -> str | None:
                 os.rename(original_path, new_path)
 
     return new_path
+
+
+def format_smoldyn_configuration(filename: str) -> None:
+    config = read_smoldyn_simulation_configuration(filename)
+    disable_smoldyn_graphics_in_simulation_configuration(configuration=config)
+    return write_smoldyn_simulation_configuration(configuration=config, filename=filename)
+
+
+def read_smoldyn_simulation_configuration(filename: str) -> List[str]:
+    ''' Read a configuration for a Smoldyn simulation
+
+    Args:
+        filename (:obj:`str`): path to model file
+
+    Returns:
+        :obj:`list` of :obj:`str`: simulation configuration
+    '''
+    with open(filename, 'r') as file:
+        return [line.strip('\n') for line in file]
+
+
+def write_smoldyn_simulation_configuration(configuration: List[str], filename: str):
+    ''' Write a configuration for Smoldyn simulation to a file
+
+    Args:
+        configuration
+        filename (:obj:`str`): path to save configuration
+    '''
+    with open(filename, 'w') as file:
+        for line in configuration:
+            file.write(line)
+            file.write('\n')
+
+
+def disable_smoldyn_graphics_in_simulation_configuration(configuration: List[str]):
+    ''' Turn off graphics in the configuration of a Smoldyn simulation
+
+    Args:
+        configuration (:obj:`list` of :obj:`str`): simulation configuration
+    '''
+    for i_line, line in enumerate(configuration):
+        if line.startswith('graphics '):
+            configuration[i_line] = re.sub(r'^graphics +[a-z_]+', 'graphics none', line)
+

@@ -11,11 +11,12 @@ import pandas as pd
 
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME, CORE
-from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, download_blob, upload_blob, write_uploaded_file
+from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
+
 
 # logging
 logger = logging.getLogger(__name__)
@@ -64,12 +65,18 @@ class SimulationRunWorker(Worker):
         return self.job_result
 
     async def run_smoldyn(self, local_fp: str):
+        # format model file for disabling graphics
+        format_smoldyn_configuration(filename=local_fp)
+
+        # get job params
         duration = self.job_params['duration']
         dt = self.job_params['dt']
         initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
 
         # execute simularium, pointing to a filepath that is returned by the run smoldyn call
         result = run_smoldyn(model_fp=local_fp, duration=duration, dt=dt)
+
+        # TODO: Instead use the composition framework to do this
 
         # write the aforementioned output file (which is itself locally written to the temp out_dir, to the bucket if applicable
         results_file = result.get('results_file')
@@ -84,6 +91,8 @@ class SimulationRunWorker(Worker):
         end = self.job_params['end']
         steps = self.job_params['steps']
         simulator = self.job_params['simulator']
+
+        # TODO: instead use the composition framework to do this!
 
         result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
         self.job_result['results'] = result[simulator]
