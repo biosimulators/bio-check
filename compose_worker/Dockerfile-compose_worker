@@ -21,4 +21,4 @@ WORKDIR /app/worker
 
 RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
 
-CMD ["python3", "main.py"]
+ENTRYPOINT ["python3", "main.py"]
