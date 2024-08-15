@@ -79,8 +79,24 @@ def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Uni
         step_size = dt or simulation.dt
         simulation.run(duration, step_size, overwrite=True)
 
+        species_count = simulation.count()['species']
+        species_names: List[str] = []
+        for index in range(species_count):
+            species_name = simulation.getSpeciesName(index)
+            if 'empty' not in species_name.lower():
+                species_names.append(species_name)
+
+        molecule_output = simulation.getOutputData('molecules')
+        counts_output = simulation.getOutputData('species_counts')
+        for i, output_array in enumerate(counts_output):
+            interval_data = {}
+            for j, species_count in enumerate(output_array):
+                interval_data[species_names[j - 1]] = species_count
+            counts_output.pop(i)
+            counts_output.insert(i, interval_data)
+
         # return ram data (default dimensions)
-        output_data = {'species_counts': simulation.getOutputData('species_counts'), 'molecules': simulation.getOutputData('molecules')}
+        output_data = {'species_counts': counts_output, 'molecules': molecule_output}
 
     # case: output files are specified, and thus time parameters by which to capture/collect output
     else:
