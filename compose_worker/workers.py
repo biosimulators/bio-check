@@ -35,7 +35,7 @@ class Worker(ABC):
         """
         self.job_params = job
         self.job_id = self.job_params['job_id']
-        self.job_result = None
+        self.job_result = {}
 
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         self.worker_id = unique_id()
