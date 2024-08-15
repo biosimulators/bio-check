@@ -5,9 +5,10 @@ from fastapi import UploadFile
 from google.cloud import storage
 
 
-def check_upload_file_extension(file: UploadFile, purpose: str, ext: str) -> bool:
+def check_upload_file_extension(file: UploadFile, purpose: str, ext: str, message: str = None) -> bool:
     if not file.filename.endswith(ext):
-        raise ValueError(f"Files for {purpose} must be passed in {ext} format.")
+        msg = message or f"Files for {purpose} must be passed in {ext} format."
+        raise ValueError(msg)
     else:
         return True
 
@@ -82,7 +83,7 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     blob.download_to_filename(destination_file_name)
 
 
-def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
+def download_file_from_bucket(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
     """Download any file specified in a given job_params (mongo db collection document) which is saved in the bucket to out_dir. The file is assumed to originate from bucket_name.
 
         Returns:

@@ -15,8 +15,8 @@ from starlette.middleware.cors import CORSMiddleware
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData
-from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME
-from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file
+from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections
+from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
 
 # --load env -- #
@@ -133,13 +133,13 @@ async def run_smoldyn(
         job_doc = {
             'job_id': job_id,
             'timestamp': _time,
-            'status': 'PENDING',
+            'status': JobStatus.PENDING,
             'path': uploaded_file_location,
             'duration': duration,
             'dt': dt,
             # 'initial_molecule_state': initial_molecule_state
         }
-        pending_job = await db_connector.write(coll_name='pending_jobs', **job_doc)
+        pending_job = await db_connector.write(collection_name=DatabaseCollections.PENDING_JOBS, **job_doc)
 
         return job_doc
     except Exception as e:
@@ -168,14 +168,14 @@ async def run_utc(
         job_doc = {
             'job_id': job_id,
             'timestamp': _time,
-            'status': 'PENDING',
+            'status': JobStatus.PENDING,
             'path': uploaded_file_location,
             'start': start,
             'end': end,
             'steps': steps,
             'simulator': simulator
         }
-        pending_job = await db_connector.write(coll_name='pending_jobs', **job_doc)
+        pending_job = await db_connector.write(collection_name=DatabaseCollections.PENDING_JOBS, **job_doc)
 
         return job_doc
     except Exception as e:
@@ -240,8 +240,8 @@ async def verify_omex(
         report_location = report_blob_dest
 
         pending_job_doc = await db_connector.write(
-            coll_name="pending_jobs",
-            status="PENDING",
+            collection_name=DatabaseCollections.PENDING_JOBS,
+            status=JobStatus.PENDING,
             job_id=job_id,
             path=uploaded_file_location,
             simulators=simulators,
@@ -322,8 +322,8 @@ async def verify_sbml(
         report_location = report_blob_dest
 
         pending_job_doc = await db_connector.write(
-            coll_name="pending_jobs",
-            status="PENDING",
+            collection_name=DatabaseCollections.PENDING_JOBS,
+            status=JobStatus.PENDING,
             job_id=job_id,
             comparison_id=compare_id,
             path=uploaded_file_location,
@@ -367,7 +367,7 @@ async def fetch_results(job_id: str) -> Union[OutputData, FileResponse]:
             if "results_file" in job_data.keys():
                 remote_fp = job_data['results_file']
                 temp_dest = mkdtemp()
-                local_fp = download_file(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
                 return FileResponse(path=local_fp)
             # else:
@@ -377,10 +377,47 @@ async def fetch_results(job_id: str) -> Union[OutputData, FileResponse]:
 
 
 @app.post(
+    "/generate-simularium-file",
+    # response_model=FileResponse,
+    operation_id='generate-simularium-file',
+    tags=["Files"],
+    summary='Generate a simularium file with a compatible simulation results file from either Smoldyn, SpringSaLaD, or ReaDDy.')
+async def generate_simularium_file(
+        uploaded_file: UploadFile = File(..., description="A file containing results that can be parse by Simularium (spatial)."),
+        filename: str = Query(default=None, description="Name desired for the simularium file. NOTE: pass only the file name without an extension."),
+):  # -> FileResponse:
+    try:
+        job_id = "files-generate-simularium-file" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+
+        # bucket params
+        upload_prefix = f"uploads/{job_id}/"
+        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
+
+        # write uploaded file to bucket
+        uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
+
+        # new simularium job in db
+        if filename is None:
+            filename = 'simulation.simularium'
+
+        new_job_submission = await db_connector.write(
+            collection_name=DatabaseCollections.PENDING_JOBS,
+            status=JobStatus.PENDING,
+            job_id=job_id,
+            path=uploaded_file_location,
+            filename=filename
+        )
+        # raise NotImplementedError("This feature is for demonstration purposes only and currently under development.")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
+
+
+@app.post(
     "/get-compatible-for-verification",
     response_model=CompatibleSimulators,
     operation_id='get-compatible-for-verification',
-    tags=["Data"],
+    tags=["Files"],
     summary='Get the simulators that are compatible with either a given OMEX/COMBINE archive or SBML model simulation.')
 async def get_compatible_for_verification(
         uploaded_file: UploadFile = File(..., description="Either a COMBINE/OMEX archive or SBML file to be simulated."),

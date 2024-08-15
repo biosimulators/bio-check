@@ -217,24 +217,31 @@ class MongoDbConnector(DatabaseConnector):
     def completed_jobs(self):
         return self._get_jobs_from_collection("completed_jobs")
 
-    async def read(self, collection_name: str, **kwargs):
+    async def read(self, collection_name: DatabaseCollections | str, **kwargs):
         """Args:
             collection_name: str
             kwargs: (as in mongodb query)
         """
-        coll = self.get_collection(collection_name)
+        coll_name = self._parse_enum_input(collection_name)
+        coll = self.get_collection(coll_name)
         result = coll.find_one(kwargs)
-        return result
+        return kwargs
 
-    async def write(self, coll_name: str, **kwargs):
+    async def write(self, collection_name: DatabaseCollections | str, **kwargs):
         """
             Args:
-                coll_name: str: collection name in mongodb
+                collection_name: str: collection name in mongodb
                 **kwargs: mongo db `insert_one` query defining the document where the key is as in the key of the document.
         """
+        coll_name = self._parse_enum_input(collection_name)
+
+        for k in kwargs.keys():
+            v = kwargs[k]
+            kwargs[k] = self._parse_enum_input(v)
+
         coll = self.get_collection(coll_name)
         result = coll.insert_one(kwargs)
-        return result
+        return kwargs
 
     def get_collection(self, collection_name: str) -> Collection:
         try:
@@ -244,5 +251,8 @@ class MongoDbConnector(DatabaseConnector):
 
     async def update_job_status(self, collection_name: str, job_id: str, status: str):
         return self.db[collection_name].update_one({'job_id': job_id, }, {'$set': {'status': status}})
+
+    def _parse_enum_input(self, _input: Any) -> str:
+        return _input.value if isinstance(_input, Enum) else _input
 
 
