@@ -164,19 +164,19 @@ async def run_utc(
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
 
-        job_doc = {
-            'job_id': job_id,
-            'timestamp': _time,
-            'status': JobStatus.PENDING,
-            'path': uploaded_file_location,
-            'start': start,
-            'end': end,
-            'steps': steps,
-            'simulator': simulator
-        }
-        pending_job = await db_connector.write(collection_name=DatabaseCollections.PENDING_JOBS, **job_doc)
+        pending_job = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            job_id=job_id,
+            timestamp=_time,
+            status=JobStatus.PENDING.value,
+            path=uploaded_file_location,
+            start=start,
+            end=end,
+            steps=steps,
+            simulator=simulator
+        )
 
-        return job_doc
+        return pending_job
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -238,9 +238,9 @@ async def verify_omex(
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         report_location = report_blob_dest
 
-        pending_job_doc = await db_connector.write(
-            collection_name=DatabaseCollections.PENDING_JOBS,
-            status=JobStatus.PENDING,
+        pending_job_doc = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            status=JobStatus.PENDING.value,
             job_id=job_id,
             path=uploaded_file_location,
             simulators=simulators,
@@ -320,7 +320,7 @@ async def verify_sbml(
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         report_location = report_blob_dest
 
-        pending_job_doc = await db_connector.write(
+        pending_job_doc = await db_connector.insert_job_async(
             collection_name=DatabaseCollections.PENDING_JOBS.value,
             status=JobStatus.PENDING.value,
             job_id=job_id,
