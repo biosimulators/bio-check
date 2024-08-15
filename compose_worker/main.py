@@ -13,7 +13,7 @@ load_dotenv('../assets/.env_dev')
 
 # sleep params
 DELAY_TIMER = 20
-MAX_RETRIES = 20
+MAX_RETRIES = 30
 
 # creds params
 MONGO_URI = os.getenv("MONGO_URI")
@@ -40,7 +40,7 @@ async def main(max_retries=MAX_RETRIES):
             await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
 
         await supervisor.check_jobs()
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
         n_retries += 1
 
 

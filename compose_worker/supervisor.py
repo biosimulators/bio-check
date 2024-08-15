@@ -20,7 +20,7 @@ LOGFILE = "biochecknet_composer_worker_supervisor.log"
 
 
 class Supervisor:
-    def __init__(self, db_connector: MongoDbConnector, queue_timer: int = 20, preferred_queue_index: int = 0):
+    def __init__(self, db_connector: MongoDbConnector, queue_timer: int = 10, preferred_queue_index: int = 0):
         self.db_connector = db_connector
         self.queue_timer = queue_timer
         self.preferred_queue_index = preferred_queue_index
@@ -40,40 +40,48 @@ class Supervisor:
         # 6. Sleep for a larger period of time
         # 7. At the end of check_jobs, run self.job_queue = self.db_connector.pending_jobs() (refresh)
 
-        for i, pending_job in enumerate(self.job_queue):
-            # get job id
-            job_id = pending_job.get('job_id')
-            source = pending_job.get('path')
+        async def check():
+            for i, pending_job in enumerate(self.job_queue):
+                # get job id
+                job_id = pending_job.get('job_id')
+                source = pending_job.get('path')
 
-            # check if job id exists in dbconn.completed
-            is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
-            worker = None
+                # check if job id exists in dbconn.completed
+                is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
+                worker = None
 
-            # case: job is not complete, otherwise do nothing
-            if not is_completed:
-                # check: run simulations
-                if job_id.startswith('execute-simulations'):
-                    worker = SimulationRunWorker(job=pending_job)
-                # check: verifications
-                elif job_id.startswith('verification'):
-                    # otherwise: create new worker with job
-                    worker = VerificationWorker(job=pending_job)
+                # case: job is not complete, otherwise do nothing
+                if not is_completed:
+                    # check: run simulations
+                    if job_id.startswith('simulation-execution'):
+                        worker = SimulationRunWorker(job=pending_job)
+                    # check: verifications
+                    elif job_id.startswith('verification'):
+                        # otherwise: create new worker with job
+                        worker = VerificationWorker(job=pending_job)
 
-                # change job status for client poll
-                # await self.db_connector.update_job_status(collection_name="pending_jobs", job_id=job_id, status=JobStatus.RUNNING)
+                    # change job status for client poll
+                    # await self.db_connector.update_job_status(collection_name="pending_jobs", job_id=job_id, status=JobStatus.RUNNING)
 
-                # change job status for client by inserting a new in progress job
-                await self.db_connector.write(collection_name=DatabaseCollections.IN_PROGRESS_JOBS, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS)
+                    # change job status for client by inserting a new in progress job
+                    await self.db_connector.write(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
 
-                # when worker completes, dismiss worker (if in parallel)
-                await worker.run()
+                    # when worker completes, dismiss worker (if in parallel)
+                    await worker.run()
 
-                # create new completed job using the worker's job_result TODO: refactor output nesting
-                result_data = worker.job_result
-                await self.db_connector.write(collection_name=DatabaseCollections.COMPLETED_JOBS, job_id=job_id, results=result_data, source=source.split('/')[-1], status=JobStatus.COMPLETED)
+                    # create new completed job using the worker's job_result TODO: refactor output nesting
+                    result_data = worker.job_result
+                    await self.db_connector.write(collection_name=DatabaseCollections.COMPLETED_JOBS.value, job_id=job_id, results=result_data, source=source.split('/')[-1], status=JobStatus.COMPLETED.value)
 
-        # scan is complete, now refresh jobs
-        self.job_queue = self.db_connector.pending_jobs()
+        for _ in range(self.queue_timer):
+            # perform check
+            await check()
+
+            # rest
+            await sleep(2)
+
+            # refresh jobs
+            self.job_queue = self.db_connector.pending_jobs()
 
         return 0
 

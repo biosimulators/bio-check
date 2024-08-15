@@ -69,8 +69,8 @@ class SimulationRunWorker(Worker):
         format_smoldyn_configuration(filename=local_fp)
 
         # get job params
-        duration = self.job_params['duration']
-        dt = self.job_params['dt']
+        duration = self.job_params.get('duration')
+        dt = self.job_params.get('dt')
         initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
 
         # execute simularium, pointing to a filepath that is returned by the run smoldyn call

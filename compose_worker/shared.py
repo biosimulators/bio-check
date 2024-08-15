@@ -180,7 +180,7 @@ class MongoDbConnector(DatabaseConnector):
         """
         coll_name = self._parse_enum_input(collection_name)
         coll = self.get_collection(coll_name)
-        result = coll.find_one(kwargs)
+        result = coll.find_one(kwargs.copy())
         return result
 
     async def write(self, collection_name: DatabaseCollections | str, **kwargs):
@@ -196,7 +196,7 @@ class MongoDbConnector(DatabaseConnector):
             kwargs[k] = self._parse_enum_input(v)
 
         coll = self.get_collection(coll_name)
-        result = coll.insert_one(kwargs)
+        result = coll.insert_one(kwargs.copy())
         return kwargs
 
     def get_collection(self, collection_name: str) -> Collection:
@@ -204,6 +204,15 @@ class MongoDbConnector(DatabaseConnector):
             return self.db[collection_name]
         except:
             return None
+
+    async def insert_job_async(self, collection_name: str, **kwargs) -> Dict[str, Any]:
+        return self.insert_job(collection_name, **kwargs)
+
+    def insert_job(self, collection_name: str, **kwargs) -> Dict[str, Any]:
+        coll = self.get_collection(collection_name)
+        job_doc = kwargs
+        coll.insert_one(job_doc)
+        return job_doc
 
     async def update_job_status(self, collection_name: str, job_id: str, status: str | JobStatus):
         job_status = self._parse_enum_input(status)

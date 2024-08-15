@@ -26,7 +26,7 @@ dotenv.load_dotenv("../assets/.env_dev")
 
 # -- constraints -- #
 
-APP_TITLE = "bio-composer"
+APP_TITLE = "bio-compose"
 APP_VERSION = "1.0.0"
 
 # TODO: update this
@@ -105,7 +105,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 # -- endpoint logic -- #
 
-@app.get("/")
+@app.get("/", summary="Ping the API root.")
 def root():
     return {'bio-composer-message': 'Hello from the BioComposer!'}
 
@@ -117,8 +117,8 @@ def root():
     # response_model=PendingSmoldynJob,
     name="Run a smoldyn simulation",
     operation_id="run-smoldyn",
-    tags=["Execute Simulations"],
-    summary="Run a smoldyn simulation")
+    tags=["Simulation Execution"],
+    summary="Run a smoldyn simulation.")
 async def run_smoldyn(
         uploaded_file: UploadFile = File(..., description="Smoldyn Configuration File"),
         duration: int = Query(default=None, description="Simulation Duration"),
@@ -126,22 +126,21 @@ async def run_smoldyn(
         # initial_molecule_state: List = Body(default=None, description="Mapping of species names to initial molecule conditions including counts and location.")
 ):
     try:
-        job_id = "execute-simulations-smoldyn" + str(uuid.uuid4())
+        job_id = "simulation-execution-smoldyn" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
-        job_doc = {
-            'job_id': job_id,
-            'timestamp': _time,
-            'status': JobStatus.PENDING,
-            'path': uploaded_file_location,
-            'duration': duration,
-            'dt': dt,
-            # 'initial_molecule_state': initial_molecule_state
-        }
-        pending_job = await db_connector.write(collection_name=DatabaseCollections.PENDING_JOBS, **job_doc)
+        pending_job = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            job_id=job_id,
+            timestamp=_time,
+            status=JobStatus.PENDING.value,
+            path=uploaded_file_location,
+            duration=duration,
+            dt=dt
+        )
 
-        return job_doc
+        return pending_job
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -151,8 +150,8 @@ async def run_smoldyn(
     # response_model=PendingUtcJob,
     name="Run an ODE Uniform Time Course simulation",
     operation_id="run-utc",
-    tags=["Execute Simulations"],
-    summary="Run a Uniform Time Course simulation")
+    tags=["Simulation Execution"],
+    summary="Run a Uniform Time Course simulation.")
 async def run_utc(
         uploaded_file: UploadFile = File(..., description="SBML File"),
         start: int = Query(..., description="Starting time for utc"),
@@ -161,7 +160,7 @@ async def run_utc(
         simulator: str = Query(..., description="Simulator to use (one of: amici, copasi, tellurium, vcell)"),
 ):
     try:
-        job_id = "execute-simulations-utc" + str(uuid.uuid4())
+        job_id = "simulation-execution-utc" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
 
@@ -357,17 +356,18 @@ async def fetch_results(job_id: str):
     for collection in DatabaseCollections:
         coll_name = collection.value
         job = await db_connector.read(collection_name=coll_name, job_id=job_id)
+        # kob = {'results': {'results_file': 'uploads/simulation-execution-smoldynee94fcbe-82f2-43ca-9b3b-2caf24a647dc/modelout.txt'}, '_id': '', 'status': 'COMPLETED'}
 
         # job exists
         if not isinstance(job, type(None)):
+            job.pop('_id')
+
             # case: job is completed
             if job['status'] == "COMPLETED":
-                job.pop('_id')
 
                 # check for a downloadable file in results
                 # job_data = job['results']  # ['results']
-                job_data = job
-                print(job.keys())
+                job_data = job['results']
 
                 # case: output is a file
                 if "results_file" in job_data.keys():
@@ -375,7 +375,7 @@ async def fetch_results(job_id: str):
                     temp_dest = mkdtemp()
                     local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
-                    return FileResponse(path=local_fp)
+                    return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
                 # case output is data
                 else:
                     return OutputData(content=job)
