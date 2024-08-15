@@ -16,7 +16,7 @@ paths:
   /run-smoldyn:
     post:
       tags:
-      - run-simulations
+      - Execute Simulations
       summary: Run a smoldyn simulation
       operationId: run-smoldyn
       parameters:
@@ -57,8 +57,8 @@ paths:
   /run-utc:
     post:
       tags:
-      - run-simulations
-      summary: Run a UTC simulation
+      - Execute Simulations
+      summary: Run a Uniform Time Course simulation
       operationId: run-utc
       parameters:
       - name: start
@@ -114,7 +114,7 @@ paths:
   /verify-omex:
     post:
       tags:
-      - verification
+      - Verification
       summary: Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE
         archive.
       operationId: verify-omex
@@ -208,7 +208,7 @@ paths:
   /verify-sbml:
     post:
       tags:
-      - verification
+      - Verification
       summary: Compare UTC outputs from a deterministic SBML model.
       operationId: verify-sbml
       parameters:
@@ -245,6 +245,7 @@ paths:
             type: string
           description: List of simulators to compare
           default:
+          - amici
           - copasi
           - tellurium
           title: Simulators
@@ -324,7 +325,7 @@ paths:
   /get-output/{job_id}:
     get:
       tags:
-      - data
+      - Data
       summary: Get the results of an existing simulation run.
       operationId: get-verify-output
       parameters:
@@ -340,7 +341,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UtcComparisonResult'
+                $ref: '#/components/schemas/OutputData'
         '422':
           description: Validation Error
           content:
@@ -350,7 +351,7 @@ paths:
   /get-compatible-for-verification:
     post:
       tags:
-      - data
+      - Data
       summary: Get the simulators that are compatible with either a given OMEX/COMBINE
         archive or SBML model simulation.
       operationId: get-compatible-for-verification
@@ -478,6 +479,14 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    OutputData:
+      properties:
+        content:
+          title: Content
+      type: object
+      required:
+      - content
+      title: OutputData
     PendingOmexJob:
       properties:
         job_id:
@@ -624,14 +633,6 @@ components:
       required:
       - name
       title: Simulator
-    UtcComparisonResult:
-      properties:
-        content:
-          title: Content
-      type: object
-      required:
-      - content
-      title: UtcComparisonResult
     ValidationError:
       properties:
         loc:

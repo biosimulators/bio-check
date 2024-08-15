@@ -11,9 +11,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, 
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
+from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob
-from shared import upload_blob, MongoDbConnector
+from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData
+from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension
 from log_config import setup_logging
 
@@ -47,10 +48,8 @@ ORIGINS = [
     'https://bio.libretexts.org',
 ]
 
-DB_TYPE = "mongo"  # ie: postgres, etc
-DB_NAME = "service_requests"
+
 MONGO_URI = os.getenv("MONGO_URI")
-BUCKET_NAME = os.getenv("BUCKET_NAME") or "bio-check-requests-1"
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 
@@ -117,7 +116,7 @@ def root():
     # response_model=PendingSmoldynJob,
     name="Run a smoldyn simulation",
     operation_id="run-smoldyn",
-    tags=["run-simulations"],
+    tags=["Execute Simulations"],
     summary="Run a smoldyn simulation")
 async def run_smoldyn(
         uploaded_file: UploadFile = File(..., description="Smoldyn Configuration File"),
@@ -126,7 +125,7 @@ async def run_smoldyn(
         # initial_molecule_state: List = Body(default=None, description="Mapping of species names to initial molecule conditions including counts and location.")
 ):
     try:
-        job_id = str(uuid.uuid4())
+        job_id = "execute-simulations-smoldyn" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
@@ -151,8 +150,8 @@ async def run_smoldyn(
     # response_model=PendingUtcJob,
     name="Run an ODE Uniform Time Course simulation",
     operation_id="run-utc",
-    tags=["run-simulations"],
-    summary="Run a UTC simulation")
+    tags=["Execute Simulations"],
+    summary="Run a Uniform Time Course simulation")
 async def run_utc(
         uploaded_file: UploadFile = File(..., description="SBML File"),
         start: int = Query(..., description="Starting time for utc"),
@@ -161,7 +160,7 @@ async def run_utc(
         simulator: str = Query(..., description="Simulator to use (one of: amici, copasi, tellurium, vcell)"),
 ):
     try:
-        job_id = str(uuid.uuid4())
+        job_id = "execute-simulations-utc" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
 
@@ -189,7 +188,7 @@ async def run_utc(
     response_model=PendingOmexJob,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
-    tags=["verification"],
+    tags=["Verification"],
     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
 async def verify_omex(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
@@ -208,7 +207,7 @@ async def verify_omex(
         else:
             compare_id = comparison_id
 
-        job_id = compare_id + "_" + str(uuid.uuid4())
+        job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
         # bucket params
@@ -268,14 +267,14 @@ async def verify_omex(
     response_model=PendingSbmlJob,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
-    tags=["verification"],
+    tags=["Verification"],
     summary="Compare UTC outputs from a deterministic SBML model.")
 async def verify_sbml(
         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
         start: int = Query(..., description="Start time of the simulation (output start time)"),
         end: int = Query(..., description="End time of simulation (end)"),
         steps: int = Query(..., description="Number of simulation steps to run"),
-        simulators: List[str] = Query(default=["copasi", "tellurium"], description="List of simulators to compare"),
+        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
@@ -286,11 +285,11 @@ async def verify_sbml(
     try:
         # request specific params
         if comparison_id is None:
-            compare_id = "utc_comparison_omex"
+            compare_id = "utc_comparison_sbml"
         else:
             compare_id = comparison_id
 
-        job_id = compare_id + "_" + str(uuid.uuid4())
+        job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
 
         # bucket params
@@ -349,17 +348,17 @@ async def verify_sbml(
 
 @app.get(
     "/get-output/{job_id}",
-    response_model=UtcComparisonResult,
+    response_model=OutputData,
     operation_id='get-verify-output',
-    tags=["data"],
+    tags=["Data"],
     summary='Get the results of an existing simulation run.')
-async def fetch_results(job_id: str) -> UtcComparisonResult:
-    colls = ['completed_jobs', 'in_progress_jobs', 'pending_jobs']
+async def fetch_results(job_id: str) -> OutputData:
+    colls = ['completed_jobs', 'pending_jobs']
     for collection in colls:
         job = db_connector.db[collection].find_one({'job_id': job_id})
         if not isinstance(job, type(None)):
             job.pop('_id')
-            return UtcComparisonResult(content=job)
+            return OutputData(content=job)
 
     raise HTTPException(status_code=404, detail="Comparison not found")
 
@@ -368,7 +367,7 @@ async def fetch_results(job_id: str) -> UtcComparisonResult:
     "/get-compatible-for-verification",
     response_model=CompatibleSimulators,
     operation_id='get-compatible-for-verification',
-    tags=["data"],
+    tags=["Data"],
     summary='Get the simulators that are compatible with either a given OMEX/COMBINE archive or SBML model simulation.')
 async def get_compatible_for_verification(
         uploaded_file: UploadFile = File(..., description="Either a COMBINE/OMEX archive or SBML file to be simulated."),
@@ -376,13 +375,15 @@ async def get_compatible_for_verification(
 ) -> CompatibleSimulators:
     try:
         filename = uploaded_file.filename
+        simulators = COMPATIBLE_VERIFICATION_SIMULATORS.copy()  # TODO: dynamically extract this!
+
+        # handle filetype: amici is not compatible with sbml verification at the moment
+        # if not filename.endswith(".omex"):
+        #     for sim in simulators:
+        #         if sim[0] == 'amici':
+        #             simulators.remove(sim)
+
         compatible_sims = []
-        simulators = [('copasi', '0.71'), ('tellurium', '2.2.10')]  # TODO: dynamically extract this!
-
-        # handle filetype: amici is compatible with omex comparison
-        if filename.endswith(".omex"):
-            simulators.append(('amici', '0.11.21'))
-
         for data in simulators:
             name = data[0]
             version = data[1]

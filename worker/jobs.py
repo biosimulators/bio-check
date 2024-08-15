@@ -152,7 +152,6 @@ class Worker:
 
         # get ground truth from bucket if applicable
         ground_truth_report_path = self.job_params.get('expected_results')
-        truth_vals = None
         if ground_truth_report_path is not None:
             source_report_blob_name = self.job_params['expected_results']
             local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])

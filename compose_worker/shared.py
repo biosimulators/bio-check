@@ -7,7 +7,9 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import *
 
+from dotenv import load_dotenv
 from google.cloud import storage
+from process_bigraph import ProcessTypes
 from pydantic import BaseModel as _BaseModel, ConfigDict
 from fastapi import UploadFile
 from pymongo import MongoClient
@@ -17,10 +19,12 @@ from pymongo.database import Database
 
 # -- globally-shared content-- #
 
+load_dotenv('../assets/.env_dev')
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
+CORE = ProcessTypes()
 
 
 def unique_id():
@@ -42,16 +46,6 @@ async def load_arrows(timer):
         if n == n_ellipses - 1:
             disp += "|"
         print(disp)
-
-
-def setup_logging(fname: str):
-    logging.basicConfig(
-        filename=fname,
-        level=logging.ERROR,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-
-
 
 
 # -- base models --

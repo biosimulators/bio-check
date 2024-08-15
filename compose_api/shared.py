@@ -6,6 +6,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import *
 
+import dotenv
 from google.cloud import storage
 from pydantic import BaseModel as _BaseModel, ConfigDict
 from fastapi import UploadFile
@@ -15,6 +16,12 @@ from pymongo.database import Database
 
 
 # -- globally-shared content-- #
+
+dotenv.load_dotenv("../assets/.env_dev")
+
+DB_TYPE = "mongo"  # ie: postgres, etc
+DB_NAME = "service_requests"
+BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 
 def check_upload_file_extension(file: UploadFile, purpose: str, ext: str) -> bool:

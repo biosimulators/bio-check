@@ -9,30 +9,32 @@ from process_bigraph import Composite
 import numpy as np
 import pandas as pd
 
-from shared import download_blob, setup_logging, unique_id, BUCKET_NAME
-from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file
-from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, generate_smoldyn_simularium
+from log_config import setup_logging
+from shared import unique_id, BUCKET_NAME, CORE
+from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
+from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
 
+
 # logging
-LOGFILE = "biochecknet_composer_worker.log"
 logger = logging.getLogger(__name__)
-setup_logging(LOGFILE)
+setup_logging(logger)
 
 
 class Worker(ABC):
     job_params: Dict
+    job_id: str
     job_result: Dict | None
 
     def __init__(self, job: Dict):
         """
-
         Args:
             job: job parameters received from the supervisor (who gets it from the db) which is a document from the pending_jobs collection within mongo.
         """
         self.job_params = job
+        self.job_id = self.job_params['job_id']
         self.job_result = None
 
         # for parallel processing in a pool of workers. TODO: eventually implement this.
@@ -49,17 +51,51 @@ class SimulationRunWorker(Worker):
 
     async def run(self):
         # check which endpoint methodology to implement
-        input_file = self.job_params['path']
+        out_dir = tempfile.mkdtemp()
+        source_fp = self.job_params['path']
+        local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
-        # is a smoldyn job
-        if input_file.endswith('.txt'):
-            duration = self.job_params['duration']
-            dt = self.job_params['dt']
-            initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
+        # case: is a smoldyn job
+        if local_fp.endswith('.txt'):
+            await self.run_smoldyn(local_fp)
+        # case: is utc job
+        elif local_fp.endswith('.xml'):
+            await self.run_utc(local_fp)
 
-        # is utc job
-        if input_file.endswith('.xml'):
-            pass
+        return self.job_result
+
+    async def run_smoldyn(self, local_fp: str):
+        # format model file for disabling graphics
+        format_smoldyn_configuration(filename=local_fp)
+
+        # get job params
+        duration = self.job_params['duration']
+        dt = self.job_params['dt']
+        initial_species_state = self.job_params.get('initial_molecule_state')  # not yet implemented
+
+        # execute simularium, pointing to a filepath that is returned by the run smoldyn call
+        result = run_smoldyn(model_fp=local_fp, duration=duration, dt=dt)
+
+        # TODO: Instead use the composition framework to do this
+
+        # write the aforementioned output file (which is itself locally written to the temp out_dir, to the bucket if applicable
+        results_file = result.get('results_file')
+        if results_file is not None:
+            uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
+
+        # set self.job_result to have a {'results': {'results_file': ...}
+        self.job_result['results'] = result
+
+    async def run_utc(self, local_fp: str):
+        start = self.job_params['start']
+        end = self.job_params['end']
+        steps = self.job_params['steps']
+        simulator = self.job_params['simulator']
+
+        # TODO: instead use the composition framework to do this!
+
+        result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
+        self.job_result['results'] = result[simulator]
 
 
 class VerificationWorker(Worker):
@@ -80,13 +116,13 @@ class VerificationWorker(Worker):
         if selections is not None:
             self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
 
-        # calculate rmse for each simulator over all observables
-        self.job_result['rmse'] = {}
-        simulators = self.job_params.get('simulators')
-        if self.job_params.get('expected_results') is not None:
-            simulators.append('expected_results')
-        for simulator in simulators:
-            self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
+        # TODO: remimplement this! calculate rmse for each simulator over all observables
+        # self.job_result['rmse'] = {}
+        # simulators = self.job_params.get('simulators')
+        # if self.job_params.get('expected_results') is not None:
+        #     simulators.append('expected_results')
+        # for simulator in simulators:
+        #     self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
 
         return self.job_result
 
@@ -145,18 +181,15 @@ class VerificationWorker(Worker):
         params = None
         out_dir = tempfile.mkdtemp()
         source_fp = self.job_params['path']
+        source_report_fp = self.job_params.get('expected_results')
 
         # download sbml file
         local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         # get ground truth from bucket if applicable
-        ground_truth_report_path = self.job_params.get('expected_results')
-        truth_vals = None
-        if ground_truth_report_path is not None:
-            source_report_blob_name = self.job_params['expected_results']
-            local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
-            download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
-            ground_truth_report_path = local_report_path
+        local_report_fp = None
+        if source_report_fp is not None:
+            local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         try:
             simulators = self.job_params.get('simulators', [])
@@ -168,28 +201,26 @@ class VerificationWorker(Worker):
             rtol = self.job_params.get('rTol')
             atol = self.job_params.get('aTol')
 
-            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=ground_truth_report_path)
+            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=local_report_fp)
             self.job_result = result
         except Exception as e:
-            self.job_result = {"bio-check-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
+            self.job_result = {"bio-composer-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
 
     def _execute_omex_job(self):
         params = None
         out_dir = tempfile.mkdtemp()
+        source_fp = self.job_params['path']
+        source_report_fp = self.job_params.get('expected_results')
 
-        # get omex from bucket
-        source_omex_blob_name = self.job_params['path']
-        local_omex_fp = os.path.join(out_dir, source_omex_blob_name.split('/')[-1])
-        download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_omex_blob_name, destination_file_name=local_omex_fp)
+        # download sbml file
+        local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
         # get ground truth from bucket if applicable
-        ground_truth_report_path = self.job_params['expected_results']
         truth_vals = None
-        if ground_truth_report_path is not None:
-            source_report_blob_name = self.job_params['expected_results']
-            local_report_path = os.path.join(out_dir, ground_truth_report_path.split('/')[-1])
-            download_blob(bucket_name=BUCKET_NAME, source_blob_name=source_report_blob_name, destination_file_name=local_report_path)
-            truth_vals = read_report_outputs(local_report_path)
+        local_report_fp = None
+        if source_report_fp is not None:
+            local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
+            truth_vals = read_report_outputs(local_report_fp)
 
         try:
             simulators = self.job_params.get('simulators', [])
@@ -199,7 +230,7 @@ class VerificationWorker(Worker):
             comparison_id = self.job_params.get('job_id')
 
             result = self._run_comparison_from_omex(
-                path=local_omex_fp,
+                path=local_fp,
                 simulators=simulators,
                 out_dir=out_dir,
                 include_outputs=include_outs,
@@ -208,7 +239,7 @@ class VerificationWorker(Worker):
             )
             self.job_result = result
         except Exception as e:
-            self.job_result = {"bio-check-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
+            self.job_result = {"bio-composer-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
 
     def _run_comparison_from_omex(
             self,
@@ -318,13 +349,12 @@ class VerificationWorker(Worker):
         for simulator_name in output_data.keys():
             for output in output_data[simulator_name]['data']:
                 if output['dataset_label'] in species_name:
-                    results['output_data'][simulator_name] = output['data'].tolist()
+                    data = output['data']
+                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
     def _generate_sbml_utc_species_comparison(self, sbml_filepath, start, dur, steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
-        simulators = simulators or ['copasi', 'tellurium']
-        if "amici" in simulators:
-            simulators.remove("amici")
+        simulators = simulators or ['amici', 'copasi', 'tellurium']
 
         output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, truth=ground_truth)
         outputs = sbml_output_stack(species_name, output_data)
@@ -338,7 +368,8 @@ class VerificationWorker(Worker):
         for simulator_name in output_data.keys():
             for spec_name, output in output_data[simulator_name].items():
                 if species_name in spec_name:
-                    results['output_data'][simulator_name] = output_data[simulator_name][spec_name].tolist()
+                    data = output_data[simulator_name][spec_name]
+                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
     def _generate_species_comparison_matrix(
@@ -413,3 +444,22 @@ class VerificationWorker(Worker):
         aTol = atol or max(1e-3, max1 * 1e-5, max2 * 1e-5)
         rTol = rtol or 1e-4
         return np.allclose(arr1, arr2, rtol=rTol, atol=aTol)
+
+
+class CompositionWorker(Worker):
+    def __init__(self, job):
+        super().__init__(job=job)
+
+    async def run(self):
+        # extract params
+        duration = self.job_params['duration']
+        composite_doc = self.job_params['composite_doc']
+
+        # instantiate composition
+        composition = Composite(config=composite_doc, core=CORE)
+
+        # run composition and set results
+        composition.run(duration)
+        self.job_result['results'] = composition.gather_results()
+
+        return self.job_result

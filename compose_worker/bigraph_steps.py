@@ -1,9 +1,12 @@
 import os
+from tempfile import mkdtemp
 from uuid import uuid4
 from typing import *
 
 from process_bigraph import Step
 from process_bigraph.composite import ProcessTypes
+from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
+from simulariumio.smoldyn import SmoldynData
 try:
     import smoldyn as sm
     from smoldyn._smoldyn import MolecState
@@ -14,8 +17,8 @@ except:
         'on installing Smoldyn.'
     )
 
-
-CORE = ProcessTypes()
+from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+from shared import CORE
 
 
 class SmoldynStep(Step):
@@ -61,6 +64,10 @@ class SmoldynStep(Step):
         # initialize the simulator from a Smoldyn MinE.txt file.
         self.simulation: sm.Simulation = sm.Simulation.fromFile(self.model_filepath)
 
+        # set default starting position of molecules/particles (assume all)
+        self.initial_mol_position = self.config.get('initial_mol_position', [0.0, 0.0, 0.0])
+        self.initial_mol_state = self.config.get('initial_mol_state', 0)
+
         # get a list of the simulation species
         species_count = self.simulation.count()['species']
         counts = self.config.get('initial_species_counts')
@@ -70,15 +77,21 @@ class SmoldynStep(Step):
             species_name = self.simulation.getSpeciesName(index)
             if 'empty' not in species_name.lower():
                 self.species_names.append(species_name)
-            # if counts is None:
-                # self.initial_species_counts[species_name] = species_count[index]
+
+        self.initial_species_state = {}
+        self.initial_mol_state = {}
+        initial_mol_counts = {spec_name: self.simulation.getMoleculeCount(spec_name, MolecState.all) for spec_name in self.species_names}
+        for species_name, count in initial_mol_counts.items():
+            self.initial_species_state[species_name] = count
+            for _ in range(count):
+                self.initial_mol_state[str(uuid4())] = {
+                    'coordinates': self.initial_mol_position,
+                    'species_id': species_name,
+                    'state': self.initial_mol_state
+                }
 
         # sort for logistical mapping to species names (i.e: ['a', 'b', c'] == ['0', '1', '2']
         self.species_names.sort()
-
-        # set default starting position of molecules/particles (assume all)
-        self.initial_mol_position = self.config.get('initial_mol_position', [0.0, 0.0, 0.0])
-        self.initial_mol_state = self.config.get('initial_mol_state', 0)
 
         # make species counts of molecules dataset for output
         self.simulation.addOutputData('species_counts')
@@ -92,10 +105,7 @@ class SmoldynStep(Step):
 
         # initialize the molecule ids based on the species names. We need this value to properly emit the schema, which expects a single value from this to be a str(int)
         # the format for molecule_ids is expected to be: 'speciesId_moleculeNumber'
-        self.molecule_ids = []
-        for i, count in enumerate(species_count):
-            for _ in range(count):
-                self.molecule_ids.append(str(uuid4()))
+        self.molecule_ids = list(self.initial_mol_state.keys())
 
         # get the simulation boundaries, which in the case of Smoldyn denote the physical boundaries
         # TODO: add a verification method to ensure that the boundaries do not change on the next step...
@@ -103,7 +113,7 @@ class SmoldynStep(Step):
 
         # create a re-usable counts and molecules type to be used by both inputs and outputs
         self.counts_type = {
-            species_name: 'int'
+            species_name: 'integer'
             for species_name in self.species_names
         }
 
@@ -127,32 +137,22 @@ class SmoldynStep(Step):
         self._specs = [None for _ in self.species_names]
         self._vals = dict(zip(self.species_names, [[] for _ in self.species_names]))
 
-    def initial_state(self):
-        initial_species_state = {}
-        initial_mol_state = {}
-
-        initial_mol_counts = {spec_name: self.simulation.getMoleculeCount(spec_name, MolecState.all) for spec_name in self.species_names}
-        for species_name, count in initial_mol_counts.items():
-            initial_species_state[species_name] = count
-            for _ in range(count):
-                initial_mol_state[str(uuid4())] = {
-                    'coordinates': self.initial_mol_position,
-                    'species_id': species_name,
-                    'state': self.initial_mol_state
-                }
-
-        return {
-            'species_counts': self.initial_species_counts or initial_species_state,
-            'molecules': initial_mol_state
-        }
+    # def initial_state(self):
+    #     return {
+    #         'species_counts': self.initial_species_state,
+    #         'molecules': self.initial_mol_state
+    #     }
 
     def inputs(self):
-        return {'species_counts': 'tree[integer]', 'molecules': 'tree[float]'}
+        # schema = self.output_port_schema.copy()
+        # schema.pop('results_file')
+        # return schema
+        return {}
 
     def outputs(self):
         return self.output_port_schema
 
-    def update(self, inputs: Dict = None) -> Dict:
+    def update(self, inputs) -> Dict:
         # reset the molecules, distribute the mols according to self.boundarieså
         # for name in self.species_names:
         #     self.set_uniform(
@@ -163,7 +163,7 @@ class SmoldynStep(Step):
 
         # run the simulation for a given interval if specified, otherwise use builtin time
         if self.duration is not None:
-            self.simulation.run(stop=self.duration, dt=self.simulation.dt)
+            self.simulation.run(stop=self.duration, dt=self.simulation.dt, overwrite=True)
         else:
             self.simulation.runSim()
 
@@ -186,8 +186,9 @@ class SmoldynStep(Step):
 
         # get and populate the species counts
         for index, name in enumerate(self.species_names):
-            input_counts = inputs['species_counts'][name]
-            simulation_state['species_counts'][name] = int(final_count[index]) - input_counts
+            simulation_state['species_counts'][name] = counts_data[index]
+            # input_counts = simulatio['species_counts'][name]
+            # simulation_state['species_counts'][name] = int(final_count[index]) - input_counts
 
         # clear the list of known molecule ids and update the list of known molecule ids (convert to an intstring)
         # self.molecule_ids.clear()
@@ -261,7 +262,116 @@ class SmoldynStep(Step):
 
 
 class SimulariumStep(Step):
-    pass
+    """
+        agent_data should have the following structure:
+
+        {species_name(type):
+            {display_type: DISPLAY_TYPE.<REQUIRED SHAPE>,
+             (mass: `float` AND density: `float`) OR (radius: `float`)
+
+    """
+    config_schema = {
+        'output_dest': 'string',
+        'box_size': 'float',  # as per simulariumio
+        'spatial_units': {
+            '_default': 'nm',
+            '_type': 'string'
+        },
+        'temporal_units': {
+            '_default': 'ns',
+            '_type': 'string'
+        },
+        'translate_output': {
+            '_default': True,
+            '_type': 'boolean'
+        },
+        'translation_magnitude': 'maybe[float]',
+        'meta_data': 'maybe[tree[string]]',
+        'agent_display_parameters': 'maybe[tree[string]]'  # as per biosim simularium
+    }
+
+    def __init__(self, config=None, core=CORE):
+        super().__init__(config=config, core=core)
+
+        # io params
+        self.output_dest = self.config['output_dest']
+
+        # display params
+        self.box_size = self.config['box_size']
+        self.translate_output = self.config['translate_output']
+        self.translation_magnitude = self.config.get('translation_magnitude')
+        self.agent_display_parameters = self.config.get('agent_display_parameters')
+
+        # units params
+        self.spatial_units = self.config['spatial_units']
+        self.temporal_units = self.config['temporal_units']
+
+        # info params
+        self.meta_data = self.config.get('meta_data')
+
+    def inputs(self):
+        return {'results_file': 'string', 'species_counts': 'tree[integer]'}
+
+    def outputs(self):
+        return {'simularium_file': 'string'}
+
+    def update(self, inputs):
+        # get job params
+        in_file = inputs['results_file']
+        file_data = InputFileData(in_file)
+
+        # get species data for display data
+        species_data = inputs['species_counts']
+        species_names = list(species_data.keys())
+
+        # generate simulariumio Smoldyn Data TODO: should display data be gen for each species type or n number of instances of that type?
+        display_data = self._generate_display_data(species_names)
+        io_data = SmoldynData(
+            smoldyn_file=file_data,
+            spatial_units=UnitData(self.spatial_units),
+            time_units=UnitData(self.temporal_units),
+            display_data=display_data,
+            meta_data=self.meta_data,
+            center=True
+        )
+
+        # translate reflections if needed
+        if self.translate_output:
+            io_data = translate_data_object(data=io_data, box_size=self.box_size, translation_magnitude=self.translation_magnitude)
+
+        # write data to simularium file
+        simularium_fp = os.path.join(self.output_dest, 'simulation.simularium')
+        write_simularium_file(data=io_data, simularium_fp=simularium_fp, json=True, validate=True)
+
+        return {'simularium_file': simularium_fp}
+
+    def _generate_display_data(self, species_names) -> Dict | None:
+        # user is specifying display data for agents
+        if self.agent_display_parameters is not None:
+            display_data = {}
+            for name in species_names:
+                display_params = self.agent_display_parameters[name]
+
+                # handle agent radius
+                radius_param = display_params.get('radius')
+
+                # user has passed a mass and density for a given agent
+                if radius_param is None:
+                    radius_param = calculate_agent_radius(m=display_params['mass'], rho=display_params['density'])
+
+                # make kwargs for display data
+                display_data_kwargs = {
+                    'name': name,
+                    'display_type': DISPLAY_TYPE[display_params['display_type']],
+                    'radius': radius_param
+                }
+
+                # check if self.agent_params as been passed as a mapping of species_name: {species_mass: , species_shape: }
+                display_data[name] = DisplayData(**display_data_kwargs)
+
+            return display_data
+        else:
+            return None
 
 
 # register processes
