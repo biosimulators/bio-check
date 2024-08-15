@@ -116,9 +116,9 @@ class JobStatus(Enum):
 
 
 class DatabaseCollections(Enum):
-    PENDING_JOBS = "PENDING_JOBS"
-    IN_PROGRESS_JOBS = "IN_PROGRESS_JOBS"
-    COMPLETED_JOBS = "COMPLETED_JOBS"
+    PENDING_JOBS = "PENDING_JOBS".lower()
+    IN_PROGRESS_JOBS = "IN_PROGRESS_JOBS".lower()
+    COMPLETED_JOBS = "COMPLETED_JOBS".lower()
 
 
 class MultipleConnectorError(Exception):
@@ -252,7 +252,9 @@ class MongoDbConnector(DatabaseConnector):
     def insert_job(self, collection_name: str, **kwargs) -> Dict[str, Any]:
         coll = self.get_collection(collection_name)
         job_doc = kwargs.copy()
+        print("Inserting job...")
         coll.insert_one(job_doc)
+        print(f"Job successfully inserted: {self.db.pending_jobs.find_one(kwargs)}.")
         return kwargs
 
     async def update_job_status(self, collection_name: str, job_id: str, status: str | JobStatus):

@@ -71,9 +71,9 @@ class JobStatus(Enum):
 
 
 class DatabaseCollections(Enum):
-    PENDING_JOBS = "PENDING_JOBS"
-    IN_PROGRESS_JOBS = "IN_PROGRESS_JOBS"
-    COMPLETED_JOBS = "COMPLETED_JOBS"
+    PENDING_JOBS = "PENDING_JOBS".lower()
+    IN_PROGRESS_JOBS = "IN_PROGRESS_JOBS".lower()
+    COMPLETED_JOBS = "COMPLETED_JOBS".lower()
 
 
 class MultipleConnectorError(Exception):

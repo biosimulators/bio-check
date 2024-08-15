@@ -105,7 +105,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 # -- endpoint logic -- #
 
-@app.get("/", summary="Ping the API root.")
+@app.get("/")
 def root():
     return {'bio-composer-message': 'Hello from the BioComposer!'}
 
@@ -353,36 +353,36 @@ async def verify_sbml(
     tags=["Data"],
     summary='Get the results of an existing simulation run.')
 async def fetch_results(job_id: str):
-    for collection in DatabaseCollections:
-        coll_name = collection.value
-        job = await db_connector.read(collection_name=coll_name, job_id=job_id)
-        # kob = {'results': {'results_file': 'uploads/simulation-execution-smoldynee94fcbe-82f2-43ca-9b3b-2caf24a647dc/modelout.txt'}, '_id': '', 'status': 'COMPLETED'}
+    job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
 
-        # job exists
-        if not isinstance(job, type(None)):
-            job.pop('_id')
+    # case: job is not in completed:
+    if job is None:
+        job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
+    # case: job is not in progress:
+    elif job is None:
+        job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
 
-            # case: job is completed
-            if job['status'] == "COMPLETED":
+    if not isinstance(job, type(None)):
+        job.pop('_id')
 
-                # check for a downloadable file in results
-                # job_data = job['results']  # ['results']
-                job_data = job['results']
+        # case: job is completed
+        if job['status'] == "COMPLETED":
+            # check for a downloadable file in results
+            job_data = job['results'].get('results')
 
-                # case: output is a file
-                if "results_file" in job_data.keys():
-                    remote_fp = job_data['results_file']
-                    temp_dest = mkdtemp()
-                    local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+            # case: output is a file
+            if "results_file" in job_data.keys():
+                remote_fp = job_data['results_file']
+                temp_dest = mkdtemp()
+                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
-                    return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
-                # case output is data
-                else:
-                    return OutputData(content=job)
-            # case: job is either in progress or pending
+                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+            # case output is data
             else:
-                return job
-
+                return OutputData(content=job)
+        # case: job is either in progress or pending
+        else:
+            return job
     # case: no job exists in any collection by that id
     raise HTTPException(status_code=404, detail="Comparison not found")
 
