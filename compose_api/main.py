@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, 
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from compose_api.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
+from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME

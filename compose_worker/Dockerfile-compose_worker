@@ -21,4 +21,7 @@ WORKDIR /app/worker
 
 RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
 
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["poetry", "run", "python3", "main.py"]
+
+# img_version=1.0.1
+# ./assets/scripts/build_image.sh compose_api "$img_version" && ./assets/scripts/push_image.sh compose_api "$img_version" AlexPatrie && ./assets/scripts/build_image.sh compose_worker "$img_version" && ./assets/scripts/push_image.sh compose_worker "$img_version" AlexPatrie
