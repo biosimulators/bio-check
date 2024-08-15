@@ -356,20 +356,22 @@ async def verify_sbml(
 async def fetch_results(job_id: str) -> Union[OutputData, FileResponse]:
     colls = ['completed_jobs', 'pending_jobs']
     for collection in colls:
-        job = await db_connector.read(collection_name=collection, job_id=job_id)
+        job = db_connector.read(collection_name=collection, job_id=job_id)
         if not isinstance(job, type(None)):
             job.pop('_id')
 
             # check for a downloadable file in results
-            job_data = job['content']['results']['results']
+            # job_data = job['results']  # ['results']
+            job_data = job
+            print(job.keys())
             if "results_file" in job_data.keys():
                 remote_fp = job_data['results_file']
                 temp_dest = mkdtemp()
                 local_fp = download_file(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
                 return FileResponse(path=local_fp)
-            else:
-                return OutputData(content=job)
+            # else:
+                # return OutputData(content=job)
 
     raise HTTPException(status_code=404, detail="Comparison not found")
 

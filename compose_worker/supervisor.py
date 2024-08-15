@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
 
 from workers import SimulationRunWorker, VerificationWorker
-from shared import BaseClass, MongoDbConnector, unique_id
+from shared import BaseClass, MongoDbConnector, unique_id, JobStatus
 from log_config import setup_logging
 
 
@@ -57,10 +57,14 @@ class Supervisor:
                     # otherwise: create new worker with job
                     worker = VerificationWorker(job=pending_job)
 
-                # when worker completes, dismiss worker (if in parallel) and create new completed job
+                # change job status for client poll and when worker completes, dismiss worker (if in parallel) and create new completed job
+
+                # when worker completes, dismiss worker (if in parallel)
                 await worker.run()
+
+                # create new completed job using the worker's job_result TODO: refactor output
                 result_data = worker.job_result
-                await self.db_connector.write(coll_name="completed_jobs", job_id=job_id, results=result_data, source=source)
+                await self.db_connector.write(coll_name="completed_jobs", job_id=job_id, results=result_data, source=source, status=JobStatus.COMPLETED.value)
 
         # scan is complete, now refresh jobs
         self.job_queue = self.db_connector.pending_jobs()

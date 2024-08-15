@@ -4,6 +4,7 @@ import os
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, asdict
 from datetime import datetime
+from enum import Enum
 from typing import *
 
 import dotenv
@@ -105,6 +106,18 @@ class BaseClass:
     """Base Python Dataclass multipurpose class with custom app configuration."""
     def to_dict(self):
         return asdict(self)
+
+
+class JobStatus(Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class DatabaseCollections(Enum):
+    PENDING_JOBS = "PENDING_JOBS"
+    COMPLETED_JOBS = "COMPLETED_JOBS"
 
 
 class MultipleConnectorError(Exception):
@@ -228,5 +241,8 @@ class MongoDbConnector(DatabaseConnector):
             return self.db[collection_name]
         except:
             return None
+
+    async def update_job_status(self, collection_name: str, job_id: str, status: str):
+        return self.db[collection_name].update_one({'job_id': job_id, }, {'$set': {'status': status}})
 
 
