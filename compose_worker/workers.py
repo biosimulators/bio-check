@@ -35,7 +35,7 @@ class Worker(ABC):
         """
         self.job_params = job
         self.job_id = self.job_params['job_id']
-        self.job_result = {'results': {}}
+        self.job_result = None
 
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         self.worker_id = unique_id()
@@ -116,13 +116,13 @@ class VerificationWorker(Worker):
         if selections is not None:
             self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
 
-        # calculate rmse for each simulator over all observables
-        self.job_result['rmse'] = {}
-        simulators = self.job_params.get('simulators')
-        if self.job_params.get('expected_results') is not None:
-            simulators.append('expected_results')
-        for simulator in simulators:
-            self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
+        # TODO: remimplement this! calculate rmse for each simulator over all observables
+        # self.job_result['rmse'] = {}
+        # simulators = self.job_params.get('simulators')
+        # if self.job_params.get('expected_results') is not None:
+        #     simulators.append('expected_results')
+        # for simulator in simulators:
+        #     self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
 
         return self.job_result
 
@@ -349,13 +349,12 @@ class VerificationWorker(Worker):
         for simulator_name in output_data.keys():
             for output in output_data[simulator_name]['data']:
                 if output['dataset_label'] in species_name:
-                    results['output_data'][simulator_name] = output['data'].tolist()
+                    data = output['data']
+                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
     def _generate_sbml_utc_species_comparison(self, sbml_filepath, start, dur, steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
-        simulators = simulators or ['copasi', 'tellurium']
-        if "amici" in simulators:
-            simulators.remove("amici")
+        simulators = simulators or ['amici', 'copasi', 'tellurium']
 
         output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, truth=ground_truth)
         outputs = sbml_output_stack(species_name, output_data)
@@ -369,7 +368,8 @@ class VerificationWorker(Worker):
         for simulator_name in output_data.keys():
             for spec_name, output in output_data[simulator_name].items():
                 if species_name in spec_name:
-                    results['output_data'][simulator_name] = output_data[simulator_name][spec_name].tolist()
+                    data = output_data[simulator_name][spec_name]
+                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
     def _generate_species_comparison_matrix(

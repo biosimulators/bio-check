@@ -274,7 +274,7 @@ async def verify_sbml(
         start: int = Query(..., description="Start time of the simulation (output start time)"),
         end: int = Query(..., description="End time of simulation (end)"),
         steps: int = Query(..., description="Number of simulation steps to run"),
-        simulators: List[str] = Query(default=["copasi", "tellurium"], description="List of simulators to compare"),
+        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
@@ -285,7 +285,7 @@ async def verify_sbml(
     try:
         # request specific params
         if comparison_id is None:
-            compare_id = "utc_comparison_omex"
+            compare_id = "utc_comparison_sbml"
         else:
             compare_id = comparison_id
 
@@ -378,10 +378,10 @@ async def get_compatible_for_verification(
         simulators = COMPATIBLE_VERIFICATION_SIMULATORS.copy()  # TODO: dynamically extract this!
 
         # handle filetype: amici is not compatible with sbml verification at the moment
-        if not filename.endswith(".omex"):
-            for sim in simulators:
-                if sim[0] == 'amici':
-                    simulators.remove(sim)
+        # if not filename.endswith(".omex"):
+        #     for sim in simulators:
+        #         if sim[0] == 'amici':
+        #             simulators.remove(sim)
 
         compatible_sims = []
         for data in simulators:

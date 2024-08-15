@@ -74,7 +74,7 @@ class Supervisor:
             await sleep(10)
 
             # refresh job queue
-            self.job_queue = self.db_connector.pending_jobs()
+            # self.job_queue = self.db_connector.pending_jobs()
 
         return 0
 

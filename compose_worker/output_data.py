@@ -57,9 +57,12 @@ def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Uni
         If it startswith that, then assume a return of the output txt file, if not: then assume a return from ram.
     """
     # search for output_files in model_fp TODO: optimize this
+    use_file_output = False
     with open(model_fp, 'r') as f:
         model_content = [line.strip() for line in f.readlines()]
-        use_file_output = 'output_files' in model_content
+        for content in model_content:
+            if content.startswith('output_files'):
+                use_file_output = True
         f.close()
 
     output_data = {}
@@ -140,7 +143,7 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
 
     result = simulator.simulate(start, dur, steps + 1)
     outputs = {}
-    for index, row in enumerate(result.transpose().tolist()):
+    for index, row in enumerate(result.transpose()):
         for i, name in enumerate(floating_species_list):
             outputs[output_keys[i]] = row
 
