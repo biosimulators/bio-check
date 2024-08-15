@@ -110,13 +110,14 @@ class BaseClass:
 
 class JobStatus(Enum):
     PENDING = "PENDING"
-    RUNNING = "RUNNING"
+    IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
 
 class DatabaseCollections(Enum):
     PENDING_JOBS = "PENDING_JOBS"
+    IN_PROGRESS_JOBS = "IN_PROGRESS_JOBS"
     COMPLETED_JOBS = "COMPLETED_JOBS"
 
 
@@ -225,7 +226,7 @@ class MongoDbConnector(DatabaseConnector):
         coll_name = self._parse_enum_input(collection_name)
         coll = self.get_collection(coll_name)
         result = coll.find_one(kwargs)
-        return kwargs
+        return result
 
     async def write(self, collection_name: DatabaseCollections | str, **kwargs):
         """
@@ -249,8 +250,9 @@ class MongoDbConnector(DatabaseConnector):
         except:
             return None
 
-    async def update_job_status(self, collection_name: str, job_id: str, status: str):
-        return self.db[collection_name].update_one({'job_id': job_id, }, {'$set': {'status': status}})
+    async def update_job_status(self, collection_name: str, job_id: str, status: str | JobStatus):
+        job_status = self._parse_enum_input(status)
+        return self.db[collection_name].update_one({'job_id': job_id, }, {'$set': {'status': job_status}})
 
     def _parse_enum_input(self, _input: Any) -> str:
         return _input.value if isinstance(_input, Enum) else _input

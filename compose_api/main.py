@@ -349,30 +349,41 @@ async def verify_sbml(
 
 @app.get(
     "/get-output/{job_id}",
-    response_model=OutputData,
+    # response_model=OutputData,
     operation_id='get-verify-output',
     tags=["Data"],
     summary='Get the results of an existing simulation run.')
-async def fetch_results(job_id: str) -> Union[OutputData, FileResponse]:
-    colls = ['completed_jobs', 'pending_jobs']
-    for collection in colls:
-        job = db_connector.read(collection_name=collection, job_id=job_id)
+async def fetch_results(job_id: str):
+    for collection in DatabaseCollections:
+        coll_name = collection.value
+        job = await db_connector.read(collection_name=coll_name, job_id=job_id)
+
+        # job exists
         if not isinstance(job, type(None)):
-            job.pop('_id')
+            # case: job is completed
+            if job['status'] == "COMPLETED":
+                job.pop('_id')
 
-            # check for a downloadable file in results
-            # job_data = job['results']  # ['results']
-            job_data = job
-            print(job.keys())
-            if "results_file" in job_data.keys():
-                remote_fp = job_data['results_file']
-                temp_dest = mkdtemp()
-                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+                # check for a downloadable file in results
+                # job_data = job['results']  # ['results']
+                job_data = job
+                print(job.keys())
 
-                return FileResponse(path=local_fp)
-            # else:
-                # return OutputData(content=job)
+                # case: output is a file
+                if "results_file" in job_data.keys():
+                    remote_fp = job_data['results_file']
+                    temp_dest = mkdtemp()
+                    local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
+                    return FileResponse(path=local_fp)
+                # case output is data
+                else:
+                    return OutputData(content=job)
+            # case: job is either in progress or pending
+            else:
+                return job
+
+    # case: no job exists in any collection by that id
     raise HTTPException(status_code=404, detail="Comparison not found")
 
 
