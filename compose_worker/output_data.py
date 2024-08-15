@@ -286,13 +286,13 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
         result = {}
         simulation_executor = SBML_EXECUTORS[simulator]
         result = simulation_executor(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-        output[simulator] = result
 
-    # else:
-    #     # amici_results = run_sbml_amici(**params)
-    #     copasi_results = run_sbml_copasi(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-    #     tellurium_results = run_sbml_tellurium(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
-    #     output = {'copasi': copasi_results, 'tellurium': tellurium_results}  # 'amici': amici_results}
+        for species_name in result.keys():
+            output_vals = result[species_name]
+            if isinstance(output_vals, np.ndarray):
+                result[species_name] = output_vals.tolist()
+
+        output[simulator] = result
 
     if truth is not None:
         output['ground_truth'] = {}

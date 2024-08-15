@@ -52,26 +52,33 @@ class Supervisor:
 
                 # case: job is not complete, otherwise do nothing
                 if not is_completed:
-                    # check: run simulations
-                    if job_id.startswith('simulation-execution'):
-                        worker = SimulationRunWorker(job=pending_job)
-                    # check: verifications
-                    elif job_id.startswith('verification'):
-                        # otherwise: create new worker with job
-                        worker = VerificationWorker(job=pending_job)
+                    try:
+                        # check: run simulations
+                        if job_id.startswith('simulation-execution'):
+                            worker = SimulationRunWorker(job=pending_job)
+                        # check: verifications
+                        elif job_id.startswith('verification'):
+                            # otherwise: create new worker with job
+                            worker = VerificationWorker(job=pending_job)
 
-                    # change job status for client poll
-                    # await self.db_connector.update_job_status(collection_name="pending_jobs", job_id=job_id, status=JobStatus.RUNNING)
+                        # change job status for client by inserting a new in progress job
+                        in_progress_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
 
-                    # change job status for client by inserting a new in progress job
-                    in_progress_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
+                        # when worker completes, dismiss worker (if in parallel)
+                        await worker.run()
 
-                    # when worker completes, dismiss worker (if in parallel)
-                    await worker.run()
-
-                    # create new completed job using the worker's job_result TODO: refactor output nesting
-                    result_data = worker.job_result
-                    completed_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.COMPLETED_JOBS.value, job_id=job_id, results=result_data, source=source.split('/')[-1], status=JobStatus.COMPLETED.value)
+                        # create new completed job using the worker's job_result TODO: refactor output nesting
+                        result_data = worker.job_result
+                        completed_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.COMPLETED_JOBS.value, job_id=job_id, results=result_data, source=source.split('/')[-1], status=JobStatus.COMPLETED.value)
+                    except Exception as e:
+                        # save new error to db
+                        await self.db_connector.insert_job_async(
+                            collection_name="failed_jobs",
+                            job_id=job_id,
+                            timestamp=self.db_connector.timestamp(),
+                            status=JobStatus.FAILED.value,
+                            results=str(e)
+                        )
 
         for _ in range(self.queue_timer):
             # perform check
