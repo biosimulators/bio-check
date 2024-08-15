@@ -321,8 +321,8 @@ async def verify_sbml(
         report_location = report_blob_dest
 
         pending_job_doc = await db_connector.write(
-            collection_name=DatabaseCollections.PENDING_JOBS,
-            status=JobStatus.PENDING,
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            status=JobStatus.PENDING.value,
             job_id=job_id,
             comparison_id=compare_id,
             path=uploaded_file_location,
