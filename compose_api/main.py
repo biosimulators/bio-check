@@ -437,15 +437,20 @@ async def generate_simularium_file(
         if filename is None:
             filename = 'simulation'
 
-        new_job_submission = await db_connector.write(
-            collection_name=DatabaseCollections.PENDING_JOBS,
-            status=JobStatus.PENDING,
+        new_job_submission = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            status=JobStatus.PENDING.value,
             job_id=job_id,
             timestamp=_time,
             path=uploaded_file_location,
             filename=filename,
             box_size=box_size,
         )
+
+        gen_id = new_job_submission.get('_id')
+        if gen_id is not None:
+            new_job_submission.pop('_id')
+
         return PendingSimulariumJob(**new_job_submission)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")

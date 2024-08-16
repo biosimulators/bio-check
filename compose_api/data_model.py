@@ -66,6 +66,7 @@ class PendingUtcJob(Job):
 # -- files --
 
 class PendingSimulariumJob(Job):
+    """jobid timestamp path filename box_size status"""
     job_id: str
     timestamp: str
     path: str
