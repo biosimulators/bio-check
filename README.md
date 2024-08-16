@@ -22,6 +22,7 @@ pip install bio-check
 
 **PLEASE NOTE: You must have `>=python3.9` in order to use the high-level api.**
 
+#### Alternatively, **the REST API can be accessed via Swagger UI here: [https://biochecknet.biosimulations.org/docs](https://biochecknet.biosimulations.org/docs)
 ### **FOR DEVELOPERS:**
 
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
