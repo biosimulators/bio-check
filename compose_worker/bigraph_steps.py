@@ -261,7 +261,7 @@ class SmoldynStep(Step):
         )
 
 
-class SimulariumStep(Step):
+class SimulariumSmoldynStep(Step):
     """
         agent_data should have the following structure:
 
@@ -321,8 +321,7 @@ class SimulariumStep(Step):
         file_data = InputFileData(in_file)
 
         # get species data for display data
-        species_data = inputs['species_counts']
-        species_names = list(species_data.keys())
+        species_names = inputs['species_names']
 
         # generate simulariumio Smoldyn Data TODO: should display data be gen for each species type or n number of instances of that type?
         display_data = self._generate_display_data(species_names)
@@ -340,7 +339,7 @@ class SimulariumStep(Step):
             io_data = translate_data_object(data=io_data, box_size=self.box_size, translation_magnitude=self.translation_magnitude)
 
         # write data to simularium file
-        simularium_fp = os.path.join(self.output_dest, 'simulation.simularium')
+        simularium_fp = os.path.join(self.output_dest, 'simulation')
         write_simularium_file(data=io_data, simularium_fp=simularium_fp, json=True, validate=True)
 
         return {'simularium_file': simularium_fp}
@@ -378,11 +377,25 @@ class SimulariumStep(Step):
 
 REGISTERED_PROCESSES = [
     ('smoldyn_step', SmoldynStep),
-    ('simularium_step', SimulariumStep)
+    ('simularium_smoldyn_step', SimulariumSmoldynStep)
 ]
 for process_name, process_class in REGISTERED_PROCESSES:
     try:
         CORE.process_registry.register(process_name, process_class)
     except Exception as e:
         print(f'{process_name} could not be registered because {str(e)}')
+
+
+def generate_simularium_file(input_fp: str, dest: str, box_size: float):
+    species_names = []
+    with open(input_fp, 'r') as f:
+        output = [l.strip() for l in f.readlines()]
+        for line in output:
+            datum = line.split(' ')[0]
+            if not datum.isdigit():
+                species_names.append(datum)
+
+    simularium = SimulariumSmoldynStep(config={'output_dest': dest, 'box_size': box_size})
+    return simularium.update(inputs={'results_file': input_fp, 'species_names': species_names})
+
 
