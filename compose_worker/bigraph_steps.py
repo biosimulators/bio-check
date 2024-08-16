@@ -1,5 +1,6 @@
 import os
 from tempfile import mkdtemp
+from typing import Dict
 from uuid import uuid4
 from typing import *
 
@@ -285,6 +286,14 @@ class SimulariumSmoldynStep(Step):
             '_default': True,
             '_type': 'boolean'
         },
+        'write_json': {
+            '_default': True,
+            '_type': 'boolean'
+        },
+        'run_validation': {
+            '_default': True,
+            '_type': 'boolean'
+        },
         'file_save_name': 'maybe[string]',
         'translation_magnitude': 'maybe[float]',
         'meta_data': 'maybe[tree[string]]',
@@ -296,6 +305,7 @@ class SimulariumSmoldynStep(Step):
 
         # io params
         self.output_dest = self.config['output_dest']
+        self.write_json = self.config['write_json']
         self.filename = self.config.get('file_save_name')
 
         # display params
@@ -310,6 +320,7 @@ class SimulariumSmoldynStep(Step):
 
         # info params
         self.meta_data = self.config.get('meta_data')
+        self.run_validation = self.config['run_validation']
 
     def inputs(self):
         return {'results_file': 'string', 'species_counts': 'tree[integer]'}
@@ -342,11 +353,13 @@ class SimulariumSmoldynStep(Step):
 
         # write data to simularium file
         if self.filename is None:
-            self.filename = f'{in_file.replace(".", "")}-simulation'
-        simularium_fp = os.path.join(self.output_dest, self.filename)
-        write_simularium_file(data=io_data, simularium_fp=simularium_fp, json=True, validate=True)
+            file_root = os.path.dirname(in_file)
+            self.filename = in_file.split('/')[-1].replace('.', '') + "-simulation"
 
-        return {'simularium_file': simularium_fp}
+        save_path = os.path.join(self.output_dest, self.filename)
+        write_simularium_file(data=io_data, simularium_fp=save_path, json=self.write_json, validate=self.run_validation)
+
+        return {'simularium_file': save_path + '.simularium'}
 
     def _generate_display_data(self, species_names) -> Dict | None:
         # user is specifying display data for agents
@@ -390,7 +403,14 @@ for process_name, process_class in REGISTERED_PROCESSES:
         print(f'{process_name} could not be registered because {str(e)}')
 
 
-async def generate_simularium_file(input_fp: str, dest_dir: str, box_size: float):
+async def generate_simularium_file(
+        input_fp: str,
+        dest_dir: str,
+        box_size: float,
+        translate_output: bool = True,
+        write_json: bool = True,
+        run_validation: bool = True
+) -> Dict[str, str]:
     species_names = []
     with open(input_fp, 'r') as f:
         output = [l.strip() for l in f.readlines()]
@@ -399,7 +419,18 @@ async def generate_simularium_file(input_fp: str, dest_dir: str, box_size: float
             if not datum.isdigit():
                 species_names.append(datum)
 
-    simularium = SimulariumSmoldynStep(config={'output_dest': dest_dir, 'box_size': box_size})
-    return simularium.update(inputs={'results_file': input_fp, 'species_names': species_names})
+    simularium = SimulariumSmoldynStep(config={
+        'output_dest': dest_dir,
+        'box_size': box_size,
+        'translate_output': translate_output,
+        'file_save_name': None,
+        'write_json': write_json,
+        'run_validation': run_validation
+    })
+
+    return simularium.update(inputs={
+        'results_file': input_fp,
+        'species_names': species_names
+    })
 
 

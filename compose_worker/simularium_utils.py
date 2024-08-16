@@ -114,7 +114,7 @@ def translate_data_object(
 def write_simularium_file(
     data: Union[SmoldynData, TrajectoryData],
     simularium_fp: str,
-    json: bool = False,
+    json: bool = True,
     validate: bool = True
 ) -> None:
     """Takes in either a `SmoldynData` or `TrajectoryData` instance and saves a simularium file based on it

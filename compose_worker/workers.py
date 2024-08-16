@@ -474,15 +474,18 @@ class FilesWorker(Worker):
         job_id = self.job_params['job_id']
         input_path = self.job_params.get('path')
 
-        # is a job related to a client file upload
-        if input_path is not None:
-            # download the input file
-            dest = tempfile.mkdtemp()
-            local_input_path = download_file(source_blob_path=input_path, bucket_name=BUCKET_NAME, out_dir=dest)
-            print(local_input_path)
-            # case: is a smoldyn output file and thus a simularium job
-            if input_path.endswith('.txt'):
-                await self._run_simularium(job_id=job_id, input_path=local_input_path, dest=dest)
+        try:
+            # is a job related to a client file upload
+            if input_path is not None:
+                # download the input file
+                dest = tempfile.mkdtemp()
+                local_input_path = download_file(source_blob_path=input_path, bucket_name=BUCKET_NAME, out_dir=dest)
+                print(local_input_path)
+                # case: is a smoldyn output file and thus a simularium job
+                if input_path.endswith('.txt'):
+                    await self._run_simularium(job_id=job_id, input_path=local_input_path, dest=dest)
+        except Exception as e:
+            self.job_result['results'] = str(e)
 
         return self.job_result
 
