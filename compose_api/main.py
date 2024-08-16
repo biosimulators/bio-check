@@ -17,7 +17,7 @@ from starlette.middleware.cors import CORSMiddleware
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob, CompositionSpecification, PendingSbmlVerificationJob, PendingOmexVerificationJob, PendingCompositionJob
-from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections
+from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
 
@@ -211,13 +211,8 @@ async def verify_omex(
 
         job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
-
-        # bucket params
-        upload_prefix = f"uploads/{job_id}/"
-        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
-
+        upload_prefix, bucket_prefix = file_upload_prefix(job_id)
         save_dest = mkdtemp()
-
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
@@ -293,13 +288,8 @@ async def verify_sbml(
 
         job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
-
-        # bucket params
-        upload_prefix = f"uploads/{job_id}/"
-        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
-
+        upload_prefix, bucket_prefix = file_upload_prefix(job_id)
         save_dest = mkdtemp()
-
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
         # Save uploaded omex file to Google Cloud Storage
