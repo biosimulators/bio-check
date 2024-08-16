@@ -360,7 +360,7 @@ async def run_composition(
 ) -> PendingCompositionJob:
     try:
         # job params
-        job_id = "composition-run-composition" + str(uuid.uuid4())
+        job_id = "composition-run" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         if composition_spec.composition_id is None:
             composition_spec.composition_id = job_id
