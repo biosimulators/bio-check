@@ -428,8 +428,7 @@ async def generate_simularium_file(
 ):
     job_id = "files-generate-simularium-file" + str(uuid.uuid4())
     _time = db_connector.timestamp()
-    upload_prefix = f"uploads/{job_id}/"
-    bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
+    upload_prefix, bucket_prefix = file_upload_prefix(job_id)
     uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
     # new simularium job in db

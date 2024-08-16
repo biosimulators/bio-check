@@ -4,7 +4,7 @@ from typing import *
 from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
 
-from workers import SimulationRunWorker, VerificationWorker
+from workers import SimulationRunWorker, VerificationWorker, FilesWorker, CompositionWorker
 from shared import BaseClass, MongoDbConnector, unique_id, JobStatus, DatabaseCollections
 from log_config import setup_logging
 
@@ -60,6 +60,12 @@ class Supervisor:
                         elif job_id.startswith('verification'):
                             # otherwise: create new worker with job
                             worker = VerificationWorker(job=pending_job)
+                        # check: files
+                        elif job_id.startswith('files'):
+                            worker = FilesWorker(job=pending_job)
+                        # check: composition
+                        elif job_id.startswith('composition-run'):
+                            worker = CompositionWorker(job=pending_job)
 
                         # change job status for client by inserting a new in progress job
                         in_progress_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
