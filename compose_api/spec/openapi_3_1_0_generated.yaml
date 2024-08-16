@@ -5,7 +5,7 @@ info:
 paths:
   /:
     get:
-      summary: Ping the API root.
+      summary: Root
       operationId: root__get
       responses:
         '200':
@@ -198,7 +198,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingOmexJob'
+                $ref: '#/components/schemas/PendingOmexVerificationJob'
         '422':
           description: Validation Error
           content:
@@ -315,7 +315,44 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingSbmlJob'
+                $ref: '#/components/schemas/PendingSbmlVerificationJob'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /run-composition:
+    post:
+      tags:
+      - Composition
+      summary: Run a composite simulation.
+      operationId: run-composition
+      parameters:
+      - name: duration
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Duration of the simulation in seconds.
+          title: Duration
+        description: Duration of the simulation in seconds.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/CompositionSpecification'
+              description: ProcessBigraph-compliant specification of composition.
+              title: Composition Spec
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingCompositionJob'
         '422':
           description: Validation Error
           content:
@@ -517,6 +554,89 @@ components:
       - file
       - simulators
       title: CompatibleSimulators
+    CompositionNode:
+      properties:
+        name:
+          type: string
+          title: Name
+          description: Descriptive name of the composition node.
+          examples:
+          - fba-process
+        node_type:
+          type: string
+          title: Node Type
+          description: Type name, usually either step or process.
+          examples:
+          - <IMPLEMENTATION TYPE>
+        address:
+          type: string
+          title: Address
+          description: Node (process or step) implementation address within Bigraph
+            schema via some sort of ProcessTypes implementation.
+          examples:
+          - <ADDRESS PROTOCOL>:<ADDRESS ID>
+        config:
+          type: object
+          title: Config
+          description: A mapping of config_schema names to required values as per
+            the given process bigraph step or process implementation.
+          examples:
+          - <REQUIRED PARAMETER NAME>: <REQUIRED PARAMETER VALUE>
+        inputs:
+          anyOf:
+          - additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+          - type: 'null'
+          title: Inputs
+          description: A mapping of input port (data) names and a list describing
+            the path at which results for that data name are stored within the composite
+            bigraph.
+          examples:
+          - <INPUT PORT NAME>:
+            - <INPUT PORT STORE NAME>
+        outputs:
+          anyOf:
+          - additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+          - type: 'null'
+          title: Outputs
+          description: A mapping of output port (data) names and a list describing
+            the path at which results for that data name are stored within the composite
+            bigraph.
+          examples:
+          - <OUTPUT PORT NAME>:
+            - <OUTPUT PORT STORE NAME>
+      type: object
+      required:
+      - node_type
+      - address
+      - config
+      - inputs
+      - outputs
+      title: CompositionNode
+    CompositionSpecification:
+      properties:
+        composition_id:
+          type: string
+          title: Composition Id
+          description: Unique composition ID.
+          examples:
+          - ode-fba-species-a
+        nodes:
+          items:
+            $ref: '#/components/schemas/CompositionNode'
+          type: array
+          title: Nodes
+      type: object
+      required:
+      - nodes
+      title: CompositionSpecification
     HTTPValidationError:
       properties:
         detail:
@@ -526,7 +646,32 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    PendingOmexJob:
+    PendingCompositionJob:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        composition:
+          type: object
+          title: Composition
+        duration:
+          type: integer
+          title: Duration
+        timestamp:
+          type: string
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+          default: PENDING
+      type: object
+      required:
+      - job_id
+      - composition
+      - duration
+      - timestamp
+      title: PendingCompositionJob
+    PendingOmexVerificationJob:
       properties:
         job_id:
           type: string
@@ -585,8 +730,8 @@ components:
       - timestamp
       - path
       - simulators
-      title: PendingOmexJob
-    PendingSbmlJob:
+      title: PendingOmexVerificationJob
+    PendingSbmlVerificationJob:
       properties:
         job_id:
           type: string
@@ -657,7 +802,7 @@ components:
       - end
       - steps
       - simulators
-      title: PendingSbmlJob
+      title: PendingSbmlVerificationJob
     PendingSimulariumJob:
       properties:
         job_id:
