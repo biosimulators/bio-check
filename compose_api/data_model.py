@@ -103,7 +103,7 @@ class PendingCompositionJob(BaseModel):
     composition: Dict[str, Any]
     duration: int
     timestamp: str
-    status: Enum = JobStatus.PENDING
+    status: str = JobStatus.PENDING.value
 
 
 class DbClientResponse(BaseModel):

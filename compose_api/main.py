@@ -375,9 +375,13 @@ async def run_composition(
             node_spec["_type"] = node.node_type
             spec[name] = node_spec
 
-        return PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id, status=JobStatus.PENDING)
+        # write job as dict to db
+        job = PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id)
+        await db_connector.insert_job_async(collection_name=DatabaseCollections.PENDING_JOBS.value, **job.model_dump())
+
+        return job
     except Exception as e:
-        raise HTTPException(status_code=404, detail="Comparison not found")
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.get(
