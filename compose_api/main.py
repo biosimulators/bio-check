@@ -29,7 +29,7 @@ dotenv.load_dotenv("../assets/.env_dev")
 # -- constraints -- #
 
 APP_TITLE = "bio-compose"
-APP_VERSION = "1.0.0"
+APP_VERSION = "0.1.0"
 
 # TODO: update this
 ORIGINS = [
