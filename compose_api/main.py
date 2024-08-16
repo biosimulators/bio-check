@@ -2,6 +2,8 @@ import asyncio
 import os
 import logging
 import uuid
+from enum import Enum
+
 import dotenv
 from tempfile import mkdtemp
 from typing import *
@@ -9,12 +11,12 @@ from typing import *
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
 from fastapi.responses import FileResponse
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 from starlette.middleware.cors import CORSMiddleware
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingOmexJob, PendingSbmlJob, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob
+from data_model import DbClientResponse, UtcComparisonResult, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob, CompositionSpecification, PendingSbmlVerificationJob, PendingOmexVerificationJob, PendingCompositionJob
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
@@ -185,7 +187,7 @@ async def run_utc(
 
 @app.post(
     "/verify-omex",  # "/biosimulators-utc-comparison",
-    response_model=PendingOmexJob,
+    response_model=PendingOmexVerificationJob,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
     tags=["Verification"],
@@ -199,7 +201,7 @@ async def verify_omex(
         expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
-) -> PendingOmexJob:
+) -> PendingOmexVerificationJob:
     try:
         # request specific params
         if comparison_id is None:
@@ -257,14 +259,14 @@ async def verify_omex(
         if report_fp:
             os.remove(report_fp)
 
-        return PendingOmexJob(**pending_job_doc)
+        return PendingOmexVerificationJob(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
     "/verify-sbml",
-    response_model=PendingSbmlJob,
+    response_model=PendingSbmlVerificationJob,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
     tags=["Verification"],
@@ -281,7 +283,7 @@ async def verify_sbml(
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
-) -> PendingSbmlJob:
+) -> PendingSbmlVerificationJob:
     try:
         # request specific params
         if comparison_id is None:
@@ -341,9 +343,41 @@ async def verify_sbml(
         # clean up local temp files
         os.remove(fp)
 
-        return PendingSbmlJob(**pending_job_doc)
+        return PendingSbmlVerificationJob(**pending_job_doc)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/run-composition",
+    response_model=PendingCompositionJob,
+    operation_id='run-composition',
+    tags=["Composition"],
+    summary='Run a composite simulation.')
+async def run_composition(
+        composition_spec: CompositionSpecification = Body(..., description="ProcessBigraph-compliant specification of composition."),
+        duration: int = Query(..., description="Duration of the simulation in seconds."),
+) -> PendingCompositionJob:
+    try:
+        # job params
+        job_id = "composition-run-composition" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+        if composition_spec.composition_id is None:
+            composition_spec.composition_id = job_id
+
+        # format process bigraph spec needed for Composite()
+        spec = {}
+        for node in composition_spec.nodes:
+            name = node.name
+            node_spec = node.model_dump()
+            node_spec.pop("name")
+            node_spec.pop("node_type")
+            node_spec["_type"] = node.node_type
+            spec[name] = node_spec
+
+        return PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id, status=JobStatus.PENDING)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Comparison not found")
 
 
 @app.get(

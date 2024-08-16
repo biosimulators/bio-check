@@ -1,10 +1,15 @@
 # -- api models -- #
+from enum import Enum
 from typing import List, Optional, Any, Dict
 
-from shared import BaseModel, Job
+from pydantic import Field
+
+from shared import BaseModel, Job, JobStatus
 
 
-class PendingOmexJob(Job):
+# -- verification --
+
+class PendingOmexVerificationJob(Job):
     job_id: str
     status: str
     timestamp: str
@@ -18,7 +23,7 @@ class PendingOmexJob(Job):
     selection_list: Optional[List[str]] = None
 
 
-class PendingSbmlJob(Job):
+class PendingSbmlVerificationJob(Job):
     job_id: str
     status: str
     timestamp: str
@@ -34,6 +39,8 @@ class PendingSbmlJob(Job):
     aTol: Optional[float] = None
     selection_list: Optional[List[str]] = None
 
+
+# -- simulation execution --
 
 class PendingSmoldynJob(Job):
     job_id: str 
@@ -56,6 +63,8 @@ class PendingUtcJob(Job):
     simulator: str
 
 
+# -- files --
+
 class PendingSimulariumJob(Job):
     job_id: str
     timestamp: str
@@ -64,20 +73,37 @@ class PendingSimulariumJob(Job):
     status: str = "PENDING"
 
 
-class OmexComparisonSubmission(PendingOmexJob):
-    pass
+# -- composition --
+
+class CompositionNode(BaseModel):
+    name: str = Field(default=None, examples=["fba-process"], description="Descriptive name of the composition node.")
+    node_type: str = Field(examples=['<IMPLEMENTATION TYPE>'], description="Type name, usually either step or process.")
+    address: str = Field(examples=['<ADDRESS PROTOCOL>:<ADDRESS ID>'], description="Node (process or step) implementation address within Bigraph schema via some sort of ProcessTypes implementation.")
+    config: Dict[str, Any] = Field(
+        examples=[{'<REQUIRED PARAMETER NAME>': '<REQUIRED PARAMETER VALUE>'}],
+        description="A mapping of config_schema names to required values as per the given process bigraph step or process implementation."
+    )
+    inputs: Optional[Dict[str, List[str]]] = Field(
+        examples=[{'<INPUT PORT NAME>': ['<INPUT PORT STORE NAME>']}],
+        description="A mapping of input port (data) names and a list describing the path at which results for that data name are stored within the composite bigraph."
+    )
+    outputs: Optional[Dict[str, List[str]]] = Field(
+        examples=[{'<OUTPUT PORT NAME>': ['<OUTPUT PORT STORE NAME>']}],
+        description="A mapping of output port (data) names and a list describing the path at which results for that data name are stored within the composite bigraph."
+    )
 
 
-class SbmlComparisonSubmission(PendingSbmlJob):
-    pass
+class CompositionSpecification(BaseModel):
+    composition_id: str = Field(default=None, examples=["ode-fba-species-a"], description="Unique composition ID.")
+    nodes: List[CompositionNode]
 
 
-class Simulators(BaseModel):
-    simulators: List[str]
-
-
-# class UtcComparisonSubmission(PendingJob):
-    # pass
+class PendingCompositionJob(BaseModel):
+    job_id: str
+    composition: Dict[str, Any]
+    duration: int
+    timestamp: str
+    status: Enum = JobStatus.PENDING
 
 
 class DbClientResponse(BaseModel):
@@ -86,11 +112,7 @@ class DbClientResponse(BaseModel):
     timestamp: str
 
 
-class UtcComparisonRequestParams(BaseModel):
-    simulators: List[str] = ["amici", "copasi", "tellurium"]
-    include_output: Optional[bool] = True
-    comparison_id: Optional[str] = None
-
+# -- data --
 
 class OutputData(BaseModel):
     content: Any
