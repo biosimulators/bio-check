@@ -374,6 +374,11 @@ async def run_composition(
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@app.get("/get-jobs")
+async def get_jobs(collection: str = Query(...)):
+    return [job['job_id'] for job in db_connector.db[collection].find()]
+
+
 @app.get(
     "/get-output/{job_id}",
     # response_model=OutputData,
@@ -381,38 +386,64 @@ async def run_composition(
     tags=["Data"],
     summary='Get the results of an existing simulation run.')
 async def fetch_results(job_id: str):
+    # TODO: refactor this!
+
+    # state-case: job is completed
     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
 
-    # case: job is not in completed:
+    # state-case: job is not in completed:
     if job is None:
         job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
-    # case: job is not in progress:
-    elif job is None:
+
+    # state-case: job is not in progress:
+    if job is None:
         job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
 
+    # return-case: job exists
     if not isinstance(job, type(None)):
+        # remove autogen obj
         job.pop('_id')
 
-        # case: job is completed
+        # status/content-case: case: job is completed
         if job['status'] == "COMPLETED":
-            # check for a downloadable file in results
-            job_data = job['results'].get('results')
+            # check output for type (either raw data or file download)
+            job_data = job['results'].get('results') or job['results']
 
-            # case: output is a file (smoldyn simulation run or simularium file conversion, among others)
-            if "results_file" in job_data.keys():
-                remote_fp = job_data['results_file']
-                temp_dest = mkdtemp()
-                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+            # job has results
+            if job_data is not None:
+                remote_fp = None
 
-                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
-            # case output is data
-            else:
-                return OutputData(content=job)
-        # case: job is either in progress or pending
+                # output-type-case: output is saved as a dict
+                if isinstance(job_data, dict):
+                    # output-case: output content in dict is a downloadable file
+                    if "results_file" in job_data.keys():
+                        remote_fp = job_data['results_file']
+                    # status/output-case: job is complete and output content is raw data and so return the full data TODO: do something better here
+                    else:
+                        return OutputData(content=job)
+
+                # output-type-case: output is saved as flattened (str) and thus also a file download
+                elif isinstance(job_data, str):
+                    remote_fp = job_data
+
+                # content-case: output content relates to file download
+                if remote_fp is not None:
+                    temp_dest = mkdtemp()
+                    local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+
+                    return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+
+        # status/content-case: job is either pending or in progress and does not contain files to download
         else:
-            return job
-    # case: no job exists in any collection by that id
-    raise HTTPException(status_code=404, detail="Comparison not found")
+            # acknowledge the user submission to differentiate between original submission
+            status = job['status']
+            job['status'] = 'SUBMITTED:' + status
+
+            return OutputData(content=job)
+
+    # return-case: no job exists in any collection by that id
+    else:
+        raise HTTPException(status_code=404, detail="Comparison not found")
 
 
 class AgentParameter(BaseModel):
