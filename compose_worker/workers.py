@@ -476,15 +476,18 @@ class FilesWorker(Worker):
 
         # is a job related to a client file upload
         if input_path is not None:
-            # is a smoldyn output file and thus a simularium job
+            # download the input file
+            dest = tempfile.mkdtemp()
+            local_input_path = await download_file(source_blob_path=input_path, bucket_name=BUCKET_NAME, out_dir=dest)
+
+            # case: is a smoldyn output file and thus a simularium job
             if input_path.endswith('.txt'):
-                await self._run_simularium(job_id=job_id, input_path=input_path)
+                await self._run_simularium(job_id=job_id, input_path=local_input_path, dest=dest)
 
         return self.job_result
 
-    async def _run_simularium(self, job_id: str, input_path: str):
+    async def _run_simularium(self, job_id: str, input_path: str, dest: str):
         box_size = self.job_params['box_size']
-        dest = tempfile.mkdtemp()
         result = await generate_simularium_file(input_fp=input_path, dest_dir=dest, box_size=box_size)
 
         results_file = result.get('simularium_file')
