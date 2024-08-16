@@ -409,7 +409,8 @@ async def generate_simularium_file(
         box_size: float,
         translate_output: bool = True,
         write_json: bool = True,
-        run_validation: bool = True
+        run_validation: bool = True,
+        agent_parameters: Dict[str, Dict[str, Any]] = None
 ) -> Dict[str, str]:
     species_names = []
     with open(input_fp, 'r') as f:
@@ -425,7 +426,8 @@ async def generate_simularium_file(
         'translate_output': translate_output,
         'file_save_name': None,
         'write_json': write_json,
-        'run_validation': run_validation
+        'run_validation': run_validation,
+        'agent_display_parameters': agent_parameters,
     })
 
     return simularium.update(inputs={

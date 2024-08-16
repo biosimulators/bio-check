@@ -17,7 +17,7 @@ from starlette.middleware.cors import CORSMiddleware
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
 from data_model import DbClientResponse, UtcComparisonResult, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob, CompositionSpecification, PendingSbmlVerificationJob, PendingOmexVerificationJob, PendingCompositionJob
-from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
+from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix, BaseModel
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
 
@@ -415,6 +415,17 @@ async def fetch_results(job_id: str):
     raise HTTPException(status_code=404, detail="Comparison not found")
 
 
+class AgentParameter(BaseModel):
+    name: str
+    radius: Optional[float]
+    mass: Optional[float]
+    density: Optional[float]
+
+
+class AgentParameters(BaseModel):
+    agents: List[AgentParameter]
+
+
 @app.post(
     "/generate-simularium-file",
     # response_model=PendingSimulariumJob,
@@ -426,7 +437,8 @@ async def generate_simularium_file(
         box_size: float = Query(..., description="Size of the simulation box as a floating point number."),
         filename: str = Query(default=None, description="Name desired for the simularium file. NOTE: pass only the file name without an extension."),
         translate_output: bool = Query(default=True, description="Whether to translate the output trajectory prior to converting to simularium. See simulariumio documentation for more details."),
-        validate_output: bool = Query(default=True, description="Whether to validate the outputs for the simularium file. See simulariumio documentation for more details.")
+        validate_output: bool = Query(default=True, description="Whether to validate the outputs for the simularium file. See simulariumio documentation for more details."),
+        agent_parameters: AgentParameters = Body(default=None, description="Parameters for the simularium agents defining either radius or mass and density.")
 ):
     job_id = "files-generate-simularium-file" + str(uuid.uuid4())
     _time = db_connector.timestamp()
@@ -437,6 +449,11 @@ async def generate_simularium_file(
     if filename is None:
         filename = 'simulation'
 
+    agent_params = {}
+    if agent_parameters is not None:
+        for agent_param in agent_parameters.agents:
+            agent_params[agent_param.name] = agent_param.model_dump()
+
     new_job_submission = await db_connector.insert_job_async(
         collection_name=DatabaseCollections.PENDING_JOBS.value,
         status=JobStatus.PENDING.value,
@@ -446,7 +463,8 @@ async def generate_simularium_file(
         filename=filename,
         box_size=box_size,
         translate_output=translate_output,
-        validate_output=validate_output
+        validate_output=validate_output,
+        agent_parameters=agent_params if agent_params is not {} else None
     )
     gen_id = new_job_submission.get('_id')
     if gen_id is not None:

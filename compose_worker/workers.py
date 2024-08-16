@@ -490,11 +490,23 @@ class FilesWorker(Worker):
         return self.job_result
 
     async def _run_simularium(self, job_id: str, input_path: str, dest: str):
+        # get parameters from job
         box_size = self.job_params['box_size']
         translate = self.job_params['translate_output']
         validate = self.job_params['validate_output']
-        result = await generate_simularium_file(input_fp=input_path, dest_dir=dest, box_size=box_size, translate_output=translate, run_validation=validate)
+        params = self.job_params.get('agent_parameters')
 
+        # generate file
+        result = await generate_simularium_file(
+            input_fp=input_path,
+            dest_dir=dest,
+            box_size=box_size,
+            translate_output=translate,
+            run_validation=validate,
+            agent_parameters=params
+        )
+
+        # upload file to bucket
         results_file = result.get('simularium_file')
         uploaded_file_location = None
         if results_file is not None:
@@ -502,6 +514,7 @@ class FilesWorker(Worker):
                 results_file += '.simularium'
             uploaded_file_location = await write_uploaded_file(job_id=job_id, bucket_name=BUCKET_NAME, uploaded_file=results_file, extension='.simularium')
 
+        # set uploaded file as result
         self.job_result['results'] = {'results_file': uploaded_file_location}
 
 
