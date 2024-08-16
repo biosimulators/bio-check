@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 from logging import warn
 from tempfile import mkdtemp
@@ -404,7 +405,7 @@ class SimulariumSmoldynStep(Step):
         self.box_size = self.config['box_size']
         self.translate_output = self.config['translate_output']
         self.translation_magnitude = self.config.get('translation_magnitude')
-        self.agent_display_parameters = self.config.get('agent_display_parameters')
+        self.agent_display_parameters = self.config.get('agent_display_parameters', {})
 
         # units params
         self.spatial_units = self.config['spatial_units']
@@ -415,7 +416,7 @@ class SimulariumSmoldynStep(Step):
         self.run_validation = self.config['run_validation']
 
     def inputs(self):
-        return {'results_file': 'string', 'species_counts': 'tree[integer]'}
+        return {'results_file': 'string', 'species_names': 'list[string]'}
 
     def outputs(self):
         return {'simularium_file': 'string'}
@@ -442,20 +443,19 @@ class SimulariumSmoldynStep(Step):
         # translate reflections if needed
         if self.translate_output:
             io_data = translate_data_object(data=io_data, box_size=self.box_size, translation_magnitude=self.translation_magnitude)
-
         # write data to simularium file
         if self.filename is None:
-            file_root = os.path.dirname(in_file)
             self.filename = in_file.split('/')[-1].replace('.', '') + "-simulation"
 
         save_path = os.path.join(self.output_dest, self.filename)
         write_simularium_file(data=io_data, simularium_fp=save_path, json=self.write_json, validate=self.run_validation)
+        result = {'simularium_file': save_path + '.simularium'}
 
-        return {'simularium_file': save_path + '.simularium'}
+        return result
 
     def _generate_display_data(self, species_names) -> Dict | None:
         # user is specifying display data for agents
-        if self.agent_display_parameters is not None:
+        if isinstance(self.agent_display_parameters, dict) and len(self.agent_display_parameters.keys()) > 0:
             display_data = {}
             for name in species_names:
                 display_params = self.agent_display_parameters[name]
@@ -478,8 +478,8 @@ class SimulariumSmoldynStep(Step):
                 display_data[name] = DisplayData(**display_data_kwargs)
 
             return display_data
-        else:
-            return None
+
+        return None
 
 
 # register processes
@@ -497,7 +497,7 @@ for process_name, process_class in REGISTERED_PROCESSES:
 
 # -- utils --
 
-async def generate_simularium_file(
+def generate_simularium_file(
         input_fp: str,
         dest_dir: str,
         box_size: float,
@@ -507,12 +507,16 @@ async def generate_simularium_file(
         agent_parameters: Dict[str, Dict[str, Any]] = None
 ) -> Dict[str, str]:
     species_names = []
+    float_pattern = re.compile(r'^-?\d+(\.\d+)?$')
     with open(input_fp, 'r') as f:
         output = [l.strip() for l in f.readlines()]
         for line in output:
             datum = line.split(' ')[0]
-            if not datum.isdigit():
+            # Check if the datum is not a float string
+            if not float_pattern.match(datum):
                 species_names.append(datum)
+        f.close()
+    species_names = list(set(species_names))
 
     simularium = SimulariumSmoldynStep(config={
         'output_dest': dest_dir,

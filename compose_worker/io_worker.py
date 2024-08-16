@@ -25,12 +25,12 @@ def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
     return local_fp
 
 
-async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile | str, extension: str) -> str:
+async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile | str, extension: str, save_dest=None) -> str:
     # bucket params
     upload_prefix = f"file_uploads/{job_id}/"
     bucket_prefix = f"gs://{bucket_name}/" + upload_prefix
 
-    save_dest = mkdtemp()
+    save_dest = save_dest or mkdtemp()
     fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
     # Save uploaded omex file to Google Cloud Storage
@@ -40,8 +40,9 @@ async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: Uplo
         raise ValueError(f"Files for {purpose} must be passed in {extension} format.")
 
     blob_dest = upload_prefix + fp.split("/")[-1]
+    print(f'Blob destination for {blob_dest}')
     upload_blob(bucket_name=bucket_name, source_file_name=fp, destination_blob_name=blob_dest)
-
+    print(f'blob_dest: {blob_dest}')
     return blob_dest
 
 
@@ -71,7 +72,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     # generation-match precondition using its generation number.
     generation_match_precondition = 0
 
-    blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
+    blob.upload_from_filename(source_file_name)  # if_generation_match=generation_match_precondition)
 
     return {
         'message': f"File {source_file_name} uploaded to {destination_blob_name}."

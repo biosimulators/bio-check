@@ -128,6 +128,7 @@ def write_simularium_file(
             validate(:obj:`bool`): whether to call the wrapped method using `validate_ids=True`. Defaults
                 to `True`.
     """
+    print(f'Writing simularium file "{simularium_fp}"')
     if json:
         writer = JsonWriter()
     else:

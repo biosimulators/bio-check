@@ -374,9 +374,10 @@ async def run_composition(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.get("/get-jobs")
-async def get_jobs(collection: str = Query(...)):
-    return [job['job_id'] for job in db_connector.db[collection].find()]
+# TODO: allow this for admins
+# @app.get("/get-jobs")
+# async def get_jobs(collection: str = Query(...)):
+#     return [job['job_id'] for job in db_connector.db[collection].find()]
 
 
 @app.get(
