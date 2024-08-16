@@ -392,6 +392,14 @@ paths:
         from either Smoldyn, SpringSaLaD, or ReaDDy.
       operationId: generate-simularium-file
       parameters:
+      - name: box_size
+        in: query
+        required: true
+        schema:
+          type: number
+          description: Size of the simulation box as a floating point number.
+          title: Box Size
+        description: Size of the simulation box as a floating point number.
       - name: filename
         in: query
         required: false
@@ -413,8 +421,7 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PendingSimulariumJob'
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -803,35 +810,6 @@ components:
       - steps
       - simulators
       title: PendingSbmlVerificationJob
-    PendingSimulariumJob:
-      properties:
-        job_id:
-          type: string
-          title: Job Id
-        status:
-          type: string
-          title: Status
-          default: PENDING
-        timestamp:
-          type: string
-          title: Timestamp
-        comparison_id:
-          type: string
-          title: Comparison Id
-        input_file:
-          type: string
-          title: Input File
-        filename:
-          type: string
-          title: Filename
-      type: object
-      required:
-      - job_id
-      - timestamp
-      - comparison_id
-      - input_file
-      - filename
-      title: PendingSimulariumJob
     Simulator:
       properties:
         name:

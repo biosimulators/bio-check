@@ -417,7 +417,7 @@ async def fetch_results(job_id: str):
 
 @app.post(
     "/generate-simularium-file",
-    response_model=PendingSimulariumJob,
+    # response_model=PendingSimulariumJob,
     operation_id='generate-simularium-file',
     tags=["Files"],
     summary='Generate a simularium file with a compatible simulation results file from either Smoldyn, SpringSaLaD, or ReaDDy.')
@@ -425,35 +425,33 @@ async def generate_simularium_file(
         uploaded_file: UploadFile = File(..., description="A file containing results that can be parse by Simularium (spatial)."),
         box_size: float = Query(..., description="Size of the simulation box as a floating point number."),
         filename: str = Query(default=None, description="Name desired for the simularium file. NOTE: pass only the file name without an extension."),
-) -> PendingSimulariumJob:
-    try:
-        job_id = "files-generate-simularium-file" + str(uuid.uuid4())
-        _time = db_connector.timestamp()
-        upload_prefix = f"uploads/{job_id}/"
-        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
-        uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
+):
+    job_id = "files-generate-simularium-file" + str(uuid.uuid4())
+    _time = db_connector.timestamp()
+    upload_prefix = f"uploads/{job_id}/"
+    bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
+    uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
-        # new simularium job in db
-        if filename is None:
-            filename = 'simulation'
+    # new simularium job in db
+    if filename is None:
+        filename = 'simulation'
 
-        new_job_submission = await db_connector.insert_job_async(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
-            status=JobStatus.PENDING.value,
-            job_id=job_id,
-            timestamp=_time,
-            path=uploaded_file_location,
-            filename=filename,
-            box_size=box_size,
-        )
+    new_job_submission = await db_connector.insert_job_async(
+        collection_name=DatabaseCollections.PENDING_JOBS.value,
+        status=JobStatus.PENDING.value,
+        job_id=job_id,
+        timestamp=_time,
+        path=uploaded_file_location,
+        filename=filename,
+        box_size=box_size,
+    )
+    gen_id = new_job_submission.get('_id')
+    if gen_id is not None:
+        new_job_submission.pop('_id')
 
-        gen_id = new_job_submission.get('_id')
-        if gen_id is not None:
-            new_job_submission.pop('_id')
-
-        return PendingSimulariumJob(**new_job_submission)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
+    return new_job_submission
+    # except Exception as e:
+        # raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
 
 
 @app.post(
