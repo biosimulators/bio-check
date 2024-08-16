@@ -33,7 +33,7 @@ unused.txt
 model-examples
 .gitignore
 .idea
-tests
+tests.py
 bio_check/api
 bio_check/worker
 !enter.sh

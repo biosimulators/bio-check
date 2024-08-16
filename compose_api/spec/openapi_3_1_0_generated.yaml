@@ -359,6 +359,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /get-jobs:
+    get:
+      summary: Get Jobs
+      operationId: get_jobs_get_jobs_get
+      parameters:
+      - name: collection
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Collection
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /get-output/{job_id}:
     get:
       tags:
@@ -490,6 +513,44 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
+    AgentParameter:
+      properties:
+        name:
+          type: string
+          title: Name
+        radius:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Radius
+        mass:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mass
+        density:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Density
+      type: object
+      required:
+      - name
+      - radius
+      - mass
+      - density
+      title: AgentParameter
+    AgentParameters:
+      properties:
+        agents:
+          items:
+            $ref: '#/components/schemas/AgentParameter'
+          type: array
+          title: Agents
+      type: object
+      required:
+      - agents
+      title: AgentParameters
     Body_generate-simularium-file:
       properties:
         uploaded_file:
@@ -497,6 +558,11 @@ components:
           format: binary
           title: Uploaded File
           description: A file containing results that can be parse by Simularium (spatial).
+        agent_parameters:
+          allOf:
+          - $ref: '#/components/schemas/AgentParameters'
+          description: Parameters for the simularium agents defining either radius
+            or mass and density.
       type: object
       required:
       - uploaded_file
