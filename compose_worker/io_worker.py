@@ -27,7 +27,7 @@ def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
 
 async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile | str, extension: str) -> str:
     # bucket params
-    upload_prefix = f"uploads/{job_id}/"
+    upload_prefix = f"file_uploads/{job_id}/"
     bucket_prefix = f"gs://{bucket_name}/" + upload_prefix
 
     save_dest = mkdtemp()

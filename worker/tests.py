@@ -25,7 +25,7 @@ async def test_worker(uploaded_file: str, ground_truth_report: str = None, simul
     # save_dest = mkdtemp()
 
     # bucket params
-    upload_prefix = f"uploads/{job_id}/"
+    upload_prefix = f"file_uploads/{job_id}/"
     bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
     # Save uploaded omex file to Google Cloud Storage

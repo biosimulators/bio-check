@@ -136,7 +136,7 @@ async def verify_omex(
         _time = db_connector.timestamp()
 
         # bucket params
-        upload_prefix = f"uploads/{job_id}/"
+        upload_prefix = f"file_uploads/{job_id}/"
         bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
         save_dest = mkdtemp()
@@ -217,7 +217,7 @@ async def verify_sbml(
         _time = db_connector.timestamp()
 
         # bucket params
-        upload_prefix = f"uploads/{job_id}/"
+        upload_prefix = f"file_uploads/{job_id}/"
         bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
 
         save_dest = mkdtemp()

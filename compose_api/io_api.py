@@ -52,7 +52,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
 async def write_uploaded_file(job_id: str, bucket_name: str, uploaded_file: UploadFile, extension: str) -> str:
     # bucket params
-    upload_prefix = f"uploads/{job_id}/"
+    upload_prefix = f"file_uploads/{job_id}/"
     bucket_prefix = f"gs://{bucket_name}/" + upload_prefix
 
     save_dest = mkdtemp()

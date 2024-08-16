@@ -27,7 +27,7 @@ BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 def file_upload_prefix(job_id: str):
     # bucket params
-    upload_prefix = f"file_uploads/{job_id}/"
+    upload_prefix = f"file_file_uploads/{job_id}/"
     bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
     return upload_prefix, bucket_prefix
 
