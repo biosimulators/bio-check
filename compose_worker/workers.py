@@ -478,8 +478,8 @@ class FilesWorker(Worker):
         if input_path is not None:
             # download the input file
             dest = tempfile.mkdtemp()
-            local_input_path = await download_file(source_blob_path=input_path, bucket_name=BUCKET_NAME, out_dir=dest)
-
+            local_input_path = download_file(source_blob_path=input_path, bucket_name=BUCKET_NAME, out_dir=dest)
+            print(local_input_path)
             # case: is a smoldyn output file and thus a simularium job
             if input_path.endswith('.txt'):
                 await self._run_simularium(job_id=job_id, input_path=local_input_path, dest=dest)
@@ -493,6 +493,8 @@ class FilesWorker(Worker):
         results_file = result.get('simularium_file')
         uploaded_file_location = None
         if results_file is not None:
+            if not results_file.endswith('.simularium'):
+                results_file += '.simularium'
             uploaded_file_location = await write_uploaded_file(job_id=job_id, bucket_name=BUCKET_NAME, uploaded_file=results_file, extension='.simularium')
 
         self.job_result['results'] = {'results_file': uploaded_file_location}

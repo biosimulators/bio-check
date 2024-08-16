@@ -114,7 +114,7 @@ async def save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) ->
             file.write(contents)
     # case: is a string
     else:
-        with open(uploaded_file, 'r') as fp:
+        with open(filename, 'r') as fp:
             contents = fp.read()
         with open(file_path, 'w') as f:
             f.write(contents)
