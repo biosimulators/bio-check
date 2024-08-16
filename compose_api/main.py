@@ -398,7 +398,7 @@ async def fetch_results(job_id: str):
             # check for a downloadable file in results
             job_data = job['results'].get('results')
 
-            # case: output is a file
+            # case: output is a file (smoldyn simulation run or simularium file conversion, among others)
             if "results_file" in job_data.keys():
                 remote_fp = job_data['results_file']
                 temp_dest = mkdtemp()
@@ -435,7 +435,8 @@ async def generate_simularium_file(
 
         # new simularium job in db
         if filename is None:
-            filename = 'simulation.simularium'
+            filename = 'simulation'
+
         new_job_submission = await db_connector.write(
             collection_name=DatabaseCollections.PENDING_JOBS,
             status=JobStatus.PENDING,
