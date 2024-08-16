@@ -13,6 +13,7 @@ from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME, CORE
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
 from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
+from bigraph_steps import generate_simularium_file
 
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
@@ -463,3 +464,34 @@ class CompositionWorker(Worker):
         self.job_result['results'] = composition.gather_results()
 
         return self.job_result
+
+
+class FilesWorker(Worker):
+    def __init__(self, job):
+        super().__init__(job)
+
+    async def run(self):
+        job_id = self.job_params['job_id']
+        input_path = self.job_params.get('path')
+
+        # is a job related to a client file upload
+        if input_path is not None:
+            # is a smoldyn output file and thus a simularium job
+            if input_path.endswith('.txt'):
+                await self._run_simularium(job_id=job_id, input_path=input_path)
+
+        return self.job_result
+
+    async def _run_simularium(self, job_id: str, input_path: str):
+        box_size = self.job_params['box_size']
+        dest = tempfile.mkdtemp()
+        result = await generate_simularium_file(input_fp=input_path, dest_dir=dest, box_size=box_size)
+
+        results_file = result.get('simularium_file')
+        uploaded_file_location = None
+        if results_file is not None:
+            uploaded_file_location = await write_uploaded_file(job_id=job_id, bucket_name=BUCKET_NAME, uploaded_file=results_file, extension='.simularium')
+
+        self.job_result['results'] = {'results_file': uploaded_file_location}
+
+

@@ -285,6 +285,7 @@ class SimulariumSmoldynStep(Step):
             '_default': True,
             '_type': 'boolean'
         },
+        'file_save_name': 'maybe[string]',
         'translation_magnitude': 'maybe[float]',
         'meta_data': 'maybe[tree[string]]',
         'agent_display_parameters': 'maybe[tree[string]]'  # as per biosim simularium
@@ -295,6 +296,7 @@ class SimulariumSmoldynStep(Step):
 
         # io params
         self.output_dest = self.config['output_dest']
+        self.filename = self.config.get('file_save_name')
 
         # display params
         self.box_size = self.config['box_size']
@@ -339,7 +341,9 @@ class SimulariumSmoldynStep(Step):
             io_data = translate_data_object(data=io_data, box_size=self.box_size, translation_magnitude=self.translation_magnitude)
 
         # write data to simularium file
-        simularium_fp = os.path.join(self.output_dest, 'simulation')
+        if self.filename is None:
+            self.filename = f'{in_file.replace(".", "")}-simulation'
+        simularium_fp = os.path.join(self.output_dest, self.filename)
         write_simularium_file(data=io_data, simularium_fp=simularium_fp, json=True, validate=True)
 
         return {'simularium_file': simularium_fp}
@@ -386,7 +390,7 @@ for process_name, process_class in REGISTERED_PROCESSES:
         print(f'{process_name} could not be registered because {str(e)}')
 
 
-def generate_simularium_file(input_fp: str, dest: str, box_size: float):
+async def generate_simularium_file(input_fp: str, dest_dir: str, box_size: float):
     species_names = []
     with open(input_fp, 'r') as f:
         output = [l.strip() for l in f.readlines()]
@@ -395,7 +399,7 @@ def generate_simularium_file(input_fp: str, dest: str, box_size: float):
             if not datum.isdigit():
                 species_names.append(datum)
 
-    simularium = SimulariumSmoldynStep(config={'output_dest': dest, 'box_size': box_size})
+    simularium = SimulariumSmoldynStep(config={'output_dest': dest_dir, 'box_size': box_size})
     return simularium.update(inputs={'results_file': input_fp, 'species_names': species_names})
 
 

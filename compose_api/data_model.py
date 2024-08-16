@@ -68,8 +68,9 @@ class PendingUtcJob(Job):
 class PendingSimulariumJob(Job):
     job_id: str
     timestamp: str
-    input_file: str
+    path: str
     filename: str
+    box_size: float
     status: str = "PENDING"
 
 

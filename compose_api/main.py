@@ -423,37 +423,31 @@ async def fetch_results(job_id: str):
     summary='Generate a simularium file with a compatible simulation results file from either Smoldyn, SpringSaLaD, or ReaDDy.')
 async def generate_simularium_file(
         uploaded_file: UploadFile = File(..., description="A file containing results that can be parse by Simularium (spatial)."),
+        box_size: float = Query(..., description="Size of the simulation box as a floating point number."),
         filename: str = Query(default=None, description="Name desired for the simularium file. NOTE: pass only the file name without an extension."),
 ) -> PendingSimulariumJob:
-    e = NotImplementedError("This feature is for demonstration purposes only and currently under development.")
-    raise HTTPException(status_code=501, detail=str(e))
-    # try:
-    #     job_id = "files-generate-simularium-file" + str(uuid.uuid4())
-    #     _time = db_connector.timestamp()
+    try:
+        job_id = "files-generate-simularium-file" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+        upload_prefix = f"uploads/{job_id}/"
+        bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
+        uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
-    #     # bucket params
-    #     upload_prefix = f"uploads/{job_id}/"
-    #     bucket_prefix = f"gs://{BUCKET_NAME}/" + upload_prefix
-
-    #     # write uploaded file to bucket
-    #     uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
-
-    #     # new simularium job in db
-    #     if filename is None:
-    #         filename = 'simulation.simularium'
-
-    #     new_job_submission = await db_connector.write(
-    #         collection_name=DatabaseCollections.PENDING_JOBS,
-    #         status=JobStatus.PENDING,
-    #         job_id=job_id,
-    #         timestamp=_time,
-    #         input_file=uploaded_file_location,
-    #         filename=filename
-    #     )
-
-    #     return PendingSimulariumJob(**new_job_submission)
-    # except Exception as e:
-    #     raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
+        # new simularium job in db
+        if filename is None:
+            filename = 'simulation.simularium'
+        new_job_submission = await db_connector.write(
+            collection_name=DatabaseCollections.PENDING_JOBS,
+            status=JobStatus.PENDING,
+            job_id=job_id,
+            timestamp=_time,
+            path=uploaded_file_location,
+            filename=filename,
+            box_size=box_size,
+        )
+        return PendingSimulariumJob(**new_job_submission)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
 
 
 @app.post(
