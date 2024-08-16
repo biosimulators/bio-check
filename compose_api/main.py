@@ -425,6 +425,8 @@ async def generate_simularium_file(
         uploaded_file: UploadFile = File(..., description="A file containing results that can be parse by Simularium (spatial)."),
         box_size: float = Query(..., description="Size of the simulation box as a floating point number."),
         filename: str = Query(default=None, description="Name desired for the simularium file. NOTE: pass only the file name without an extension."),
+        translate_output: bool = Query(default=True, description="Whether to translate the output trajectory prior to converting to simularium. See simulariumio documentation for more details."),
+        validate_output: bool = Query(default=True, description="Whether to validate the outputs for the simularium file. See simulariumio documentation for more details.")
 ):
     job_id = "files-generate-simularium-file" + str(uuid.uuid4())
     _time = db_connector.timestamp()
@@ -443,6 +445,8 @@ async def generate_simularium_file(
         path=uploaded_file_location,
         filename=filename,
         box_size=box_size,
+        translate_output=translate_output,
+        validate_output=validate_output
     )
     gen_id = new_job_submission.get('_id')
     if gen_id is not None:

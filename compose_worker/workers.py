@@ -491,7 +491,9 @@ class FilesWorker(Worker):
 
     async def _run_simularium(self, job_id: str, input_path: str, dest: str):
         box_size = self.job_params['box_size']
-        result = await generate_simularium_file(input_fp=input_path, dest_dir=dest, box_size=box_size)
+        translate = self.job_params['translate_output']
+        validate = self.job_params['validate_output']
+        result = await generate_simularium_file(input_fp=input_path, dest_dir=dest, box_size=box_size, translate_output=translate, run_validation=validate)
 
         results_file = result.get('simularium_file')
         uploaded_file_location = None
