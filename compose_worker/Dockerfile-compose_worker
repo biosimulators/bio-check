@@ -13,7 +13,7 @@ COPY . /app/worker
 # install deps
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
-# RUN mv -r /app/biosimulator_processes /app/worker/biosimulator_processes
+RUN mv /app/biosimulator_processes /app/api/biosimulator_processes
 
 WORKDIR /app/worker
 
