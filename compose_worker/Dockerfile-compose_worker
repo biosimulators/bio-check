@@ -2,20 +2,18 @@
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-# WORKDIR /app
-
-COPY . /app/worker
-
-# RUN pip uninstall biosimulators-utils -y \
-#     && pip install -r /app/worker/requirements.worker.txt \
-#     && python3 -m pip install --upgrade matplotlib
-
+# hdf5/amici deps
 RUN apt-get update \
     && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# copy content
+COPY . /app/worker
 
+# install deps
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
+
+# RUN mv -r /app/biosimulator_processes /app/worker/biosimulator_processes
 
 WORKDIR /app/worker
 

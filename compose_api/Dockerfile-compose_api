@@ -9,6 +9,8 @@ COPY . /app/api
 
 EXPOSE 3001
 
+RUN mv /app/biosimulator_processes /app/api/biosimulator_processes
+
 WORKDIR /app/api
 
 RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"

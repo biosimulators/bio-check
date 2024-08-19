@@ -322,6 +322,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /get-process-bigraph-addresses:
+    get:
+      tags:
+      - Composition
+      summary: Get process bigraph implementation addresses for composition specifications.
+      operationId: get-process-bigraph-addresses
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+                title: Response Get-Process-Bigraph-Addresses
   /run-composition:
     post:
       tags:

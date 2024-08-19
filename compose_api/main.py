@@ -338,6 +338,20 @@ async def verify_sbml(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get(
+    "/get-process-bigraph-addresses",
+    operation_id="get-process-bigraph-addresses",
+    tags=["Composition"],
+    summary="Get process bigraph implementation addresses for composition specifications.")
+def get_process_bigraph_addresses() -> List[str]:
+    try:
+        from biosimulator_proceses import CORE
+        return list(CORE.process_registry.registry.keys())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @app.post(
     "/run-composition",
     response_model=PendingCompositionJob,
