@@ -406,6 +406,10 @@ async def fetch_results(job_id: str):
     # state-case: job is completed
     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
 
+    # state-case: job has failed
+    if job is None:
+        job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
+
     # state-case: job is not in completed:
     if job is None:
         job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
@@ -414,7 +418,7 @@ async def fetch_results(job_id: str):
     if job is None:
         job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
 
-    # return-case: job exists
+    # return-case: job exists as either completed, failed, in_progress, or pending
     if not isinstance(job, type(None)):
         # remove autogen obj
         job.pop('_id')
