@@ -8,7 +8,8 @@ ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
 # handle app creds from google
 RUN mkdir /.google
-COPY ./.bio-check.json /.google/.bio-check.json
+COPY ./.biosimulations.json /.google/.bio-check.json
+# COPY ./.bio-check.json /.google/.bio-check.json
 
 # handle main content
 WORKDIR /app
