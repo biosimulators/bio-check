@@ -95,6 +95,17 @@ class CompositionNode(BaseModel):
     )
 
 
+class AgentParameter(BaseModel):
+    name: str
+    radius: Optional[float]
+    mass: Optional[float]
+    density: Optional[float]
+
+
+class AgentParameters(BaseModel):
+    agents: List[AgentParameter]
+
+
 class CompositionSpecification(BaseModel):
     composition_id: str = Field(default=None, examples=["ode-fba-species-a"], description="Unique composition ID.")
     nodes: List[CompositionNode]

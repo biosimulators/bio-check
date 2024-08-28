@@ -16,7 +16,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob, CompositionSpecification, PendingSbmlVerificationJob, PendingOmexVerificationJob, PendingCompositionJob
+from data_model import DbClientResponse, UtcComparisonResult, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob, CompositionSpecification, PendingSbmlVerificationJob, PendingOmexVerificationJob, PendingCompositionJob, AgentParameters
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix, BaseModel
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
@@ -463,17 +463,6 @@ async def fetch_results(job_id: str):
     # return-case: no job exists in any collection by that id
     else:
         raise HTTPException(status_code=404, detail="Comparison not found")
-
-
-class AgentParameter(BaseModel):
-    name: str
-    radius: Optional[float]
-    mass: Optional[float]
-    density: Optional[float]
-
-
-class AgentParameters(BaseModel):
-    agents: List[AgentParameter]
 
 
 @app.post(
