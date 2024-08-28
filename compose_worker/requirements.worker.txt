@@ -1,4 +1,4 @@
-amici
+# amici
 biosimulators-amici
 biosimulators-copasi
 biosimulators-tellurium

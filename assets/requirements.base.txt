@@ -11,3 +11,5 @@ pyyaml
 httpx
 pymongo[srv]
 google-cloud-storage
+amici
+biosimulators-processes
