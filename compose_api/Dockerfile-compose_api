@@ -9,7 +9,7 @@ COPY . /app/api
 
 EXPOSE 3001
 
-RUN mv /app/biosimulator_processes /app/api/biosimulator_processes
+RUN mv /app/biosimulator_processes /app/api/biosimulator_processes && poetry add biosimulators-processes
 
 WORKDIR /app/api
 
