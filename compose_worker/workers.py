@@ -124,41 +124,43 @@ class VerificationWorker(Worker):
         if selections is not None:
             self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
 
-        # TODO: remimplement this! calculate rmse for each simulator over all observables
-        # self.job_result['rmse'] = {}
-        # simulators = self.job_params.get('simulators')
-        # if self.job_params.get('expected_results') is not None:
-        #     simulators.append('expected_results')
-        # for simulator in simulators:
-        #     self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
+        # calculate rmse
+        self.job_result['rmse'] = {}
+        simulators = self.job_params.get('simulators')
+
+        # include expected results in rmse if applicable
+        if self.job_params.get('expected_results') is not None:
+            simulators.append('expected_results')
+
+        # calc rmse for each simulator
+        for simulator in simulators:
+            self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
 
         return self.job_result
 
     def _calculate_inter_simulator_rmse(self, target_simulator):
         # extract data fields
-        try:
-            spec_data = self.job_result['results']
-            spec_names = list(spec_data.keys())
-            num_species = len(spec_names)
+        spec_data = self.job_result['results']
 
-            squared_differences = []
-            # iterate through observables
-            for observable, sim_details in spec_data.items():
-                mse_data = sim_details['mse'][target_simulator]
+        # iterate through observables
+        mse_values = []
+        for observable, sim_details in spec_data.items():
+            mse_data = sim_details['mse'][target_simulator]
 
-                # exclude the self-comparison, calculate squared differences with others
-                for sim, mse in mse_data.items():
-                    if sim != target_simulator:
-                        squared_differences.append(mse ** 2)
+            # exclude self-comparison and collect MSE values with other simulators
+            for sim, mse in mse_data.items():
+                if sim != target_simulator:
+                    mse_values.append(mse)
 
-            # calc mean of squared diffs
-            mean_squared_diff = sum(squared_differences) / len(squared_differences)
+        # calculate the mean of the collected MSE values
+        if mse_values:
+            mean_mse = sum(mse_values) / len(mse_values)
 
-            # return the square root of the mean of squared diffs
-            return math.sqrt(mean_squared_diff)
-        except Exception as e:
-            logger.error(msg=e)
-            return None
+            # return the square root of the mean MSE (RMSE)
+            return math.sqrt(mean_mse)
+        else:
+            # handle case where no MSE values are present (to avoid division by zero)
+            return 0.0
 
     def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
