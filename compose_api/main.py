@@ -109,7 +109,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 @app.get("/")
 def root():
-    return {'bio-composer-message': 'Hello from the BioComposer!'}
+    return {'bio-compose-api-endpoint-root': 'https://biochecknet.biosimulations.org'}
 
 
 # run simulations
