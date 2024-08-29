@@ -1,4 +1,3 @@
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19uxh93pZvhCGXkC7a15SmAx4oH4MV7OJ#scrollTo=j_mN-EE3vanZ)
 ![GitHub CI](https://github.com/biosimulators/bio-check/actions/workflows/ci.yaml/badge.svg)
 ![GitHub CD](https://github.com/biosimulators/bio-check/actions/workflows/cd.yaml/badge.svg)
 # BioCheck: A Biological Simulation Verification Service
