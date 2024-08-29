@@ -117,6 +117,14 @@ def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Uni
 
 
 def get_sbml_species_mapping(sbml_fp: str):
+    """
+
+    Args:
+        - sbml_fp: `str`: path to the SBML model file.
+
+    Returns:
+        Dictionary mapping of {sbml_species_names(usually the actual observable name): sbml_species_ids(ids used in the solver)}
+    """
     # read file
     sbml_reader = libsbml.SBMLReader()
     sbml_doc = sbml_reader.readSBML(sbml_fp)
@@ -134,6 +142,7 @@ def get_sbml_species_mapping(sbml_fp: str):
 def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     simulator = te.loadSBMLModel(sbml_fp)
     floating_species_list = simulator.getFloatingSpeciesIds()
+    sbml_species_names = list(get_sbml_species_mapping(sbml_fp).keys())
 
     # in the case that the start time is set to a point after the simulation begins
     if start > 0:
@@ -145,30 +154,28 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     for index, row in enumerate(result.transpose()):
         if not index == 0:
             for i, name in enumerate(floating_species_list):
-                outputs[name] = row
+                outputs[sbml_species_names[i]] = row
     return outputs
 
 
 def run_sbml_copasi(sbml_fp: str, start, dur, steps):
     simulator = load_model(sbml_fp)
     species_info = get_species(model=simulator)
-    floating_species_list = list(species_info['sbml_id'])  # matches libsbml
-    basico_species_ids = list(species_info.index)  # as copasi is familiar with the names
+    sbml_ids = list(species_info['sbml_id'])  # matches libsbml and solver ids
+    basico_species_names = list(species_info.index)  # sbml species NAMES, as copasi is familiar with the names
     # remove EmptySet reference if applicable
-    for _id in basico_species_ids:
+    for _id in basico_species_names:
         if "emptyset" in _id.lower():
-            floating_species_list.remove(_id)
-            basico_species_ids.remove(_id)
+            sbml_ids.remove(_id)
+            basico_species_names.remove(_id)
     # set time
     t = np.linspace(start, dur, steps + 1)
-    # if start > 0:
-    #    run_time_course(start_time=0, duration=start, model=simulator, update_model=True)
-    # run simulation
+    # get outputs
     _tc = run_time_course(start_time=t[0], duration=t[-1], values=t, model=simulator, update_model=True, use_numbers=True)
     tc = _tc.to_dict()
     results = {}
-    for i, name in enumerate(floating_species_list):
-        results[name] = list(tc.get(basico_species_ids[i]))
+    for i, name in enumerate(basico_species_names):
+        results[name] = list(tc.get(basico_species_names[i]))
     return results
 
 
@@ -203,7 +210,7 @@ def run_sbml_amici(sbml_fp: str, start, dur, steps):
     sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     method = amici_model_object.getSolver()
     result_data = runAmiciSimulation(solver=method, model=amici_model_object)
-    output_keys = [list(sbml_species_mapping.values())[i] for i, spec_id in enumerate(floating_species_list)]
+    output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
     results = {}
     floating_results = dict(zip(
         output_keys,
@@ -254,56 +261,85 @@ SBML_EXECUTORS = dict(zip(
 
 
 def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, simulators: list[str] = None, truth: str = None) -> dict:
+    # output = {}
+    # # TODO: add VCELL and pysces here
+    # sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).values())
+    # simulators = simulators or ['amici', 'copasi', 'tellurium']
+    # all_output_ids = []
+    # for simulator in simulators:
+    #     simulator = simulator.lower()
+    #     results = {}
+    #     simulation_executor = SBML_EXECUTORS[simulator]
+    #     sim_result = simulation_executor(sbml_fp, start, dur, steps)
+    #     all_output_ids.append(list(sim_result.keys()))
+    #     for species_id in sbml_species_ids:
+    #         if species_id in sim_result.keys():
+    #             output_vals = sim_result[species_id]
+    #             if isinstance(output_vals, np.ndarray):
+    #                 output_vals = output_vals.tolist()
+    #             results[species_id] = output_vals
+    #     output[simulator] = results
+    # # get the commonly shared output ids
+    # shared_output_ids = min(all_output_ids)
+    # for simulator_name in output.keys():
+    #     sim_data = {}
+    #     for spec_id in output[simulator_name].keys():
+    #         if spec_id in shared_output_ids:
+    #             sim_data[spec_id] = output[simulator_name][spec_id]
+    #     output[simulator_name] = sim_data
     output = {}
-
-    # TODO: add VCELL and pysces here
-    sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).values())
-    simulators = simulators or ['amici', 'copasi', 'tellurium']
+    sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
+    simulators = ['amici', 'copasi', 'tellurium']
     all_output_ids = []
 
     for simulator in simulators:
-        simulator = simulator.lower()
-        results = {}
-        simulation_executor = SBML_EXECUTORS[simulator]
+        try:
+            simulator = simulator.lower()
+            results = {}
+            simulation_executor = SBML_EXECUTORS[simulator]
+            sim_result = simulation_executor(sbml_fp=sbml_fp, start=start, dur=dur, steps=steps)
+            all_output_ids.append(list(sim_result.keys()))
 
-        sim_result = simulation_executor(sbml_fp, start, dur, steps)
-        all_output_ids.append(list(sim_result.keys()))
-
-        for species_id in sbml_species_ids:
-            if species_id in sim_result.keys():
-                output_vals = sim_result[species_id]
-                if isinstance(output_vals, np.ndarray):
-                    output_vals = output_vals.tolist()
-                results[species_id] = output_vals
-        output[simulator] = results
+            for species_id in sbml_species_ids:
+                if species_id in sim_result.keys():
+                    output_vals = sim_result[species_id]
+                    if isinstance(output_vals, np.ndarray):
+                        output_vals = output_vals.tolist()
+                    results[species_id] = output_vals
+            output[simulator] = results
+        except Exception as e:
+            print(str(e))
 
     # get the commonly shared output ids
+    final_output = {}
     shared_output_ids = min(all_output_ids)
     for simulator_name in output.keys():
         sim_data = {}
         for spec_id in output[simulator_name].keys():
             if spec_id in shared_output_ids:
                 sim_data[spec_id] = output[simulator_name][spec_id]
-        output[simulator_name] = sim_data
+        final_output[simulator_name] = sim_data
 
     # handle expected outputs
     if truth is not None:
-        output['ground_truth'] = {}
+        final_output['ground_truth'] = {}
         report_results = read_report_outputs(truth)
         report_data = report_results.to_dict()['data'] if isinstance(report_results, BiosimulationsRunOutputData) else {}
         for datum in report_data:
             spec_name = datum['dataset_label']
             if not spec_name.lower() == 'time':
                 spec_data = datum['data']
-                output['ground_truth'][spec_name] = spec_data
-    return output
+                final_output['ground_truth'][spec_name] = spec_data
+
+    return final_output
 
 
 def sbml_output_stack(spec_name: str, output):
     stack = []
-    for simulator_name, simulator_output in output.items():
-        spec_data = simulator_output[spec_name]
-        stack.append(spec_data)
+    for simulator_name in output.keys():
+        spec_data = output[simulator_name].get(spec_name)
+        if spec_data is not None:
+            stack.append(spec_data)
     return stack
 
 

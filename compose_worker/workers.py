@@ -12,7 +12,14 @@ import pandas as pd
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME, CORE
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
-from output_data import generate_biosimulator_utc_outputs, _get_output_stack, sbml_output_stack, generate_sbml_utc_outputs, get_sbml_species_mapping, run_smoldyn
+from output_data import (
+    generate_biosimulator_utc_outputs,
+    _get_output_stack,
+    sbml_output_stack,
+    generate_sbml_utc_outputs,
+    get_sbml_species_mapping,
+    run_smoldyn
+)
 from bigraph_steps import generate_simularium_file
 
 
@@ -192,17 +199,27 @@ class VerificationWorker(Worker):
         if source_report_fp is not None:
             local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
-        try:
-            simulators = self.job_params.get('simulators', [])
-            include_outs = self.job_params.get('include_outputs', False)
-            comparison_id = self.job_params.get('job_id')
-            output_start = self.job_params.get('start')
-            end = self.job_params.get('end', 10)
-            steps = self.job_params.get('steps', 100)
-            rtol = self.job_params.get('rTol')
-            atol = self.job_params.get('aTol')
+        simulators = self.job_params.get('simulators', ['amici', 'copasi', 'tellurium'])
+        include_outs = self.job_params.get('include_outputs', False)
+        comparison_id = self.job_params.get('job_id')
+        output_start = self.job_params.get('start')
+        end = self.job_params.get('end', 10)
+        steps = self.job_params.get('steps', 100)
+        rtol = self.job_params.get('rTol')
+        atol = self.job_params.get('aTol')
+        print(self.job_params)
 
-            result = self._run_comparison_from_sbml(sbml_fp=local_fp, start=output_start, dur=end, steps=steps, rTol=rtol, aTol=atol, ground_truth=local_report_fp)
+        try:
+            result = self._run_comparison_from_sbml(
+                sbml_fp=local_fp,
+                start=output_start,
+                dur=end,
+                steps=steps,
+                rTol=rtol,
+                aTol=atol,
+                ground_truth=local_report_fp,
+                simulators=simulators
+            )
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-composer-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
@@ -300,25 +317,28 @@ class VerificationWorker(Worker):
     def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
         results = {'results': {}}
-        for species_name in species_mapping.keys():
-            species_comparison = self._generate_sbml_utc_species_comparison(
-                sbml_filepath=sbml_fp,
-                start=start,
-                dur=dur,
-                steps=steps,
-                species_name=species_name,
-                rTol=rTol,
-                aTol=aTol,
-                simulators=simulators,
-                ground_truth=ground_truth
-            )
-            results['results'][species_name] = species_comparison
+        output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps)
+        sims = simulators or list(output_data.keys())
+        for simulator in sims:
+            sim_data = output_data[simulator]
+            # for i, species_name in enumerate(list(species_mapping.keys())):
+            for i, species_name in enumerate(list(sim_data.keys())):
+                species_comparison = self._generate_sbml_utc_species_comparison(
+                    output_data=output_data,
+                    species_name=species_name,
+                    rTol=rTol,
+                    aTol=aTol,
+                    ground_truth=ground_truth
+                )
+                results['results'][list(species_mapping.keys())[i]] = species_comparison
 
         return results
 
     def _generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
         model_file = get_sbml_model_file_from_archive(omex_fp, out_dir)
-        sbml_species_names = get_sbml_species_names(model_file)
+        species_mapping = get_sbml_species_mapping(model_file)
+        sbml_species_ids = list(species_mapping.values())
+        sbml_species_names = list(species_mapping.keys())
         results = {'results': {}, 'comparison_id': comparison_id}
         for i, species in enumerate(sbml_species_names):
             ground_truth_data = None
@@ -326,6 +346,7 @@ class VerificationWorker(Worker):
                 for data in ground_truth['data']:
                     if data['dataset_label'] == species:
                         ground_truth_data = data['data']
+            species_id = species_mapping[species]
             results['results'][species] = self._generate_omex_utc_species_comparison(
                 omex_fp=omex_fp,
                 out_dir=out_dir,
@@ -354,11 +375,12 @@ class VerificationWorker(Worker):
                     results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
-    def _generate_sbml_utc_species_comparison(self, sbml_filepath, start, dur, steps, species_name, simulators=None, ground_truth=None, rTol=None, aTol=None):
-        simulators = simulators or ['amici', 'copasi', 'tellurium']
+    def _generate_formatted_sbml_outputs(self, sbml_filepath, start, dur, steps, ground_truth=None):
+        return generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, truth=ground_truth)
 
-        output_data = generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, truth=ground_truth)
-        outputs = sbml_output_stack(species_name, output_data)
+    def _generate_sbml_utc_species_comparison(self, output_data, species_name, ground_truth=None, rTol=None, aTol=None):
+        outputs = sbml_output_stack(spec_name=species_name, output=output_data)
+        simulators = list(output_data.keys())
         methods = ['mse', 'proximity']
         matrix_vals = list(map(
             lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth, rtol=rTol, atol=aTol).to_dict(),
@@ -401,7 +423,6 @@ class VerificationWorker(Worker):
                     simulators involved. The aforementioned simulators involved will also include the `ground_truth` value
                     within the indices if one is passed.
         """
-
         # TODO: implement the ground truth
         _simulators = simulators.copy()
         _outputs = outputs.copy()
@@ -518,3 +539,9 @@ class FilesWorker(Worker):
         self.job_result['results'] = {'results_file': uploaded_file_location}
 
 
+if __name__ == '__main__':
+    job = {'_id': '66cfc50efe7c7cd47d010ee2', 'status': 'PENDING', 'job_id': 'verification-utc_comparison_sbml-49689c16-2d33-441f-ab59-3ca7dc5491fb', 'comparison_id': 'utc_comparison_sbml', 'path': 'file_uploads/verification-utc_comparison_sbml-49689c16-2d33-441f-ab59-3ca7dc5491fb/BIOMD0000000005_url.xml', 'simulators': ['copasi', 'tellurium', 'amici'], 'timestamp': '2024-08-29 00:47:09.620125', 'start': 0, 'end': 100, 'steps': 1000, 'include_outputs': True, 'expected_results': None, 'rTol': None, 'aTol': None, 'selection_list': None}
+    verifier = VerificationWorker(job)
+    import asyncio
+    asyncio.run(verifier.run())
+    print(verifier.job_result)
