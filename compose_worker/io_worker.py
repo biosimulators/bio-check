@@ -151,7 +151,7 @@ async def read_report_outputs_async(report_file_path: str) -> Union[Biosimulatio
     return read_report_outputs(report_file_path)
 
 
-def read_report_outputs(report_file_path) -> Union[BiosimulationsRunOutputData, str]:
+def read_report_outputs(report_file_path) -> Union[BiosimulationsRunOutputData, dict[str, str]]:
     """Read the outputs from all species in the given report file from biosimulations output.
         Args:
             report_file_path (str): The path to the simulation.sedml/report.h5 HDF5 file.
@@ -172,7 +172,61 @@ def read_report_outputs(report_file_path) -> Union[BiosimulationsRunOutputData, 
                 outputs.append(output)
             return BiosimulationsRunOutputData(report_path=report_file_path, data=outputs)
         else:
-            return f"Group '{group_path}' not found in the file."
+            return {'report_path': report_file_path, 'data': f"Group '{group_path}' not found in the file."}
+
+
+def list_all_datasets(file):
+    """
+    Recursively lists all dataset names in the HDF5 file or group.
+
+    Args:
+        file (h5py.File or h5py.Group): The HDF5 file or group to search in.
+
+    Returns:
+        list: A list of paths to all datasets in the file or group.
+    """
+    datasets = []
+
+    def search_group(group, path=''):
+        for key in group.keys():
+            item = group[key]
+            item_path = f"{path}/{key}" if path else key
+
+            if isinstance(item, h5py.Group):
+                # Recursively search within subgroups
+                search_group(item, item_path)
+            elif isinstance(item, h5py.Dataset):
+                # Collect the full path to the dataset
+                datasets.append(item_path)
+
+    # Start searching from the root of the file
+    search_group(file)
+
+    return datasets
+
+
+def read_h5_reports(report_file_path):
+    # outputs = []
+    outputs = {}
+    with h5py.File(report_file_path, 'r') as f:
+        dataset_paths = list_all_datasets(f)
+        for group_path in dataset_paths:
+            if group_path in f:
+                group = f[group_path]
+                dataset_labels = group.attrs['sedmlDataSetLabels']
+                for label in dataset_labels:
+                    dataset_index = list(dataset_labels).index(label)
+                    data = group[()]
+                    specific_data = data[dataset_index]
+                    # output = BiosimulationsReportOutput(dataset_label=label, data=specific_data)
+                    # outputs.append(output)
+                    outputs[label] = specific_data
+
+                # return BiosimulationsRunOutputData(report_path=report_file_path, data=outputs)
+            else:
+                outputs['error'] = f"Group '{group_path}' not found in the file."
+
+    return outputs
 
 
 def normalize_smoldyn_output_path_in_root(root_fp) -> str | None:

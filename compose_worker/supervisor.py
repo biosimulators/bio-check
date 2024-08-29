@@ -45,6 +45,7 @@ class Supervisor:
                 # get job id
                 job_id = pending_job.get('job_id')
                 source = pending_job.get('path')
+                source_name = source.split('/')[-1]
 
                 # check if job id exists in dbconn.completed
                 is_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
@@ -52,30 +53,30 @@ class Supervisor:
 
                 # case: job is not complete, otherwise do nothing
                 if not is_completed:
+                    # check: run simulations
+                    if job_id.startswith('simulation-execution'):
+                        worker = SimulationRunWorker(job=pending_job)
+                    # check: verifications
+                    elif job_id.startswith('verification'):
+                        # otherwise: create new worker with job
+                        worker = VerificationWorker(job=pending_job)
+                    # check: files
+                    elif job_id.startswith('files'):
+                        worker = FilesWorker(job=pending_job)
+                    # check: composition
+                    elif job_id.startswith('composition-run'):
+                        worker = CompositionWorker(job=pending_job)
+
+                    # change job status for client by inserting a new in progress job
+                    in_progress_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
+
                     try:
-                        # check: run simulations
-                        if job_id.startswith('simulation-execution'):
-                            worker = SimulationRunWorker(job=pending_job)
-                        # check: verifications
-                        elif job_id.startswith('verification'):
-                            # otherwise: create new worker with job
-                            worker = VerificationWorker(job=pending_job)
-                        # check: files
-                        elif job_id.startswith('files'):
-                            worker = FilesWorker(job=pending_job)
-                        # check: composition
-                        elif job_id.startswith('composition-run'):
-                            worker = CompositionWorker(job=pending_job)
-
-                        # change job status for client by inserting a new in progress job
-                        in_progress_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
-
                         # when worker completes, dismiss worker (if in parallel)
                         await worker.run()
 
                         # create new completed job using the worker's job_result TODO: refactor output nesting
                         result_data = worker.job_result
-                        completed_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.COMPLETED_JOBS.value, job_id=job_id, results=result_data, source=source.split('/')[-1], status=JobStatus.COMPLETED.value)
+                        completed_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.COMPLETED_JOBS.value, job_id=job_id, results=result_data, source=source_name, status=JobStatus.COMPLETED.value)
                     except Exception as e:
                         # save new error to db
                         await self.db_connector.insert_job_async(
@@ -83,7 +84,8 @@ class Supervisor:
                             job_id=job_id,
                             timestamp=self.db_connector.timestamp(),
                             status=JobStatus.FAILED.value,
-                            results=str(e)
+                            results=str(e),
+                            source=source_name
                         )
 
         for _ in range(self.queue_timer):

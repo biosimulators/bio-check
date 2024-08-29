@@ -3,6 +3,8 @@ from typing import *
 from importlib import import_module
 
 import libsbml
+import numpy as np
+
 try:
     from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
 except ImportError as e:
@@ -25,7 +27,7 @@ from biosimulators_utils.config import Config
 
 from data_model import BiosimulationsRunOutputData
 from compatible import COMPATIBLE_UTC_SIMULATORS
-from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir
+from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports
 
 
 # def generate_smoldyn_simularium(smoldyn_configuration_file: str, output_dest_dir: str, use_json: bool = True, agent_params=None, box_size=None):
@@ -222,7 +224,7 @@ def run_sbml_amici(sbml_fp: str, start, dur, steps):
     return results
 
 
-def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None, alg_policy="same_framework") -> Dict:
+def _generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None, alg_policy="same_framework") -> Dict:
     """Generate the outputs of the standard UTC simulators Copasi, Tellurium, and Amici from the
         biosimulators interface (exec_sedml_docs_in_combine_archive).
     """
@@ -237,19 +239,48 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     for sim in sims:
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
         make_dir(sim_output_dir)
-
         module = import_module(name=f'biosimulators_{sim}.core')
         exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
         if not os.path.exists(sim_output_dir):
             os.mkdir(sim_output_dir)
-
         # execute simulator-specific simulation
         exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
-
         report_path = os.path.join(sim_output_dir, 'reports.h5')
+
         sim_data = read_report_outputs(report_path)
-        data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else {}
+        data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
+        output_data[sim] = data
+
+    return output_data
+
+
+def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: list[str] = None, alg_policy="same_framework") -> dict:
+    """Generate the outputs of the standard UTC simulators Copasi, Tellurium, and Amici from the
+        biosimulators interface (exec_sedml_docs_in_combine_archive).
+    """
+    make_dir(output_root_dir)
+
+    output_data = {}
+    sims = simulators or ['amici', 'copasi', 'tellurium']
+    sim_config = Config(
+        LOG=False,
+        ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy[alg_policy.upper()],
+        VERBOSE=False)
+    for sim in sims:
+        sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
+        make_dir(sim_output_dir)
+        module = import_module(name=f'biosimulators_{sim}.core')
+        exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
+        sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
+        if not os.path.exists(sim_output_dir):
+            os.mkdir(sim_output_dir)
+        # execute simulator-specific simulation
+        exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+        report_path = os.path.join(sim_output_dir, 'reports.h5')
+
+        sim_data = read_h5_reports(report_path)
+        data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
         output_data[sim] = data
 
     return output_data
@@ -345,7 +376,18 @@ def sbml_output_stack(spec_name: str, output):
     return stack
 
 
-def _get_output_stack(outputs: dict, spec_id: str):
+def _get_output_stack(outputs: dict, spec_id: str) -> np.ndarray:
+    output_stack = []
+    for sim_name in outputs.keys():
+        sim_data = outputs[sim_name]
+        for spec_name in sim_data.keys():
+            if spec_name == spec_id:
+                output_stack.append(sim_data[spec_name])
+
+    return np.stack(output_stack)
+
+
+def __get_output_stack(outputs: dict, spec_id: str):
     output_stack = []
     for sim_name in outputs.keys():
         sim_data = outputs[sim_name]['data']

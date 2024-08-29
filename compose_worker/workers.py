@@ -134,7 +134,10 @@ class VerificationWorker(Worker):
 
         # calc rmse for each simulator
         for simulator in simulators:
-            self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
+            try:
+                self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
+            except:
+                self.job_result['rmse'][simulator] = {}
 
         return self.job_result
 
@@ -209,7 +212,6 @@ class VerificationWorker(Worker):
         steps = self.job_params.get('steps', 100)
         rtol = self.job_params.get('rTol')
         atol = self.job_params.get('aTol')
-        print(self.job_params)
 
         try:
             result = self._run_comparison_from_sbml(
@@ -337,30 +339,59 @@ class VerificationWorker(Worker):
         return results
 
     def _generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
-        model_file = get_sbml_model_file_from_archive(omex_fp, out_dir)
-        species_mapping = get_sbml_species_mapping(model_file)
-        sbml_species_ids = list(species_mapping.values())
-        sbml_species_names = list(species_mapping.keys())
         results = {'results': {}, 'comparison_id': comparison_id}
-        for i, species in enumerate(sbml_species_names):
+
+        # generate the data
+        output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
+
+        # generate the species comparisons
+        # for i, species in enumerate(sbml_species_names):
+        observable_names = []
+        for simulator_name in output_data.keys():
+            for observable_name in output_data[simulator_name].keys():
+                observable_names.append(observable_name)
+        names = list(set(observable_names))
+
+        for species in names:
+            # TODO: reimplement this!
             ground_truth_data = None
-            if ground_truth:
-                for data in ground_truth['data']:
-                    if data['dataset_label'] == species:
-                        ground_truth_data = data['data']
-            species_id = species_mapping[species]
+            # if ground_truth:
+            #     for data in ground_truth['data']:
+            #         if data['dataset_label'] == species:
+            #             ground_truth_data = data['data']
+
+            # generate species comparison
             results['results'][species] = self._generate_omex_utc_species_comparison(
-                omex_fp=omex_fp,
-                out_dir=out_dir,
+                output_data=output_data,
                 species_name=species,
                 simulators=simulators,
                 ground_truth=ground_truth_data,
                 rTol=rTol,
                 aTol=aTol
             )
+
         return results
 
-    def _generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
+    def _generate_omex_utc_species_comparison(self, output_data, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
+        # output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
+        outputs = _get_output_stack(output_data, species_name)
+        methods = ['mse', 'proximity']
+        matrix_vals = list(map(
+            lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth, rtol=rTol, atol=aTol).to_dict(),
+            methods
+        ))
+        results = dict(zip(methods, matrix_vals))
+        results['output_data'] = {}
+        for simulator_name in output_data.keys():
+            sim_output = output_data[simulator_name]
+            for spec_name, spec_output in sim_output.items():
+                if spec_name == species_name:
+                    data = output_data[simulator_name][spec_name]
+                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
+
+        return results
+
+    def __generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
         output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
         outputs = _get_output_stack(output_data, species_name)
         methods = ['mse', 'proximity']
