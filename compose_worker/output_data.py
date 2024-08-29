@@ -202,7 +202,7 @@ def run_sbml_amici(sbml_fp: str, start, dur, steps):
     amici_model_object: Model = model_module.getModel()
     floating_species_list = list(amici_model_object.getStateIds())
     floating_species_initial = list(amici_model_object.getInitialStates())
-    sbml_species_ids = [spec for spec in sbml_model_object.getListOfSpecies()]
+    sbml_species_ids = [spec.getName() for spec in sbml_model_object.getListOfSpecies()]
     t = np.linspace(start, dur, steps + 1)
     amici_model_object.setTimepoints(t)
     initial_state = dict(zip(floating_species_list, floating_species_initial))
@@ -213,10 +213,9 @@ def run_sbml_amici(sbml_fp: str, start, dur, steps):
     sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
     method = amici_model_object.getSolver()
     result_data = runAmiciSimulation(solver=method, model=amici_model_object)
-    output_keys = [list(sbml_species_mapping.keys())[i] for i, spec_id in enumerate(floating_species_list)]
     results = {}
     floating_results = dict(zip(
-        output_keys,
+        sbml_species_ids,
         list(map(lambda x: result_data.by_id(x), floating_species_list))
     ))
     results = floating_results
@@ -294,7 +293,6 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
     simulators = simulators or ['amici', 'copasi', 'tellurium']
     all_output_ids = []
-
     for simulator in simulators:
         try:
             simulator = simulator.lower()
@@ -312,6 +310,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
             output[simulator] = results
         except Exception as e:
             print(str(e))
+            output[simulator] = {}
 
     # get the commonly shared output ids
     final_output = {}
