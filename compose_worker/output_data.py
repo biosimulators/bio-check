@@ -165,17 +165,20 @@ def run_sbml_copasi(sbml_fp: str, start, dur, steps):
     basico_species_names = list(species_info.index)  # sbml species NAMES, as copasi is familiar with the names
     # remove EmptySet reference if applicable
     for _id in basico_species_names:
-        if "emptyset" in _id.lower():
+        if "EmptySet" in _id:
             sbml_ids.remove(_id)
             basico_species_names.remove(_id)
     # set time
     t = np.linspace(start, dur, steps + 1)
     # get outputs
-    _tc = run_time_course(start_time=t[0], duration=t[-1], values=t, model=simulator, update_model=True, use_numbers=True)
+    names = [f'[{name}]' for name in basico_species_names]
+    _tc = run_time_course_with_output(output_selection=names, start_time=t[0], duration=t[-1], values=t, model=simulator, update_model=True, use_numbers=True)
     tc = _tc.to_dict()
     results = {}
-    for i, name in enumerate(basico_species_names):
-        results[name] = list(tc.get(basico_species_names[i]))
+    for i, name in enumerate(names):
+        tc_observable_data = tc.get(name)
+        if tc_observable_data is not None:
+            results[basico_species_names[i]] = list(tc_observable_data.values())
     return results
 
 
