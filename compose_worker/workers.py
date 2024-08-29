@@ -317,7 +317,7 @@ class VerificationWorker(Worker):
     def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
         results = {'results': {}}
-        output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps)
+        output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
         sims = simulators or list(output_data.keys())
         for simulator in sims:
             sim_data = output_data[simulator]
@@ -375,8 +375,8 @@ class VerificationWorker(Worker):
                     results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
-    def _generate_formatted_sbml_outputs(self, sbml_filepath, start, dur, steps, ground_truth=None):
-        return generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, truth=ground_truth)
+    def _generate_formatted_sbml_outputs(self, sbml_filepath, start, dur, steps, simulators, ground_truth=None):
+        return generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, simulators=simulators, truth=ground_truth)
 
     def _generate_sbml_utc_species_comparison(self, output_data, species_name, ground_truth=None, rTol=None, aTol=None):
         outputs = sbml_output_stack(spec_name=species_name, output=output_data)
