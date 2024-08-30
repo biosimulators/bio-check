@@ -20,4 +20,3 @@ if [ "$arg1" == "-k" ]; then
     && kubectl kustomize overlays/biochecknet | kubectl apply -f - \
     && cd ..
 fi
-
