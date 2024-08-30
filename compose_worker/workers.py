@@ -145,7 +145,7 @@ class VerificationWorker(Worker):
 
     def _calculate_inter_simulator_rmse(self, target_simulator):
         # extract data fields
-        spec_data = self.job_result['results']
+        spec_data = self.job_result
 
         # iterate through observables
         mse_values = []
@@ -169,7 +169,7 @@ class VerificationWorker(Worker):
 
     def _calculate_pairwise_rmse(self) -> dict:
         # get input data
-        spec_data = self.job_result['results']
+        spec_data = self.job_result
         simulators = self.job_params['simulators']
         if self.job_params.get('expected_results') is not None:
             simulators.append('expected_results')
@@ -184,14 +184,13 @@ class VerificationWorker(Worker):
                 if i != j:
                     mse_values = []
                     for observable, observable_data in spec_data.items():
-                        mse_data = observable_data['mse']
-
-                        if sim_j in mse_data:
-                            # mse_data[sim_j] is a dict containing MSEs with other simulators
-                            for comparison_sim, mse_value in mse_data[sim_j].items():
-                                if comparison_sim == sim_i:
-                                    mse_values.append(mse_value)
-
+                        if not isinstance(observable_data, str):
+                            mse_data = observable_data['mse']
+                            if sim_j in mse_data:
+                                # mse_data[sim_j] is a dict containing MSEs with other simulators
+                                for comparison_sim, mse_value in mse_data[sim_j].items():
+                                    if comparison_sim == sim_i:
+                                        mse_values.append(mse_value)
                     if mse_values:
                         mean_mse = sum(mse_values) / len(mse_values)
                         rmse_matrix[i, j] = math.sqrt(mean_mse)
@@ -209,14 +208,14 @@ class VerificationWorker(Worker):
         """
         outputs = job_result.copy()
         result = {}
-        data = job_result['results']
+        data = job_result
 
         # case: results from sbml
         if isinstance(data, dict):
             for name, obs_data in data.items():
                 if name in observables:
                     result[name] = obs_data
-            outputs['results'] = result
+            outputs = result
         # case: results from omex
         elif isinstance(data, list):
             for i, datum in enumerate(data):
@@ -224,7 +223,7 @@ class VerificationWorker(Worker):
                 if name not in observables:
                     print(f'Name: {name} not in observables')
                     data.pop(i)
-            outputs['results'] = data
+            outputs = data
 
         return outputs
 
@@ -360,7 +359,7 @@ class VerificationWorker(Worker):
 
     def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
-        results = {'results': {}}
+        results = {}
         output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
         sims = simulators or list(output_data.keys())
         for simulator in sims:
@@ -374,12 +373,12 @@ class VerificationWorker(Worker):
                     aTol=aTol,
                     ground_truth=ground_truth
                 )
-                results['results'][list(species_mapping.keys())[i]] = species_comparison
+                results[list(species_mapping.keys())[i]] = species_comparison
 
         return results
 
     def _generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
-        results = {'results': {}, 'comparison_id': comparison_id}
+        results = {'comparison_id': comparison_id}
 
         # generate the data
         output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
@@ -401,7 +400,7 @@ class VerificationWorker(Worker):
             #             ground_truth_data = data['data']
 
             # generate species comparison
-            results['results'][species] = self._generate_omex_utc_species_comparison(
+            results[species] = self._generate_omex_utc_species_comparison(
                 output_data=output_data,
                 species_name=species,
                 simulators=simulators,
