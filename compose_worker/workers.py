@@ -227,6 +227,7 @@ class VerificationWorker(Worker):
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-composer-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
+            raise e 
 
     def _execute_omex_job(self):
         params = None
@@ -262,6 +263,7 @@ class VerificationWorker(Worker):
             self.job_result = result
         except Exception as e:
             self.job_result = {"bio-composer-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
+            raise e
 
     def _run_comparison_from_omex(
             self,
