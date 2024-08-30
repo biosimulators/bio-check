@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from log_config import setup_logging
-from shared import unique_id, BUCKET_NAME, CORE
+from shared import unique_id, BUCKET_NAME, PROCESS_TYPES
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
 from output_data import (
     generate_biosimulator_utc_outputs,
@@ -511,7 +511,7 @@ class CompositionWorker(Worker):
         composite_doc = self.job_params['composite_doc']
 
         # instantiate composition
-        composition = Composite(config=composite_doc, core=CORE)
+        composition = Composite(config=composite_doc, core=PROCESS_TYPES)
 
         # run composition and set results
         composition.run(duration)
