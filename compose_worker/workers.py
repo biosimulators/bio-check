@@ -628,11 +628,3 @@ class FilesWorker(Worker):
 
         # set uploaded file as result
         self.job_result = {'results_file': uploaded_file_location}
-
-
-if __name__ == '__main__':
-    job = {'_id': '66cfc50efe7c7cd47d010ee2', 'status': 'PENDING', 'job_id': 'verification-utc_comparison_sbml-49689c16-2d33-441f-ab59-3ca7dc5491fb', 'comparison_id': 'utc_comparison_sbml', 'path': 'file_uploads/verification-utc_comparison_sbml-49689c16-2d33-441f-ab59-3ca7dc5491fb/BIOMD0000000005_url.xml', 'simulators': ['copasi', 'tellurium', 'amici'], 'timestamp': '2024-08-29 00:47:09.620125', 'start': 0, 'end': 100, 'steps': 1000, 'include_outputs': True, 'expected_results': None, 'rTol': None, 'aTol': None, 'selection_list': None}
-    verifier = VerificationWorker(job)
-    import asyncio
-    asyncio.run(verifier.run())
-    print(verifier.job_result)
