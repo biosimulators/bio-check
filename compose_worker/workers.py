@@ -125,19 +125,21 @@ class VerificationWorker(Worker):
             self.job_result = self._select_observables(job_result=self.job_result, observables=selections)
 
         # calculate rmse
-        self.job_result['rmse'] = {}
-        simulators = self.job_params.get('simulators')
+        try:
+            self.job_result['rmse'] = self._calculate_pairwise_rmse()
+        except Exception as e:
+            self.job_result['rmse'] = {'error': str(e)}
 
-        # include expected results in rmse if applicable
-        if self.job_params.get('expected_results') is not None:
-            simulators.append('expected_results')
-
-        # calc rmse for each simulator
-        for simulator in simulators:
-            try:
-                self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
-            except:
-                self.job_result['rmse'][simulator] = {}
+        # simulators = self.job_params.get('simulators')
+        # # include expected results in rmse if applicable
+        # if self.job_params.get('expected_results') is not None:
+        #     simulators.append('expected_results')
+        # # calc rmse for each simulator
+        # for simulator in simulators:
+        #     try:
+        #         self.job_result['rmse'][simulator] = self._calculate_inter_simulator_rmse(target_simulator=simulator)
+        #     except:
+        #         self.job_result['rmse'][simulator] = {}
 
         return self.job_result
 
@@ -164,6 +166,40 @@ class VerificationWorker(Worker):
         else:
             # handle case where no MSE values are present (to avoid division by zero)
             return 0.0
+
+    def _calculate_pairwise_rmse(self) -> dict:
+        # get input data
+        spec_data = self.job_result['results']
+        simulators = self.job_params['simulators']
+        n = len(simulators)
+
+        # set up empty matrix
+        rmse_matrix = np.zeros((n, n))
+
+        # enumerate over i,j of simulators in a matrix
+        for i, sim_i in enumerate(simulators):
+            for j, sim_j in enumerate(simulators):
+                if i != j:
+                    mse_values = []
+                    for observable, observable_data in spec_data.items():
+                        mse_data = observable_data['mse']
+
+                        if sim_j in mse_data:
+                            # mse_data[sim_j] is a dict containing MSEs with other simulators
+                            for comparison_sim, mse_value in mse_data[sim_j].items():
+                                if comparison_sim == sim_i:
+                                    mse_values.append(mse_value)
+
+                    if mse_values:
+                        mean_mse = sum(mse_values) / len(mse_values)
+                        rmse_matrix[i, j] = math.sqrt(mean_mse)
+                    else:
+                        # TODO: make this more robust
+                        rmse_matrix[i, j] = np.nan
+                else:
+                    rmse_matrix[i, j] = 0.0
+
+        return pd.DataFrame(rmse_matrix, columns=simulators, index=simulators).to_dict()
 
     def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
         """Select data from the input data that is passed which should be formatted such that the data has mappings of observable names
