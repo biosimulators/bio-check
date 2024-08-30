@@ -68,7 +68,13 @@ class Supervisor:
                         worker = CompositionWorker(job=pending_job)
 
                     # change job status for client by inserting a new in progress job
-                    in_progress_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value, job_id=job_id, timestamp=self.db_connector.timestamp(), status=JobStatus.IN_PROGRESS.value)
+                    in_progress_job = await self.db_connector.insert_job_async(
+                        collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value,
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        status=JobStatus.IN_PROGRESS.value,
+                        source=source_name
+                    )
 
                     try:
                         # when worker completes, dismiss worker (if in parallel)
@@ -76,7 +82,14 @@ class Supervisor:
 
                         # create new completed job using the worker's job_result TODO: refactor output nesting
                         result_data = worker.job_result
-                        completed_job = await self.db_connector.insert_job_async(collection_name=DatabaseCollections.COMPLETED_JOBS.value, job_id=job_id, results=result_data, source=source_name, status=JobStatus.COMPLETED.value)
+                        completed_job = await self.db_connector.insert_job_async(
+                            collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                            job_id=job_id,
+                            timestamp=self.db_connector.timestamp(),
+                            status=JobStatus.COMPLETED.value,
+                            results=result_data,
+                            source=source_name
+                        )
                     except Exception as e:
                         # save new error to db
                         await self.db_connector.insert_job_async(
