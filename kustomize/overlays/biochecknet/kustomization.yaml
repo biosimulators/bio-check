@@ -12,7 +12,7 @@ images:
 - name: ghcr.io/biosimulators/bio-check-compose_api
   newTag: 1.6.2
 - name: ghcr.io/biosimulators/bio-check-compose_worker
-  newTag: 1.6.6
+  newTag: 1.6.7
 - name: mongo
   newTag: 8.0-rc
 
