@@ -356,19 +356,15 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              allOf:
-              - $ref: '#/components/schemas/CompositionSpecification'
-              description: ProcessBigraph-compliant specification of composition.
-              title: Composition Spec
+              $ref: '#/components/schemas/Body_run-composition'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PendingCompositionJob'
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -571,6 +567,22 @@ components:
       required:
       - uploaded_file
       title: Body_get-compatible-for-verification
+    Body_run-composition:
+      properties:
+        source:
+          type: string
+          format: binary
+          title: Source
+          description: Upload source file
+        composition_spec:
+          allOf:
+          - $ref: '#/components/schemas/CompositionSpecification'
+          description: ProcessBigraph-compliant specification of composition.
+      type: object
+      required:
+      - source
+      - composition_spec
+      title: Body_run-composition
     Body_run-smoldyn:
       properties:
         uploaded_file:
@@ -642,87 +654,18 @@ components:
       - file
       - simulators
       title: CompatibleSimulators
-    CompositionNode:
-      properties:
-        name:
-          type: string
-          title: Name
-          description: Descriptive name of the composition node.
-          examples:
-          - fba-process
-        node_type:
-          type: string
-          title: Node Type
-          description: Type name, usually either step or process.
-          examples:
-          - <IMPLEMENTATION TYPE>
-        address:
-          type: string
-          title: Address
-          description: Node (process or step) implementation address within Bigraph
-            schema via some sort of ProcessTypes implementation.
-          examples:
-          - <ADDRESS PROTOCOL>:<ADDRESS ID>
-        config:
-          type: object
-          title: Config
-          description: A mapping of config_schema names to required values as per
-            the given process bigraph step or process implementation.
-          examples:
-          - <REQUIRED PARAMETER NAME>: <REQUIRED PARAMETER VALUE>
-        inputs:
-          anyOf:
-          - additionalProperties:
-              items:
-                type: string
-              type: array
-            type: object
-          - type: 'null'
-          title: Inputs
-          description: A mapping of input port (data) names and a list describing
-            the path at which results for that data name are stored within the composite
-            bigraph.
-          examples:
-          - <INPUT PORT NAME>:
-            - <INPUT PORT STORE NAME>
-        outputs:
-          anyOf:
-          - additionalProperties:
-              items:
-                type: string
-              type: array
-            type: object
-          - type: 'null'
-          title: Outputs
-          description: A mapping of output port (data) names and a list describing
-            the path at which results for that data name are stored within the composite
-            bigraph.
-          examples:
-          - <OUTPUT PORT NAME>:
-            - <OUTPUT PORT STORE NAME>
-      type: object
-      required:
-      - node_type
-      - address
-      - config
-      - inputs
-      - outputs
-      title: CompositionNode
     CompositionSpecification:
       properties:
         composition_id:
           type: string
           title: Composition Id
-          description: Unique composition ID.
-          examples:
-          - ode-fba-species-a
         nodes:
-          items:
-            $ref: '#/components/schemas/CompositionNode'
+          items: {}
           type: array
           title: Nodes
       type: object
       required:
+      - composition_id
       - nodes
       title: CompositionSpecification
     HTTPValidationError:
@@ -734,31 +677,6 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    PendingCompositionJob:
-      properties:
-        job_id:
-          type: string
-          title: Job Id
-        composition:
-          type: object
-          title: Composition
-        duration:
-          type: integer
-          title: Duration
-        timestamp:
-          type: string
-          title: Timestamp
-        status:
-          type: string
-          title: Status
-          default: PENDING
-      type: object
-      required:
-      - job_id
-      - composition
-      - duration
-      - timestamp
-      title: PendingCompositionJob
     PendingOmexVerificationJob:
       properties:
         job_id:
