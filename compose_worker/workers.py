@@ -90,9 +90,9 @@ class SimulationRunWorker(Worker):
         results_file = result.get('results_file')
         if results_file is not None:
             uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
-            self.job_result['results'] = {'results_file': uploaded_file_location}
+            self.job_result = {'results_file': uploaded_file_location}
         else:
-            self.job_result['results'] = result
+            self.job_result = result
 
     async def run_utc(self, local_fp: str):
         start = self.job_params['start']
@@ -103,7 +103,7 @@ class SimulationRunWorker(Worker):
         # TODO: instead use the composition framework to do this!
 
         result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
-        self.job_result['results'] = result[simulator]
+        self.job_result = result[simulator]
 
 
 class VerificationWorker(Worker):
@@ -171,6 +171,8 @@ class VerificationWorker(Worker):
         # get input data
         spec_data = self.job_result['results']
         simulators = self.job_params['simulators']
+        if self.job_params.get('expected_results') is not None:
+            simulators.append('expected_results')
         n = len(simulators)
 
         # set up empty matrix
@@ -548,12 +550,30 @@ class CompositionWorker(Worker):
         duration = self.job_params['duration']
         composite_doc = self.job_params['composite_doc']
 
+        # create emitter for results if not already:
+        result_emitter_spec = {
+            '_type': 'step',
+            "address": "local:ram-emitter",
+            "config": {
+                "emit": {
+                    "time": "float",
+                    "floating_species_concentrations": "tree[float]"
+                }
+            },
+            "inputs": {
+                "time": ["time_store"],
+                "floating_species_concentrations": ["floating_species_concentrations_store"],
+            }
+        }
+
+        composite_doc['results'] = composite_doc.get('results', result_emitter_spec)
+
         # instantiate composition
         composition = Composite(config=composite_doc, core=PROCESS_TYPES)
 
         # run composition and set results
         composition.run(duration)
-        self.job_result['results'] = composition.gather_results()
+        self.job_result = composition.gather_results()
 
         return self.job_result
 
@@ -577,7 +597,7 @@ class FilesWorker(Worker):
                 if local_input_path.endswith('.txt'):
                     await self._run_simularium(job_id=job_id, input_path=local_input_path, dest=dest)
         except Exception as e:
-            self.job_result['results'] = str(e)
+            self.job_result = {'results': str(e)}
 
         return self.job_result
 
@@ -607,7 +627,7 @@ class FilesWorker(Worker):
             uploaded_file_location = await write_uploaded_file(job_id=job_id, bucket_name=BUCKET_NAME, uploaded_file=results_file, extension='.simularium')
 
         # set uploaded file as result
-        self.job_result['results'] = {'results_file': uploaded_file_location}
+        self.job_result = {'results_file': uploaded_file_location}
 
 
 if __name__ == '__main__':
