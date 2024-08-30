@@ -1,11 +1,11 @@
 # This project configuration should relate only to the high level notebook api (as primary deps).
 [tool.poetry]
-name = "bio-check"
-version = "1.5.0"
+name = "bio-compose-server"
+version = "1.5.1"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "bio_check"}]
+packages = [{include = "compose_api"}, {include = "compose_worker"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
@@ -27,9 +27,6 @@ pymongo = {version = "^4.8.0", extras = ["srv"]}
 google-cloud-storage = "^2.18.2"
 toml = "^0.10.2"
 pytest = "^8.3.2"
-
-[tool.poetry.extras]
-dev = ["api", "worker"]
 
 [tool.pytest.ini_options]
 testpaths = ["bio_check"]
