@@ -81,15 +81,18 @@ class CompositionNode(BaseModel):
     name: str = Field(default=None, examples=["fba-process"], description="Descriptive name of the composition node.")
     node_type: str = Field(examples=['<IMPLEMENTATION TYPE>'], description="Type name, usually either step or process.")
     address: str = Field(examples=['<ADDRESS PROTOCOL>:<ADDRESS ID>'], description="Node (process or step) implementation address within Bigraph schema via some sort of ProcessTypes implementation.")
-    config: Dict[str, Any] = Field(
+    config: Optional[Any] = Field(
+        default=None,
         examples=[{'<REQUIRED PARAMETER NAME>': '<REQUIRED PARAMETER VALUE>'}],
         description="A mapping of config_schema names to required values as per the given process bigraph step or process implementation."
     )
     inputs: Optional[Dict[str, List[str]]] = Field(
+        default=None,
         examples=[{'<INPUT PORT NAME>': ['<INPUT PORT STORE NAME>']}],
         description="A mapping of input port (data) names and a list describing the path at which results for that data name are stored within the composite bigraph."
     )
     outputs: Optional[Dict[str, List[str]]] = Field(
+        default=None,
         examples=[{'<OUTPUT PORT NAME>': ['<OUTPUT PORT STORE NAME>']}],
         description="A mapping of output port (data) names and a list describing the path at which results for that data name are stored within the composite bigraph."
     )
@@ -106,9 +109,13 @@ class AgentParameters(BaseModel):
     agents: List[AgentParameter]
 
 
+# class CompositionSpecification(BaseModel):
+#     composition_id: str = Field(default=None, examples=["ode-fba-species-a"], description="Unique composition ID.")
+#     nodes: List[CompositionNode]
+
 class CompositionSpecification(BaseModel):
-    composition_id: str = Field(default=None, examples=["ode-fba-species-a"], description="Unique composition ID.")
-    nodes: List[CompositionNode]
+    composition_id: str
+    nodes: List[Any]
 
 
 class PendingCompositionJob(BaseModel):

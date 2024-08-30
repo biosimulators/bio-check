@@ -351,23 +351,36 @@ def get_process_bigraph_addresses() -> List[str]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 @app.post(
     "/run-composition",
-    response_model=PendingCompositionJob,
+    # response_model=PendingCompositionJob,
     operation_id='run-composition',
     tags=["Composition"],
     summary='Run a composite simulation.')
 async def run_composition(
+        source: UploadFile = File(..., description="Upload source file"),
         composition_spec: CompositionSpecification = Body(..., description="ProcessBigraph-compliant specification of composition."),
         duration: int = Query(..., description="Duration of the simulation in seconds."),
-) -> PendingCompositionJob:
+):
     try:
         # job params
         job_id = "composition-run" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         if composition_spec.composition_id is None:
             composition_spec.composition_id = job_id
+
+        # insert a config with source (currently only supporting UTC MODEL CONFIG) TODO: expand this
+        upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+        save_dest = mkdtemp()
+        fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
+
+        # Save uploaded omex file to Google Cloud Storage
+        uploaded_file_location = None
+        properly_formatted_sbml = check_upload_file_extension(source, 'uploaded_file', '.xml')
+        if properly_formatted_sbml:
+            blob_dest = upload_prefix + fp.split("/")[-1]
+            upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+            uploaded_file_location = blob_dest
 
         # format process bigraph spec needed for Composite()
         spec = {}
@@ -379,9 +392,17 @@ async def run_composition(
             node_spec["_type"] = node.node_type
             spec[name] = node_spec
 
+            if 'emitter' not in node.address:
+                spec[name]['config'] = {
+                    'model': {
+                        'model_source': uploaded_file_location
+                    }
+                }
+
         # write job as dict to db
-        job = PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id)
-        await db_connector.insert_job_async(collection_name=DatabaseCollections.PENDING_JOBS.value, **job.model_dump())
+        # job = PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id)
+        job = {'composition': spec, 'duration': duration, 'timestamp': _time, 'job_id': job_id}
+        await db_connector.insert_job_async(collection_name=DatabaseCollections.PENDING_JOBS.value, **job)
 
         return job
     except Exception as e:
