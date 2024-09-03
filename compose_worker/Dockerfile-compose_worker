@@ -17,6 +17,14 @@ COPY . /app/worker
 # install deps
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
+# install pysces from source (pip is outdated :( )
+RUN git clone https://github.com/PySCeS/pysces.git pysces-src \
+    && cd pysces-src \
+    && poetry run pip install --no-deps --no-build-isolation . \
+    && cd .. \
+    && rm -rf pysces-src
+
+# mv biosimulator processes artifact TODO: update this.
 RUN mv /app/biosimulator_processes /app/worker/biosimulator_processes
 
 WORKDIR /app/worker
