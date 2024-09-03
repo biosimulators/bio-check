@@ -5,6 +5,7 @@ from typing import Tuple
 class CompatibleUtcSimulators(Enum):
     AMICI = ('amici', '0.11.21')
     COPASI = ('copasi', '0.71')
+    PYSCES = ('pysces', '1.2.2')
     TELLURIUM = ('tellurium', '0.85')
 
 

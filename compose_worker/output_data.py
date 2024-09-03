@@ -141,6 +141,82 @@ def get_sbml_species_mapping(sbml_fp: str):
     return dict(zip(names, species_ids))
 
 
+def sbml_to_psc(sbml_fp: str, compilation_dir: str = None):
+    import pysces
+    compilation_dir = mkdtemp()
+    modelname = sbml_fp.split('/')[-1].replace('.psc', '')
+    pysces.interface.convertSBML2PSC(sbml_fp, sbmldir=None, pscfile=modelname, pscdir=compilation_dir)
+    return sbml_fp + '.psc'
+
+
+def load_psc_model(psc_fp: str, modelname=None):
+    import pysces
+    F = open(psc_fp, 'r', encoding='UTF-8')
+    pscS = F.read()
+    F.close()
+    modelname = psc_fp.split('/')[-1].replace('.psc', '')
+
+    return pysces.model(modelname, loader='string', fString=pscS)
+
+
+def load_pysces_model(sbml_fp: str, compilation_dir: str = None):
+    psc_fp = sbml_to_psc(sbml_fp, compilation_dir)
+    return load_psc_model(psc_fp)
+
+
+def _run_sbml_pysces(sbml_fp: str, start: int, dur: int, steps: int):
+    sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
+    obs_names = list(sbml_species_mapping.keys())
+    obs_ids = list(sbml_species_mapping.values())
+    model = load_pysces_model(sbml_fp=sbml_fp)
+    model.sim_start = start
+    model.sim_stop = dur
+    model.sim_points = steps + 1
+    model.Simulate()
+    return {
+        obs_names[i]: model.data_sim.getSimData(obs_id)
+        for i, obs_id in enumerate(obs_ids)
+    }
+
+
+def run_sbml_pysces(sbml_fp: str, start, dur, steps):
+    import pysces
+    # # model compilation
+    import os
+    compilation_dir = mkdtemp()
+    sbml_filename = sbml_fp.split('/')[-1]
+    psc_filename = sbml_filename + '.psc'
+    psc_fp = os.path.join(compilation_dir, psc_filename)
+    modelname = sbml_filename.replace('.xml', '')
+    # convert sbml to psc
+    pysces.interface.convertSBML2PSC(sbml_fp, sbmldir=os.path.dirname(sbml_fp))
+
+    # instantiate model from compilation contents
+    with open(psc_fp, 'rb', encoding='UTF-8') as F:
+        pscS = F.read()
+        # F.close()
+        model = pysces.model(modelname, loader='string', fString=pscS)
+
+    # load the sbml model
+    # model = pysces.loadSBML(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp, pscdir=compilation_dir)
+
+    # run the simulation with specified time params
+    model.sim_start = start
+    model.sim_stop = dur
+    model.sim_points = steps + 1
+    model.Simulate()
+
+    # get output with mapping of internal species ids to external (shared) species names
+    sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
+    obs_names = list(sbml_species_mapping.keys())
+    obs_ids = list(sbml_species_mapping.values())
+
+    return {
+        obs_names[i]: model.data_sim.getSimData(obs_id)
+        for i, obs_id in enumerate(obs_ids)
+    }
+
+
 def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     simulator = te.loadSBMLModel(sbml_fp)
     floating_species_list = simulator.getFloatingSpeciesIds()
@@ -289,7 +365,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
 # TODO: add Vcell and pysces here
 SBML_EXECUTORS = dict(zip(
     [data[0] for data in COMPATIBLE_UTC_SIMULATORS],
-    [run_sbml_amici, run_sbml_copasi, run_sbml_tellurium]
+    [run_sbml_amici, run_sbml_copasi, run_sbml_pysces, run_sbml_tellurium]
 ))
 
 
@@ -322,7 +398,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     #     output[simulator_name] = sim_data
     output = {}
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
-    simulators = simulators or ['amici', 'copasi', 'tellurium']
+    simulators = simulators or ['amici', 'copasi', 'pysces', 'tellurium']
     all_output_ids = []
     for simulator in simulators:
         try:

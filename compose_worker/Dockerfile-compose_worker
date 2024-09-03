@@ -3,8 +3,12 @@
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
 # hdf5/amici deps
-RUN apt-get update \
-    && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev \
+RUN apt-get update && apt-get install -y libatlas-base-dev \
+    libhdf5-serial-dev \
+    swig \
+    libboost-all-dev \
+    git \
+    meson \
     && rm -rf /var/lib/apt/lists/*
 
 # copy content

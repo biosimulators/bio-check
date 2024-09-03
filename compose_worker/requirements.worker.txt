@@ -1,3 +1,4 @@
+meson-python
 biosimulators-amici
 biosimulators-copasi
 biosimulators-tellurium
