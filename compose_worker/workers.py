@@ -378,7 +378,7 @@ class VerificationWorker(Worker):
         return results
 
     def _generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, comparison_id, ground_truth=None, rTol=None, aTol=None):
-        results = {'comparison_id': comparison_id}
+        results = {}
 
         # generate the data
         output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")

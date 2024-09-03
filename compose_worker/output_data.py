@@ -194,8 +194,10 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     # instantiate model from compilation contents
     with open(psc_fp, 'rb', encoding='UTF-8') as F:
         pscS = F.read()
-        # F.close()
-        model = pysces.model(modelname, loader='string', fString=pscS)
+        F.close()
+
+    pscS = pscS.decode('UTF-8')
+    model = pysces.model(modelname, loader='string', fString=pscS)
 
     # load the sbml model
     # model = pysces.loadSBML(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp, pscdir=compilation_dir)
@@ -315,18 +317,29 @@ def _generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simul
     for sim in sims:
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
         make_dir(sim_output_dir)
-        module = import_module(name=f'biosimulators_{sim}.core')
-        exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
-        sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
-        if not os.path.exists(sim_output_dir):
-            os.mkdir(sim_output_dir)
-        # execute simulator-specific simulation
-        exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
-        report_path = os.path.join(sim_output_dir, 'reports.h5')
+        try:
+            module = import_module(name=f'biosimulators_{sim}.core')
+            exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
+            sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
+            if not os.path.exists(sim_output_dir):
+                os.mkdir(sim_output_dir)
+            # execute simulator-specific simulation
+            exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+            report_path = os.path.join(sim_output_dir, 'reports.h5')
 
-        sim_data = read_report_outputs(report_path)
-        data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
-        output_data[sim] = data
+            sim_data = read_report_outputs(report_path)
+            data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
+            output_data[sim] = data
+        except Exception as e:
+            import traceback
+            tb_str = traceback.format_exc()
+            error_message = (
+                f"An unexpected error occurred while processing your request:\n"
+                f"Error Type: {type(e).__name__}\n"
+                f"Error Details: {str(e)}\n"
+                f"Traceback:\n{tb_str}"
+            )
+            output_data[sim] = error_message
 
     return output_data
 
@@ -346,18 +359,30 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     for sim in sims:
         sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
         make_dir(sim_output_dir)
-        module = import_module(name=f'biosimulators_{sim}.core')
-        exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
-        sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
-        if not os.path.exists(sim_output_dir):
-            os.mkdir(sim_output_dir)
-        # execute simulator-specific simulation
-        exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
-        report_path = os.path.join(sim_output_dir, 'reports.h5')
+        try:
+            module = import_module(name=f'biosimulators_{sim}.core')
+            exec_func = getattr(module, 'exec_sedml_docs_in_combine_archive')
+            sim_output_dir = os.path.join(output_root_dir, f'{sim}_outputs')
+            if not os.path.exists(sim_output_dir):
+                os.mkdir(sim_output_dir)
 
-        sim_data = read_h5_reports(report_path)
-        data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
-        output_data[sim] = data
+            # execute simulator-specific simulation
+            exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+            report_path = os.path.join(sim_output_dir, 'reports.h5')
+
+            sim_data = read_h5_reports(report_path)
+            data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
+            output_data[sim] = data
+        except Exception as e:
+            import traceback
+            tb_str = traceback.format_exc()
+            error_message = (
+                f"An unexpected error occurred while processing your request:\n"
+                f"Error Type: {type(e).__name__}\n"
+                f"Error Details: {str(e)}\n"
+                f"Traceback:\n{tb_str}"
+            )
+            output_data[sim] = error_message
 
     return output_data
 

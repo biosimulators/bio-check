@@ -1,5 +1,9 @@
 meson-python
+meson
+ninja
+pysces
 biosimulators-amici
 biosimulators-copasi
+biosimulators-pysces
 biosimulators-tellurium
 biosimulators-utils[logging]
