@@ -127,7 +127,9 @@ class VerificationWorker(Worker):
 
         # calculate rmse
         try:
-            self.job_result['rmse'] = self._calculate_pairwise_rmse()
+            rmse_matrix = self._calculate_pairwise_rmse()
+            self.job_result['rmse'] = self._format_rmse_matrix(rmse_matrix)
+            # self.job_result['rmse'] = self._calculate_pairwise_rmse()
         except:
             e = handle_exception('rmse_calculation')
             self.job_result['rmse'] = {'error': e}
@@ -169,7 +171,69 @@ class VerificationWorker(Worker):
             # handle case where no MSE values are present (to avoid division by zero)
             # return 0.0
 
+    def _format_rmse_matrix(self, matrix) -> dict[str, dict[str, float]]:
+        print(f'Formatting matrix!')
+        _m = matrix
+        rmse = {}
+
+        # iterate over original matrix
+        for outer, inner_dict in _m.items():
+            keys = list(inner_dict.keys())
+            scores = list(inner_dict.values())
+            valid_scores = []
+            valid_keys = []
+            n_valid = 0
+
+            for i, score in enumerate(scores):
+                # case: valid score
+                if score is not None and not np.isnan(score):
+                    valid_keys.append(keys[i])
+                    valid_scores.append(score)
+                    n_valid += 1
+
+            # dict is valid if greater than 1
+            if n_valid > 1:
+                inner = dict(zip(valid_keys, valid_scores))
+                rmse[outer] = inner
+
+        return rmse
+
     def _calculate_pairwise_rmse(self) -> dict:
+        # get input data
+        spec_data = self.job_result
+        simulators = self.job_params['simulators']
+        if self.job_params.get('expected_results') is not None:
+            simulators.append('expected_results')
+        n = len(simulators)
+
+        # set up empty matrix
+        rmse_matrix = np.zeros((n, n))
+
+        # enumerate over i,j of simulators in a matrix
+        for i, sim_i in enumerate(simulators):
+            for j, sim_j in enumerate(simulators):
+                if i != j:
+                    mse_values = []
+                    for observable, observable_data in spec_data.items():
+                        if not isinstance(observable_data, str):
+                            mse_data = observable_data['mse']
+                            if sim_j in mse_data:
+                                # mse_data[sim_j] is a dict containing MSEs with other simulators
+                                for comparison_sim, mse_value in mse_data[sim_j].items():
+                                    if comparison_sim == sim_i:
+                                        mse_values.append(mse_value)
+                    if mse_values:
+                        mean_mse = sum(mse_values) / len(mse_values)
+                        rmse_matrix[i, j] = math.sqrt(mean_mse)
+                    else:
+                        # TODO: make this more robust
+                        rmse_matrix[i, j] = np.nan
+                else:
+                    rmse_matrix[i, j] = 0.0
+
+        return pd.DataFrame(rmse_matrix, columns=simulators, index=simulators).to_dict()
+
+    def __calculate_pairwise_rmse(self) -> dict:
         # get input data
         spec_data = self.job_result
         simulators = self.job_params['simulators']

@@ -76,30 +76,43 @@ class Supervisor:
                         source=source_name
                     )
 
-                    try:
-                        # when worker completes, dismiss worker (if in parallel)
-                        await worker.run()
+                    # when worker completes, dismiss worker (if in parallel)
+                    await worker.run()
 
-                        # create new completed job using the worker's job_result TODO: refactor output nesting
-                        result_data = worker.job_result
-                        completed_job = await self.db_connector.insert_job_async(
-                            collection_name=DatabaseCollections.COMPLETED_JOBS.value,
-                            job_id=job_id,
-                            timestamp=self.db_connector.timestamp(),
-                            status=JobStatus.COMPLETED.value,
-                            results=result_data,
-                            source=source_name
-                        )
-                    except Exception as e:
-                        # save new error to db
-                        await self.db_connector.insert_job_async(
-                            collection_name="failed_jobs",
-                            job_id=job_id,
-                            timestamp=self.db_connector.timestamp(),
-                            status=JobStatus.FAILED.value,
-                            results=str(e),
-                            source=source_name
-                        )
+                    # create new completed job using the worker's job_result TODO: refactor output nesting
+                    result_data = worker.job_result
+                    completed_job = await self.db_connector.insert_job_async(
+                        collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        status=JobStatus.COMPLETED.value,
+                        results=result_data,
+                        source=source_name
+                    )
+                    # try:
+                    #     # when worker completes, dismiss worker (if in parallel)
+                    #     await worker.run()
+
+                    #     # create new completed job using the worker's job_result TODO: refactor output nesting
+                    #     result_data = worker.job_result
+                    #     completed_job = await self.db_connector.insert_job_async(
+                    #         collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                    #         job_id=job_id,
+                    #         timestamp=self.db_connector.timestamp(),
+                    #         status=JobStatus.COMPLETED.value,
+                    #         results=result_data,
+                    #         source=source_name
+                    #     )
+                    # except Exception as e:
+                    #     # save new error to db
+                    #     await self.db_connector.insert_job_async(
+                    #         collection_name="failed_jobs",
+                    #         job_id=job_id,
+                    #         timestamp=self.db_connector.timestamp(),
+                    #         status=JobStatus.FAILED.value,
+                    #         results=str(e),
+                    #         source=source_name
+                    #     )
 
         for _ in range(self.queue_timer):
             # perform check
