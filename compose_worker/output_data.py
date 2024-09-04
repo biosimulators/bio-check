@@ -345,7 +345,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     make_dir(output_root_dir)
 
     output_data = {}
-    sims = simulators or ['amici', 'copasi', 'pysces', 'tellurium']
+    sims = simulators or ['amici', 'copasi', 'tellurium']  # ,'pysces']
     sim_config = Config(
         LOG=False,
         ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy[alg_policy.upper()],
@@ -367,16 +367,13 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
             sim_data = read_h5_reports(report_path)
             data = sim_data.to_dict() if isinstance(sim_data, BiosimulationsRunOutputData) else sim_data
             output_data[sim] = data
-        except Exception as e:
+        except:
             import traceback
             tb_str = traceback.format_exc()
             error_message = (
-                f"An unexpected error occurred while processing your request:\n"
-                f"Error Type: {type(e).__name__}\n"
-                f"Error Details: {str(e)}\n"
                 f"Traceback:\n{tb_str}"
             )
-            output_data[sim] = error_message
+            output_data[sim] = {'error': error_message}
 
     return output_data
 
@@ -508,9 +505,10 @@ def _get_output_stack(outputs: dict, spec_id: str) -> np.ndarray:
     output_stack = []
     for sim_name in outputs.keys():
         sim_data = outputs[sim_name]
-        for spec_name in sim_data.keys():
-            if spec_name == spec_id:
-                output_stack.append(sim_data[spec_name])
+        if isinstance(sim_data, dict):
+            for spec_name in sim_data.keys():
+                if spec_name == spec_id:
+                    output_stack.append(sim_data[spec_name])
 
     return np.stack(output_stack)
 

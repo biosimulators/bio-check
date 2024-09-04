@@ -172,7 +172,6 @@ class VerificationWorker(Worker):
             # return 0.0
 
     def _format_rmse_matrix(self, matrix) -> dict[str, dict[str, float]]:
-        print(f'Formatting matrix!')
         _m = matrix
         rmse = {}
 
@@ -295,10 +294,7 @@ class VerificationWorker(Worker):
                         mse_vals = mse_values[i][j]
                         mean_mse = sum(mse_vals) / len(mse_vals)
                         rmse_matrix[i, j] = math.sqrt(mean_mse)
-        
-        
-        print(f'cols: {columns}')
-        print(f'shape: {rmse_matrix.shape}')
+
         return pd.DataFrame(rmse_matrix, columns=columns, index=columns).to_dict()
 
     def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
@@ -498,8 +494,10 @@ class VerificationWorker(Worker):
         # for i, species in enumerate(sbml_species_names):
         observable_names = []
         for simulator_name in output_data.keys():
-            for observable_name in output_data[simulator_name].keys():
-                observable_names.append(observable_name)
+            sim_data = output_data[simulator_name]
+            if isinstance(sim_data, dict):
+                for observable_name in sim_data.keys():
+                    observable_names.append(observable_name)
         names = list(set(observable_names))
 
         for species in names:
