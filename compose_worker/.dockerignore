@@ -38,3 +38,4 @@ bio_check/api
 bio_check/worker
 !enter.sh
 bio_check/.env
+test.ipynb

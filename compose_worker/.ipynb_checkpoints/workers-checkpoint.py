@@ -127,9 +127,7 @@ class VerificationWorker(Worker):
 
         # calculate rmse
         try:
-            rmse_matrix = self._calculate_pairwise_rmse()
-            self.job_result['rmse'] = self._format_rmse_matrix(rmse_matrix)
-            # self.job_result['rmse'] = self._calculate_pairwise_rmse()
+            self.job_result['rmse'] = self._calculate_pairwise_rmse()
         except:
             e = handle_exception('rmse_calculation')
             self.job_result['rmse'] = {'error': e}
@@ -171,68 +169,7 @@ class VerificationWorker(Worker):
             # handle case where no MSE values are present (to avoid division by zero)
             # return 0.0
 
-    def _format_rmse_matrix(self, matrix) -> dict[str, dict[str, float]]:
-        _m = matrix
-        rmse = {}
-
-        # iterate over original matrix
-        for outer, inner_dict in _m.items():
-            keys = list(inner_dict.keys())
-            scores = list(inner_dict.values())
-            valid_scores = []
-            valid_keys = []
-            n_valid = 0
-
-            for i, score in enumerate(scores):
-                # case: valid score
-                if score is not None and not np.isnan(score):
-                    valid_keys.append(keys[i])
-                    valid_scores.append(score)
-                    n_valid += 1
-
-            # dict is valid if greater than 1
-            if n_valid > 1:
-                inner = dict(zip(valid_keys, valid_scores))
-                rmse[outer] = inner
-
-        return rmse
-
     def _calculate_pairwise_rmse(self) -> dict:
-        # get input data
-        spec_data = self.job_result
-        simulators = self.job_params['simulators']
-        if self.job_params.get('expected_results') is not None:
-            simulators.append('expected_results')
-        n = len(simulators)
-
-        # set up empty matrix
-        rmse_matrix = np.zeros((n, n))
-
-        # enumerate over i,j of simulators in a matrix
-        for i, sim_i in enumerate(simulators):
-            for j, sim_j in enumerate(simulators):
-                if i != j:
-                    mse_values = []
-                    for observable, observable_data in spec_data.items():
-                        if not isinstance(observable_data, str):
-                            mse_data = observable_data['mse']
-                            if sim_j in mse_data:
-                                # mse_data[sim_j] is a dict containing MSEs with other simulators
-                                for comparison_sim, mse_value in mse_data[sim_j].items():
-                                    if comparison_sim == sim_i:
-                                        mse_values.append(mse_value)
-                    if mse_values:
-                        mean_mse = sum(mse_values) / len(mse_values)
-                        rmse_matrix[i, j] = math.sqrt(mean_mse)
-                    else:
-                        # TODO: make this more robust
-                        rmse_matrix[i, j] = np.nan
-                else:
-                    rmse_matrix[i, j] = 0.0
-
-        return pd.DataFrame(rmse_matrix, columns=simulators, index=simulators).to_dict()
-
-    def __calculate_pairwise_rmse(self) -> dict:
         # get input data
         spec_data = self.job_result
         simulators = self.job_params['simulators']
@@ -294,7 +231,10 @@ class VerificationWorker(Worker):
                         mse_vals = mse_values[i][j]
                         mean_mse = sum(mse_vals) / len(mse_vals)
                         rmse_matrix[i, j] = math.sqrt(mean_mse)
-
+        
+        
+        print(f'cols: {columns}')
+        print(f'shape: {rmse_matrix.shape}')
         return pd.DataFrame(rmse_matrix, columns=columns, index=columns).to_dict()
 
     def _select_observables(self, job_result, observables: List[str] = None) -> Dict:
@@ -404,9 +344,9 @@ class VerificationWorker(Worker):
                 truth_vals=truth_vals
             )
             self.job_result = result
-        except:
-            error = handle_sbml_exception()
-            self.job_result = {"error": error}
+        except Exception as e:
+            self.job_result = {"bio-composer-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
+            raise e
 
     def _run_comparison_from_omex(
             self,
@@ -494,10 +434,8 @@ class VerificationWorker(Worker):
         # for i, species in enumerate(sbml_species_names):
         observable_names = []
         for simulator_name in output_data.keys():
-            sim_data = output_data[simulator_name]
-            if isinstance(sim_data, dict):
-                for observable_name in sim_data.keys():
-                    observable_names.append(observable_name)
+            for observable_name in output_data[simulator_name].keys():
+                observable_names.append(observable_name)
         names = list(set(observable_names))
 
         for species in names:
