@@ -404,9 +404,9 @@ class VerificationWorker(Worker):
                 truth_vals=truth_vals
             )
             self.job_result = result
-        except Exception as e:
-            self.job_result = {"bio-composer-message": f"Job for {self.job_params['job_id']} could not be completed because:\n{str(e)}"}
-            raise e
+        except:
+            error = handle_sbml_exception()
+            self.job_result = {"error": error}
 
     def _run_comparison_from_omex(
             self,
