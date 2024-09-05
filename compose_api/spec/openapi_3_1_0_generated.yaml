@@ -247,7 +247,6 @@ paths:
           default:
           - amici
           - copasi
-          - pysces
           - tellurium
           title: Simulators
         description: List of simulators to compare
