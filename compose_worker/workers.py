@@ -9,7 +9,6 @@ from process_bigraph import Composite
 import numpy as np
 import pandas as pd
 
-from compose_worker.output_data import handle_sbml_exception
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME, PROCESS_TYPES, handle_exception
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
@@ -19,7 +18,8 @@ from output_data import (
     sbml_output_stack,
     generate_sbml_utc_outputs,
     get_sbml_species_mapping,
-    run_smoldyn
+    run_smoldyn,
+    handle_sbml_exception
 )
 from bigraph_steps import generate_simularium_file
 
@@ -640,8 +640,12 @@ class VerificationWorker(Worker):
                 output_i = _outputs[i]
                 output_j = _outputs[j]
                 method_type = method.lower()
-                result = self.calculate_mse(output_i, output_j) if method_type == 'mse' else self.compare_arrays(arr1=output_i, arr2=output_j, rtol=rtol, atol=atol)
-                mse_matrix[i, j] = result
+                try:
+                    result = self.calculate_mse(output_i, output_j) if method_type == 'mse' else self.compare_arrays(arr1=output_i, arr2=output_j, rtol=rtol, atol=atol)
+                    mse_matrix[i, j] = result
+                except ValueError:
+                    error = handle_sbml_exception()
+                    mse_matrix[i, j] = error
                 if i != j:
                     mse_matrix[j, i] = mse_matrix[i, j]
         return pd.DataFrame(mse_matrix, index=_simulators, columns=_simulators)

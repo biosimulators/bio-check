@@ -8,7 +8,7 @@ from tempfile import mkdtemp
 from jobs import Worker
 from shared import MongoDbConnector, save_uploaded_file, upload_blob
 
-load_dotenv('../assets/.env_dev')
+load_dotenv('../assets/dev/.env_dev')
 
 MONGO_URI = os.getenv('MONGO_URI')
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')

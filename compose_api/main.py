@@ -23,7 +23,7 @@ from log_config import setup_logging
 
 # --load env -- #
 
-dotenv.load_dotenv("../assets/.env_dev")
+dotenv.load_dotenv("../assets/dev/.env_dev")
 
 
 # -- constraints -- #

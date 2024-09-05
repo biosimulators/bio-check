@@ -10,7 +10,7 @@ from log_config import setup_logging
 
 
 # for dev only
-load_dotenv('../assets/.env_dev')
+load_dotenv('../assets/dev/.env_dev')
 
 
 # logging

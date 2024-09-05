@@ -169,14 +169,13 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     try:
         # convert sbml to psc
         pysces.model_dir = compilation_dir
-        pysces.interface.convertSBML2PSC(sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp)
+        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp)
 
         # instantiate model from compilation contents
-        with open(psc_fp, 'rb', encoding='UTF-8') as F:
+        with open(psc_fp, 'r', encoding='UTF-8') as F:
             pscS = F.read()
             F.close()
 
-        pscS = pscS.decode('UTF-8')
         model = pysces.model(modelname, loader='string', fString=pscS)
 
         # run the simulation with specified time params

@@ -21,7 +21,7 @@ from biosimulators_processes import CORE
 
 # -- globally-shared content-- #
 
-load_dotenv('../assets/.env_dev')
+load_dotenv('../assets/dev/.env_dev')
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
