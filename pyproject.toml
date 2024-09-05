@@ -29,7 +29,7 @@ toml = "^0.10.2"
 pytest = "^8.3.2"
 
 [tool.pytest.ini_options]
-testpaths = ["bio_check"]
+testpaths = ["compose_api", "compose_worker"]
 addopts = "--ignore=setup.py"
 python_files = "tests.py"
 

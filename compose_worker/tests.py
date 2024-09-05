@@ -5,7 +5,6 @@ from pprint import pp
 from dotenv import load_dotenv
 from tempfile import mkdtemp
 
-from workers import FilesWorker, SimulationRunWorker
 from shared import MongoDbConnector
 
 load_dotenv('../assets/dev/.env_dev')
