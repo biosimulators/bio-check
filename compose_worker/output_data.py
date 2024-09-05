@@ -116,7 +116,7 @@ def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Uni
             # return output file
             output_data = {'results_file': results_fp}
     except:
-        error = handle_exception("run_smoldyn")
+        error = handle_exception("Run Smoldyn")
         output_data = {'error': error}
 
     return output_data

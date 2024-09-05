@@ -29,6 +29,23 @@ BUCKET_NAME = os.getenv("BUCKET_NAME")
 PROCESS_TYPES = CORE
 
 
+def check_jobs(coll):
+    from main import db_connector as conn
+    from supervisor import Supervisor
+    supervisor = Supervisor(conn)
+    db_connector = supervisor.db_connector
+    not_complete = []
+    for job in db_connector.pending_jobs():
+        job_id = job['job_id']
+        exists = supervisor.job_exists(job_id, coll)
+        t = job["timestamp"]
+        print(f'- Exists: {exists}\n- Job ID: {job_id}\n- Timestamp: {t}')
+        if not exists:
+            not_complete.append((job_id, t))
+
+    return not_complete
+
+
 def unique_id():
     return str(uuid.uuid4())
 

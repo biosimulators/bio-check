@@ -38,6 +38,7 @@ class Worker(ABC):
     job_params: Dict
     job_id: str
     job_result: Dict | None
+    job_failed: bool
 
     def __init__(self, job: Dict):
         """
@@ -47,6 +48,7 @@ class Worker(ABC):
         self.job_params = job
         self.job_id = self.job_params['job_id']
         self.job_result = {}
+        self.job_failed = False
 
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         self.worker_id = unique_id()
@@ -54,6 +56,9 @@ class Worker(ABC):
     @abstractmethod
     async def run(self):
         pass
+
+    def result(self) -> tuple[dict, bool]:
+        return (self.job_result, self.job_failed)
 
 
 class SimulationRunWorker(Worker):
@@ -103,8 +108,6 @@ class SimulationRunWorker(Worker):
         steps = self.job_params['steps']
         simulator = self.job_params['simulator']
 
-        # TODO: instead use the composition framework to do this!
-
         result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
         self.job_result = result[simulator]
 
@@ -133,7 +136,7 @@ class VerificationWorker(Worker):
             self.job_result['rmse'] = self._format_rmse_matrix(rmse_matrix)
             # self.job_result['rmse'] = self._calculate_pairwise_rmse()
         except:
-            e = handle_exception('rmse_calculation')
+            e = handle_exception('RMSE Calculation')
             self.job_result['rmse'] = {'error': e}
 
         # simulators = self.job_params.get('simulators')
