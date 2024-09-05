@@ -24,4 +24,4 @@ jobs:
 
     - name: Test BioCheck
       run: |
-        pytest 
+        pytest
