@@ -22,13 +22,6 @@ def test_files_worker(test_queue_index=0):
     # get first job from queue
     job = db_connector.pending_jobs().pop(test_queue_index)
 
-    # instantiate worker
-    worker = FilesWorker(job=job)
-
-    # run main worker func async
-    asyncio.run(worker.run())
-
-    # 
 
 
 
