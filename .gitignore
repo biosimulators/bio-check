@@ -10,10 +10,10 @@ worker/handlers/__pycache__/
 venv
 smoldyn-2.73-mac.tgz.1
 *.egg-info/
-assets/.env_dev
-.bio-check.json
-.biosimulations-prodbucket.json
-.biosimulations.json
+assets/dev/.env_dev
+assets/.bio-check.json
+assets/.biosimulations-prodbucket.json
+assets/.biosimulations.json
 bucket.sh
 .env_dev
 NOTES

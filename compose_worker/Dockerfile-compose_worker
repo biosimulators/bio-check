@@ -14,7 +14,18 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
 # copy content
 COPY . /app/worker
 
+# meson-python
+# meson
+# ninja
+# pysces
 # install deps
+
+# install pysces
+RUN poetry add \
+    meson-python \
+    meson ninja \
+    && poetry add pysces --extras=sbml
+
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
 # mv biosimulator processes artifact TODO: update this.

@@ -1,0 +1,53 @@
+name: bio-check
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    # volumes:
+      # - mongo-data:/data/db
+    networks:
+      - appnetwork
+
+  api:
+    build:
+      context: ./compose_api
+      dockerfile: ./Dockerfile-compose_api
+    image: ghcr.io/biosimulators/bio-check-compose_api:1.9.0
+    container_name: api
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
+      - MONGO_USERNAME=alex
+      - MONGO_DB_PWD=123
+      - GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
+      - DB_NAME=service_requests
+      - BUCKET_NAME=files-biochecknet
+    ports:
+      - "3001:3001"
+    networks:
+      - appnetwork
+
+  worker:
+    build:
+      context: ./compose_worker
+      dockerfile: ./Dockerfile-compose_worker
+    image: ghcr.io/biosimulators/bio-check-compose_worker:1.9.0
+    container_name: worker
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
+      - MONGO_USERNAME=alex
+      - MONGO_DB_PWD=123
+      - GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
+      - DB_NAME=service_requests
+      - BUCKET_NAME=files-biochecknet
+    networks:
+      - appnetwork
+
+networks:
+  appnetwork:
+    driver: bridge
+
+
+# The API will be available at http://localhost:3001 once docker compose up is run

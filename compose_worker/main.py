@@ -9,7 +9,7 @@ from log_config import setup_logging
 from supervisor import Supervisor
 
 
-load_dotenv('../assets/.env_dev')
+load_dotenv('../assets/dev/.env_dev')
 
 # sleep params
 DELAY_TIMER = 20
