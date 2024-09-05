@@ -9,7 +9,7 @@ from process_bigraph import Composite
 import numpy as np
 import pandas as pd
 
-from compose_worker.io_worker import read_h5_reports
+from io_worker import read_h5_reports
 from log_config import setup_logging
 from shared import unique_id, BUCKET_NAME, PROCESS_TYPES, handle_exception
 from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
