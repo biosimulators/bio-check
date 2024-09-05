@@ -413,7 +413,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     #     output[simulator_name] = sim_data
     output = {}
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
-    simulators = simulators or ['amici', 'copasi', 'pysces', 'tellurium']
+    simulators = simulators or ['amici', 'copasi', 'tellurium']  # 'pysces',
     all_output_ids = []
     for simulator in simulators:
         results = {}

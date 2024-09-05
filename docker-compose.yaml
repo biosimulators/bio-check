@@ -33,6 +33,7 @@ services:
     build:
       context: ./compose_worker
       dockerfile: ./Dockerfile-compose_worker
+
     image: ghcr.io/biosimulators/bio-check-compose_worker:1.9.0
     container_name: worker
     environment:

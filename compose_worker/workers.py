@@ -336,7 +336,7 @@ class VerificationWorker(Worker):
         if source_report_fp is not None:
             local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
-        simulators = self.job_params.get('simulators', ['amici', 'copasi', 'pysces', 'tellurium'])
+        simulators = self.job_params.get('simulators', ['amici', 'copasi', 'tellurium'])  # pysces
         include_outs = self.job_params.get('include_outputs', False)
         comparison_id = self.job_params.get('job_id')
         output_start = self.job_params.get('start')
@@ -637,12 +637,13 @@ class VerificationWorker(Worker):
         # fill the matrices with the calculated values
         for i in range(len(_simulators)):
             for j in range(i, len(_simulators)):
-                output_i = _outputs[i]
-                output_j = _outputs[j]
-                method_type = method.lower()
                 try:
-                    result = self.calculate_mse(output_i, output_j) if method_type == 'mse' else self.compare_arrays(arr1=output_i, arr2=output_j, rtol=rtol, atol=atol)
-                    mse_matrix[i, j] = result
+                    output_i = _outputs[i]
+                    output_j = _outputs[j]
+                    method_type = method.lower()
+                    if not isinstance(output_i, str) and not isinstance(output_j, str):
+                        result = self.calculate_mse(output_i, output_j) if method_type == 'mse' else self.compare_arrays(arr1=output_i, arr2=output_j, rtol=rtol, atol=atol)
+                        mse_matrix[i, j] = result
                 except ValueError:
                     error = handle_sbml_exception()
                     mse_matrix[i, j] = error
