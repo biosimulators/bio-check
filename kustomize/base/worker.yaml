@@ -21,10 +21,10 @@ spec:
           resources:
             requests:
               memory: "400Mi"
-              cpu: "200m"
+              cpu: "500m"
             limits:
               memory: "2000Mi"
-#              cpu: "500m"
+              cpu: "1500m"
           envFrom:
             - configMapRef:
                 name: worker-config
