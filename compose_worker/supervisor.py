@@ -170,7 +170,6 @@ class Supervisor:
                         results=result_data,
                         source=source_name
                     )
-
                     # remove in progress job
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
                 except:
@@ -184,7 +183,6 @@ class Supervisor:
                         results=error,
                         source=source_name
                     )
-
                     # remove in progress job TODO: refactor this
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
 
