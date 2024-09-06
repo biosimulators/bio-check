@@ -130,6 +130,7 @@ class Supervisor:
                 # change job status for client by inserting a new in progress job
                 job_in_progress = self.job_exists(job_id=job_id, collection_name="in_progress_jobs")
                 if not job_in_progress:
+                    # store new in_progress_job
                     in_progress_job = await self.db_connector.insert_job_async(
                         collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value,
                         job_id=job_id,
@@ -137,6 +138,8 @@ class Supervisor:
                         status=JobStatus.IN_PROGRESS.value,
                         source=source_name
                     )
+                    # remove job from pending
+                    self.db_connector.db.pending_jobs.delete_one({'job_id': job_id})
 
                 # run job again
                 try:
@@ -159,7 +162,6 @@ class Supervisor:
 
                     # create new completed job using the worker's job_result
                     result_data = worker.job_result
-
                     await self.db_connector.insert_job_async(
                         collection_name=DatabaseCollections.COMPLETED_JOBS.value,
                         job_id=job_id,
@@ -168,6 +170,9 @@ class Supervisor:
                         results=result_data,
                         source=source_name
                     )
+
+                    # remove in progress job
+                    self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
                 except:
                     # save new execution error to db
                     error = handle_exception('Job Execution Error')
@@ -179,6 +184,9 @@ class Supervisor:
                         results=error,
                         source=source_name
                     )
+
+                    # remove in progress job TODO: refactor this
+                    self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
 
     def job_exists(self, job_id: str, collection_name: str) -> bool:
         """Returns True if job with the given job_id exists, False otherwise."""
