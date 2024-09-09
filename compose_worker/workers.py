@@ -699,7 +699,7 @@ class CompositionWorker(Worker):
     def __init__(self, job):
         super().__init__(job=job)
 
-    async def run(self):
+    async def _run(self):
         # extract params
         duration = self.job_params['duration']
         composite_doc = self.job_params['composite_doc']
@@ -729,6 +729,44 @@ class CompositionWorker(Worker):
         composition.run(duration)
         self.job_result = composition.gather_results()
 
+        return self.job_result
+
+    async def run(self, conn):
+        from process_bigraph import Composite
+        from biosimulators_processes import CORE
+        from uuid import uuid4
+
+        doc = self.job_params['composite_spec']
+        process_name = list(doc.keys())[0]
+        duration = self.job_params['duration']
+        simulator = self.job_params['simulator']
+        job_id = self.job_params['job_id']
+        new_job = {'job_id': job_id}
+        out_dir = tempfile.mkdtemp()
+        source_fp = self.job_params['path']
+        local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
+
+        doc[process_name]['config']['model']['model_source'] = local_fp
+
+        # make composite
+        composite = Composite(config={'state': doc}, core=CORE)
+
+        for n in range(duration):
+            # run composite
+            composite.run(1)
+            # get historical results
+            results = composite.gather_results()
+            data = results[('emitter',)]
+            # find job and update data
+            write_data = conn.db.in_progress_jobs.find_one(new_job)
+            write_data['data'] = data
+            # update db
+            conn.db.in_progress_jobs.update_one(new_job, {'$set': write_data})
+            from time import sleep
+            print(f'{n}: sleeping for 10...')
+            sleep(10)
+
+        self.job_result = conn.db.in_progress_jobs.find_one({'job_id': job_id}).get('results', {})
         return self.job_result
 
 

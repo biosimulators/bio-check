@@ -134,3 +134,67 @@ def write_simularium_file(
     else:
         writer = BinaryWriter()
     return writer.save(trajectory_data=data, output_path=simularium_fp, validate_ids=validate)
+
+
+def read_smoldyn_simulation_configuration(filename):
+    ''' Read a configuration for a Smoldyn simulation
+
+    Args:
+        filename (:obj:`str`): path to model file
+
+    Returns:
+        :obj:`list` of :obj:`str`: simulation configuration
+    '''
+    with open(filename, 'r') as file:
+        return [line.strip('\n') for line in file]
+
+
+def write_smoldyn_simulation_configuration(configuration, filename):
+    ''' Write a configuration for Smoldyn simulation to a file
+
+    Args:
+        configuration
+        filename (:obj:`str`): path to save configuration
+    '''
+    with open(filename, 'w') as file:
+        for line in configuration:
+            file.write(line)
+            file.write('\n')
+
+
+def add_output_commands(model_fp, duration):
+    config = read_smoldyn_simulation_configuration(model_fp)
+    has_output_commands = any([v.startswith('output') for v in config])
+    if not has_output_commands:
+        cmd_i = 0
+        for i, v in enumerate(config):
+            if v == 'end_file':
+                cmd_i += i - 1
+            stop_key = 'time_stop'
+
+            if f'define {stop_key.upper()}' in v:
+                new_v = f'define TIME_STOP   {duration}'
+                config.remove(config[i])
+                config.insert(i, new_v)
+            elif v.startswith(stop_key):
+                new_v = f'time_stop TIME_STOP'
+                config.remove(config[i])
+                config.insert(i, new_v)
+        cmds = ["output_files modelout.txt",
+                "cmd i 0 TIME_STOP 2 executiontime modelout.txt",
+                "cmd i 0 TIME_STOP 2 listmols modelout.txt"]
+        current = cmd_i
+        for cmd in cmds:
+            config.insert(current, cmd)
+            current += 1
+
+        write_smoldyn_simulation_configuration(config, model_fp)
+
+    out_file = model_fp.replace(model_fp.split('/')[-1].split('.')[0], 'modelout')
+    return out_file
+
+# 1. in worker, read in path params from job_params
+# 2. download file to get local temp filepath
+# 3. get ouput filepath as add_output_commands() (rewrite the files if need be locally)
+# 4. reupload/replace the bucket file with the newly created local file
+# 5. Continue to run process

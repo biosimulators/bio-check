@@ -169,13 +169,13 @@ class DatabaseConnector(ABC):
     def timestamp() -> str:
         return str(datetime.utcnow())
 
-    def refresh_jobs(self):
-        def refresh_collection(coll):
-            for job in self.db[coll].find():
-                self.db[coll].delete_one(job)
+    def refresh_collection(self, coll):
+        for job in self.db[coll].find():
+            self.db[coll].delete_one(job)
 
+    def refresh_jobs(self):
         for collname in ['completed_jobs', 'in_progress_jobs', 'pending_jobs']:
-            refresh_collection(collname)
+            self.refresh_collection(collname)
 
     @abstractmethod
     def _get_client(self, *args):
@@ -224,6 +224,13 @@ class MongoDbConnector(DatabaseConnector):
 
     def completed_jobs(self):
         return self._get_jobs_from_collection("completed_jobs")
+
+    @property
+    def data(self):
+        return self._get_data()
+
+    def _get_data(self):
+        return {coll_name: [v for v in self.db[coll_name].find()] for coll_name in self.db.list_collection_names()}
 
     async def read(self, collection_name: DatabaseCollections | str, **kwargs):
         """Args:
