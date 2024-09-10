@@ -48,6 +48,8 @@ APP_ORIGINS = [
     'http://localhost:4200',
     'http://localhost:4201',
     'http://localhost:4202',
+    'http://localhost:8000',
+    'http://localhost:3001',
     'https://biosimulators.org',
     'https://www.biosimulators.org',
     'https://biosimulators.dev',
@@ -64,7 +66,7 @@ APP_ORIGINS = [
 # -- app components -- #
 
 router = APIRouter()
-app = FastAPI(title=APP_TITLE, version=APP_VERSION)
+app = FastAPI(title=APP_TITLE, version=APP_VERSION, servers=APP_SERVERS)
 
 # add origins
 app.add_middleware(
