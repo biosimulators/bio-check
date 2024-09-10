@@ -4,7 +4,7 @@ import os
 import yaml
 from fastapi.openapi.utils import get_openapi
 
-from main import app
+from main import app, APP_SERVERS
 
 
 def main():
@@ -14,6 +14,7 @@ def main():
         openapi_version=app.openapi_version,
         description=app.description,
         routes=app.routes,
+        servers=APP_SERVERS
     )
 
     # Convert the JSON OpenAPI spec to YAML

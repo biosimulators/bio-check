@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: bio-compose
   version: 0.1.0
+servers:
+- url: https://biochecknet.biosimulations.org
+  description: Production server
 paths:
   /:
     get:
@@ -338,27 +341,31 @@ paths:
                   type: string
                 type: array
                 title: Response Get-Process-Bigraph-Addresses
-  /run-composition:
+  /new-utc-composition:
     post:
       tags:
       - Composition
-      summary: Run a composite simulation.
-      operationId: run-composition
+      summary: Create new UTC composition job for composition specifications.
+      operationId: new-utc-composition
       parameters:
+      - name: simulator
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Simulator
       - name: duration
         in: query
         required: true
         schema:
           type: integer
-          description: Duration of the simulation in seconds.
           title: Duration
-        description: Duration of the simulation in seconds.
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_run-composition'
+              $ref: '#/components/schemas/Body_new-utc-composition'
       responses:
         '200':
           description: Successful Response
@@ -567,22 +574,16 @@ components:
       required:
       - uploaded_file
       title: Body_get-compatible-for-verification
-    Body_run-composition:
+    Body_new-utc-composition:
       properties:
         source:
           type: string
           format: binary
           title: Source
-          description: Upload source file
-        composition_spec:
-          allOf:
-          - $ref: '#/components/schemas/CompositionSpecification'
-          description: ProcessBigraph-compliant specification of composition.
       type: object
       required:
       - source
-      - composition_spec
-      title: Body_run-composition
+      title: Body_new-utc-composition
     Body_run-smoldyn:
       properties:
         uploaded_file:
@@ -654,20 +655,6 @@ components:
       - file
       - simulators
       title: CompatibleSimulators
-    CompositionSpecification:
-      properties:
-        composition_id:
-          type: string
-          title: Composition Id
-        nodes:
-          items: {}
-          type: array
-          title: Nodes
-      type: object
-      required:
-      - composition_id
-      - nodes
-      title: CompositionSpecification
     HTTPValidationError:
       properties:
         detail:

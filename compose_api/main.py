@@ -21,18 +21,26 @@ from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME,
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
 
-# --load env -- #
+
+# --load dev env -- #
 
 dotenv.load_dotenv("../assets/dev/.env_dev")
 
 
 # -- constraints -- #
 
+MONGO_URI = os.getenv("MONGO_URI")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
 APP_TITLE = "bio-compose"
 APP_VERSION = "0.1.0"
-
-# TODO: update this
-ORIGINS = [
+APP_SERVERS = [
+    {
+        "url": "https://biochecknet.biosimulations.org",
+        "description": "Production server"
+    }
+]
+APP_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:4200',
     'http://127.0.0.1:4201',
@@ -49,17 +57,8 @@ ORIGINS = [
     'https://biosimulations.dev',
     'https://biosimulations.org',
     'https://bio.libretexts.org',
+    'https://biochecknet.biosimulations.org'
 ]
-
-
-MONGO_URI = os.getenv("MONGO_URI")
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-
-# -- handle logging -- #
-
-# setup_logging()
-# logger = logging.getLogger(__name__)
 
 
 # -- app components -- #
@@ -67,15 +66,19 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 router = APIRouter()
 app = FastAPI(title=APP_TITLE, version=APP_VERSION)
 
+# add origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ORIGINS,
+    allow_origins=APP_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"])
 
+# add servers
+app.servers = APP_SERVERS
 
-# -- get mongo db -- #
+
+# -- mongo db -- #
 
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 app.mongo_client = db_connector.client
