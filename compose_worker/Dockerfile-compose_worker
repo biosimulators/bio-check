@@ -19,23 +19,20 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     g++ \
     petsc-dev \
     software-properties-common \
+    && rm -rf /var/lib/apt/lists/* \
     && add-apt-repository ppa:fenics-packages/fenics -y \
     && apt update \
-    && apt install -y fenicsx \
-    && rm -rf /var/lib/apt/lists/*
+    && apt install -y fenicsx
 
 # copy content
 COPY . /app/worker
 
-# install pysces
-RUN poetry add \
-    meson-python \
-    meson ninja \
-    && poetry add pysces --extras=sbml \
-    && poetry add biosimulators-utils --extras=logging
-
-# install biosimulators deps
+# install requirements
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
+
+# add deps with extras
+RUN poetry add pysces --extras=sbml \
+    && poetry add biosimulators-utils --extras=logging
 
 WORKDIR /app/worker
 
