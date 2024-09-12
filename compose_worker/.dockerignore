@@ -5,7 +5,6 @@ bio_check/__pycache__
 *.pyc
 *.pyo
 *.pyd
-*.sh
 .Python
 env
 pip-log.txt

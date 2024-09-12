@@ -22,13 +22,14 @@ WORKDIR /app
 RUN mkdir /app/data
 
 # copy deps
-COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY assets/scripts/install_dolfinx.sh ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
 
 # copy example files TODO: optimize this.
 COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
 COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
 
 RUN chmod +x /app/assets/install_deps.sh \
+    && chmod +x /app/assets/install_dolfinx.sh \
     && /app/assets/install_deps.sh /app/assets/requirements.base.txt
 
 # RUN poetry add $(cat /app/assets/requirements.base.txt)
