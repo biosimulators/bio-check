@@ -10,19 +10,21 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     git \
     meson \
     build-essential \
-    gfortran \
-    libopenmpi-dev \
-    libspdlog-dev \
-    libpugixml-dev \
-    cmake \
-    gcc \
-    g++ \
-    petsc-dev \
-    software-properties-common \
-    && rm -rf /var/lib/apt/lists/* \
-    && add-apt-repository ppa:fenics-packages/fenics -y \
-    && apt update \
-    && apt install -y fenicsx
+    && rm -rf /var/lib/apt/lists/*
+
+# TODO: start the implementation: fencis deps
+# RUN apt-get update && apt-get install -y petsc-dev \
+#     libopenmpi-dev \
+#     libspdlog-dev \
+#     libpugixml-dev \
+#     cmake \
+#     gcc \
+#     g++ \
+#     gfortran \
+#     && rm -rf /var/lib/apt/lists/* \
+#     && add-apt-repository ppa:fenics-packages/fenics -y \
+#     && apt update \
+#     && apt install -y fenicsx
 
 # copy content
 COPY . /app/worker
