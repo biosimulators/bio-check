@@ -11,9 +11,9 @@
 
 This application (`bio_check`) uses a microservices architecture which presents the following libraries:
 
-- `api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
+- `compose_api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
 - `storage`: This library handles MongoDB configs as well as bucket-like storages for uploaded files.
-- `worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and comparison execution.
+- `compose_worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and comparison execution.
 
 The installation process is outlined as follows:
 

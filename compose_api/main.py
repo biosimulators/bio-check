@@ -38,6 +38,10 @@ APP_SERVERS = [
     {
         "url": "https://biochecknet.biosimulations.org",
         "description": "Production server"
+    },
+    {
+        "url": "http://localhost:8000",
+        "description": "Development server"
     }
 ]
 APP_ORIGINS = [
