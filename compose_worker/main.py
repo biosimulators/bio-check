@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from shared import MongoDbConnector
 from log_config import setup_logging
-from supervisor import Supervisor
+from supervisor import Supervisor, CompositionSupervisor
 
 
 load_dotenv('../assets/dev/.env_dev')
@@ -33,6 +33,7 @@ async def main(max_retries=MAX_RETRIES):
 
     # create supervisor
     supervisor = Supervisor(db_connector=db_connector)
+    # supervisor = CompositionSupervisor(db_connector=db_connector)
 
     while True:
         # no job has come in a while

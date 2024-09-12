@@ -1,3 +1,5 @@
+meson-python
+meson ninja
 biosimulators-amici
 biosimulators-copasi
 biosimulators-pysces

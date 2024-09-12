@@ -15,7 +15,5 @@ WORKDIR /app/api
 
 RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
 
-# RUN pip install --upgrade google-cloud-storage
-
 ENTRYPOINT ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
 

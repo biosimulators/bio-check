@@ -1,7 +1,9 @@
 import logging
+from functools import partial
 from asyncio import sleep
 from typing import *
 from dotenv import load_dotenv
+from nbclient.client import timestamp
 from pymongo.collection import Collection as MongoCollection
 
 from shared import handle_exception
@@ -130,14 +132,25 @@ class Supervisor:
                 # change job status for client by inserting a new in progress job
                 job_in_progress = self.job_exists(job_id=job_id, collection_name="in_progress_jobs")
                 if not job_in_progress:
-                    # store new in_progress_job
+                    in_progress_entry = {'job_id': job_id, 'timestamp': self.db_connector.timestamp(), 'status': JobStatus.IN_PROGRESS.value, 'source': source}
+                    if job_id.startswith('composition-run'):
+                        in_progress_entry['composite_spec'] = pending_job['composite_spec']
+                        in_progress_entry['simulator'] = pending_job['simulator']
+                        in_progress_entry['duration'] = pending_job['duration']
+
                     in_progress_job = await self.db_connector.insert_job_async(
-                        collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value,
-                        job_id=job_id,
-                        timestamp=self.db_connector.timestamp(),
-                        status=JobStatus.IN_PROGRESS.value,
-                        source=source_name
+                        collection_name="in_progress_jobs",
+                        **in_progress_entry
                     )
+
+                    # store new in_progress_job
+                    # in_progress_job = await self.db_connector.insert_job_async(
+                    #     collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value,
+                    #     job_id=job_id,
+                    #     timestamp=self.db_connector.timestamp(),
+                    #     status=JobStatus.IN_PROGRESS.value,
+                    #     source=source_name
+                    # )
                     # remove job from pending
                     self.db_connector.db.pending_jobs.delete_one({'job_id': job_id})
 
@@ -153,12 +166,24 @@ class Supervisor:
                     # check: files
                     elif job_id.startswith('files'):
                         worker = FilesWorker(job=pending_job)
-                    # check: composition
-                    elif job_id.startswith('composition-run'):
-                        worker = CompositionWorker(job=pending_job)
 
-                    # when worker completes, dismiss worker (if in parallel)
-                    await worker.run()
+                    # check: composition
+                    if job_id.startswith('composition-run'):
+                        worker = CompositionWorker(job=pending_job)
+                        await worker.run(conn=self.db_connector)
+                        # result_data = worker.job_result
+                        # await self.db_connector.insert_job_async(
+                        #     collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                        #     job_id=job_id,
+                        #     timestamp=self.db_connector.timestamp(),
+                        #     status=JobStatus.COMPLETED.value,
+                        #     source=source_name,
+                        #     simulator=simulator,
+                        #     results=result_data['data']
+                        # )
+                    else:
+                        # when worker completes, dismiss worker (if in parallel)
+                        await worker.run()
 
                     # create new completed job using the worker's job_result
                     result_data = worker.job_result
@@ -193,3 +218,72 @@ class Supervisor:
         job = coll.find_one(unique_id_query) or None
 
         return job is not None
+
+
+class CompositionSupervisor:
+    def __init__(self, db_connector: MongoDbConnector):
+        self.db_connector = db_connector
+        self.queue_timer = 5
+        self.preferred_queue_index = 0
+        self.job_queue = self.db_connector.pending_jobs()
+        self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
+
+    def job_exists(self, job_id: str, collection_name: str) -> bool:
+        """Returns True if job with the given job_id exists, False otherwise."""
+        unique_id_query = {'job_id': job_id}
+        coll: MongoCollection = self.db_connector.db[collection_name]
+        job = coll.find_one(unique_id_query) or None
+
+        return job is not None
+
+    async def check_jobs(self) -> int:
+        for _ in range(self.queue_timer):
+            # perform check
+            await self._check()
+
+            # rest
+            await sleep(2)
+
+            # refresh jobs
+            self.job_queue = self.db_connector.pending_jobs()
+
+        return 0
+
+    async def _check(self):
+        worker = None
+        for i, pending_job in enumerate(self.job_queue):
+            # get job params
+            job_id = pending_job.get('job_id')
+            source = pending_job.get('path')
+            source_name = source.split('/')[-1]
+            duration = pending_job.get('duration')
+            simulator = pending_job.get('simulator')
+
+            # check terminal collections for job
+            job_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
+            job_failed = self.job_exists(job_id=job_id, collection_name="failed_jobs")
+
+            # case: job is not complete, otherwise do nothing
+            if not job_completed and not job_failed:
+                # run job again
+                try:
+                    # check: composition
+                    if job_id.startswith('composition-run'):
+                        worker = CompositionWorker(job=pending_job)
+
+                    worker.run_composite_sse(duration)
+                    result_data = worker.job_result
+
+                    await self.db_connector.insert_job_async(
+                        collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        status=JobStatus.COMPLETED.value,
+                        source=source_name,
+                        simulator=simulator,
+                        results=result_data['data']
+                    )
+                except:
+                    print('Error!')
+
+

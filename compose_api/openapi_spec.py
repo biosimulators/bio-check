@@ -14,6 +14,7 @@ def main():
         openapi_version=app.openapi_version,
         description=app.description,
         routes=app.routes,
+        servers=app.servers
     )
 
     # Convert the JSON OpenAPI spec to YAML

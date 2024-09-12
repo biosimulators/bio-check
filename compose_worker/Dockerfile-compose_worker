@@ -2,41 +2,40 @@
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-# hdf5/amici deps
+# os deps
 RUN apt-get update && apt-get install -y libatlas-base-dev \
     libhdf5-serial-dev \
     swig \
     libboost-all-dev \
     git \
     meson \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    gfortran \
+    libopenmpi-dev \
+    libspdlog-dev \
+    libpugixml-dev \
+    cmake \
+    gcc \
+    g++ \
+    petsc-dev \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/* \
+    && add-apt-repository ppa:fenics-packages/fenics -y \
+    && apt update \
+    && apt install -y fenicsx
 
 # copy content
 COPY . /app/worker
 
-# meson-python
-# meson
-# ninja
-# pysces
-# install deps
-
-# install pysces
-RUN poetry add \
-    meson-python \
-    meson ninja \
-    && poetry add pysces --extras=sbml \
-    && poetry add biosimulators-utils --extras=logging
-
+# install requirements
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
-# mv biosimulator processes artifact TODO: update this.
-# RUN mv /app/biosimulator_processes /app/worker/biosimulator_processes
+# add deps with extras
+RUN poetry add pysces --extras=sbml \
+    && poetry add biosimulators-utils --extras=logging
 
 WORKDIR /app/worker
 
 RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
 
 ENTRYPOINT ["poetry", "run", "python3", "main.py"]
-
-# img_version=1.0.1
-# ./assets/scripts/build_image.sh compose_api "$img_version" && ./assets/scripts/push_image.sh compose_api "$img_version" AlexPatrie && ./assets/scripts/build_image.sh compose_worker "$img_version" && ./assets/scripts/push_image.sh compose_worker "$img_version" AlexPatrie
