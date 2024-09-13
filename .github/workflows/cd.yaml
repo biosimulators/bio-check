@@ -16,6 +16,12 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
 
+      # Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       # Install yq from official GitHub releases
       - name: Install yq
         run: |
