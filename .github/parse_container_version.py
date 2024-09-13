@@ -3,7 +3,7 @@ import sys
 
 
 service_name = sys.argv[1]
-fp = '../docker-compose.yaml'
+fp = 'docker-compose.yaml'
 
 with open(fp, 'r') as file:
     compose_data = yaml.safe_load(file)
