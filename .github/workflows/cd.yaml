@@ -32,7 +32,7 @@ jobs:
       - name: Extract API container version
         id: extract_api_version
         run: |
-          API_VERSION=$(python3 .github/parse_container_version.py compose_api)
+          API_VERSION=$(python3 .github/parse_container_version.py api)
           echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
           echo "API Version: $API_VERSION"
 
@@ -40,7 +40,7 @@ jobs:
       - name: Extract worker container version
         id: extract_worker_version
         run: |
-          API_VERSION=$(python3 .github/parse_container_version.py compose_worker)
+          API_VERSION=$(python3 .github/parse_container_version.py worker)
           echo "WORKER_VERSION=$VERSION" >> $GITHUB_ENV
            echo "WORKER Version: $WORKER_VERSION"
 
