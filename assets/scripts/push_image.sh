@@ -4,7 +4,7 @@ set -e
 
 lib="$1"
 version="$2"
-gh_username="$3"
+# gh_username="$3"
 
 if [ "$version" == "" ]; then
   echo "You must pass a version as second arg."
@@ -12,7 +12,7 @@ if [ "$version" == "" ]; then
 fi
 
 # login to github
-./assets/scripts/gh_login.sh "$gh_username"
+# ./assets/scripts/gh_login.sh "$gh_username"
 
 # yes | docker system prune
 
