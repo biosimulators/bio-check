@@ -1,48 +1,81 @@
-name: Continuous Deployment
+name: Build and Deploy microservice containers to GHCR
 
 on:
   release:
     types: [created]
 
 jobs:
-  build_containers:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # - name: Set up Python
-    #   uses: actions/setup-python@v2
-    #   with:
-    #     python-version: '3.9'
+      # Login to ghcr
+      - name: Log in to GHCR
+        run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
 
-    # this CD assumes that CI has already been run (on each push to main), and thus tests have passed.
-    - name: Build api
-      run: |
-        echo "Run api build script here"
-      # run: ./assets/scripts/build_image.sh api
+      # Install yq to parse YAML files
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yq
 
-    - name: Build worker
-      run: |
-        echo "Run worker build script here"
-      # run: ./assets/scripts/build_image.sh worker
+      # Extract the versions from docker-compose.yaml
+      - name: Extract api container version
+        id: extract_version
+        run: |
+          VERSION=$(yq eval '.services.compose_api.image' docker-compose.yaml | cut -d ':' -f2)
+          echo "API_VERSION=$VERSION" >> $GITHUB_ENV
 
-  release_new_containers:
-    needs: build_containers
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Extract worker container version
+        id: extract_version
+        run: |
+          VERSION=$(yq eval '.services.compose_worker.image' docker-compose.yaml | cut -d ':' -f2)
+          echo "WORKER_VERSION=$VERSION" >> $GITHUB_ENV
 
-    - name: Release new api container version
-      run: |
-        echo "Run api push script here"
-      # run: ./push.sh
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: Release new worker container version
-      run: |
-        echo "Run worker push script here"
-      # run: ./push.sh
+      # Build the Docker containers using Docker Compose
+      - name: Build Docker containers with Docker Compose
+        run: docker-compose build --no-cache
 
-    - name: Notify Deployment
-      run: echo "Deployment successful on release ${{ github.ref }}"
+      # Change permissions for script
+      - name: Change push script permissions
+        run: |
+          chmod +x ./assets/scripts/push_image.sh
+
+      # Run the deploy script for each service
+      - name: Deploy api microservice container to GHCR
+        run: |
+          ./assets/scripts/push_image.sh compose_api ${{ env.API_VERSION }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+        env:
+          REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
+
+      # Run the deploy script for each service
+      - name: Deploy worker microservice container to GHCR
+        run: |
+          ./assets/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+        env:
+          REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
+
+      # - name: Deploy api microservice container to GHCR
+      #   run: |
+      #     ./assets/scripts/push_image.sh compose_api ${{ github.sha }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+      #   env:
+      #     REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+      #     REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
+      # # Run the deploy script for each service
+      # - name: Deploy worker microservice container to GHCR
+      #   run: |
+      #     ./assets/scripts/push_image.sh compose_worker ${{ github.sha }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+      #   env:
+      #     REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+      #     REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
+
