@@ -17,11 +17,11 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
 
-      # Install yq to parse YAML files
+      # Install yq from official GitHub releases
       - name: Install yq
         run: |
-          sudo apt-get update
-          sudo apt-get install -y yq
+          sudo wget https://github.com/mikefarah/yq/releases/download/v4.34.2/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
 
       # Extract the versions from docker-compose.yaml
       - name: Extract api container version
