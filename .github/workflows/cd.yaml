@@ -40,9 +40,9 @@ jobs:
       - name: Extract worker container version
         id: extract_worker_version
         run: |
-          API_VERSION=$(python3 .github/parse_container_version.py worker)
+          WORKER_VERSION=$(python3 .github/parse_container_version.py worker)
           echo "WORKER_VERSION=$VERSION" >> $GITHUB_ENV
-           echo "WORKER Version: $WORKER_VERSION"
+          echo "WORKER Version: $WORKER_VERSION"
 
       # Step 7: Debug output of extracted versions
       - name: Debug output of extracted versions
