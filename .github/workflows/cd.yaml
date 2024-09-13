@@ -57,7 +57,7 @@ jobs:
       # Run the deploy script for each service
       - name: Deploy api microservice container to GHCR
         run: |
-          ./assets/scripts/push_image.sh compose_api ${{ env.API_VERSION }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          ./assets/scripts/push_image.sh compose_api ${{ env.API_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
@@ -65,7 +65,7 @@ jobs:
       # Run the deploy script for each service
       - name: Deploy worker microservice container to GHCR
         run: |
-          ./assets/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          ./assets/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
