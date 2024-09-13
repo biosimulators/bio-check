@@ -25,13 +25,13 @@ jobs:
 
       # Extract the versions from docker-compose.yaml
       - name: Extract api container version
-        id: extract_version
+        id: extract_api_version
         run: |
           VERSION=$(yq eval '.services.compose_api.image' docker-compose.yaml | cut -d ':' -f2)
           echo "API_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Extract worker container version
-        id: extract_version
+        id: extract_worker_version
         run: |
           VERSION=$(yq eval '.services.compose_worker.image' docker-compose.yaml | cut -d ':' -f2)
           echo "WORKER_VERSION=$VERSION" >> $GITHUB_ENV
