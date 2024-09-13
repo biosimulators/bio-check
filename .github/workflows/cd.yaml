@@ -22,11 +22,17 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Check if Docker Compose is installed correctly
 
+      - name: Install Python and PyYAML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+          pip install pyyaml
+
       # Step 5: Extract API container version
       - name: Extract API container version
         id: extract_api_version
         run: |
-          API_VERSION=$(python3 parse_container_version.py compose_api)
+          API_VERSION=$(python3 .github/parse_container_version.py compose_api)
           echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
           echo "API Version: $API_VERSION"
 
@@ -34,7 +40,7 @@ jobs:
       - name: Extract worker container version
         id: extract_worker_version
         run: |
-          API_VERSION=$(python3 parse_container_version.py compose_worker)
+          API_VERSION=$(python3 .github/parse_container_version.py compose_worker)
           echo "WORKER_VERSION=$VERSION" >> $GITHUB_ENV
            echo "WORKER Version: $WORKER_VERSION"
 
