@@ -453,13 +453,14 @@ class VerificationWorker(Worker):
 
     def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
+        mapping_names = list(species_mapping.keys())
         results = {}
         output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
         sims = simulators or list(output_data.keys())
         for simulator in sims:
             sim_data = output_data[simulator]
-            # for i, species_name in enumerate(list(species_mapping.keys())):
-            for i, species_name in enumerate(list(sim_data.keys())):
+            spec_names = list(sim_data.keys())
+            for i, species_name in enumerate(spec_names):
                 if not species_name == 'error':
                     species_comparison = self._generate_sbml_utc_species_comparison(
                         output_data=output_data,
@@ -589,13 +590,14 @@ class VerificationWorker(Worker):
 
     def _generate_sbml_utc_species_comparison(self, output_data, species_name, ground_truth=None, rTol=None, aTol=None):
         # outputs = sbml_output_stack(spec_name=species_name, output=output_data)
-        simulators = list(output_data.keys())
+        sims = list(output_data.keys())
+        simulators = sims.copy()
         results = {}
 
         # extract comparison data
         stack = sbml_output_stack(spec_name=species_name, output=output_data)
+
         species_comparison_data = {}
-    
         for simulator_name in stack.keys():
             row = stack[simulator_name]
             if row is None:
@@ -614,12 +616,22 @@ class VerificationWorker(Worker):
 
         # extract output data
         results['output_data'] = {}
-        for simulator_name in output_data.keys():
-            for spec_name, output in output_data[simulator_name].items():
-                data = output_data[simulator_name][spec_name]
-                results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
-                # if species_name in spec_name:
-                #     results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
+        for simulator in sims:
+            sim_data = output_data[simulator]
+            key = None
+            if "error" in sim_data.keys():
+                key = 'error'
+            else:
+                key = species_name
+            results['output_data'][simulator] = output_data[simulator].get(key)
+
+        # results['output_data'] = {}
+        # for simulator_name in output_data.keys():
+        #     for spec_name, output in output_data[simulator_name].items():
+        #         data = output_data[simulator_name][spec_name]
+        #         results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
+        #         # if species_name in spec_name:
+        #         #     results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
     def _generate_species_comparison_matrix(
