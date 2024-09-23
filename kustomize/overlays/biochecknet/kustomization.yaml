@@ -4,15 +4,12 @@ kind: Kustomization
 
 namespace: biochecknet
 
+# LATEST STABLE VERSIONS OF CONTAINERS: api: 1.11.0, worker: 1.11.0
 images:
-# - name: ghcr.io/biosimulators/bio-check-api
-  # newTag: 1.1.1
-# - name: ghcr.io/biosimulators/bio-check-worker
-  # newTag: 1.1.5
 - name: ghcr.io/biosimulators/bio-check-compose_api
-  newTag: 1.11.0
+  newTag: 1.11.2
 - name: ghcr.io/biosimulators/bio-check-compose_worker
-  newTag: 1.11.0
+  newTag: 1.11.2
 - name: mongo
   newTag: 8.0-rc
 
