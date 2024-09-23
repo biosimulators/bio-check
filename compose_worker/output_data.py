@@ -207,10 +207,7 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
 
 def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     simulator = te.loadSBMLModel(sbml_fp)
-    floating_species_list = simulator.getFloatingSpeciesIds()  # SBML IDS
     mapping = get_sbml_species_mapping(sbml_fp)
-    sbml_species_names = list(mapping.keys())  # SBML NAMES
-    sbml_species_ids = list(mapping.values())
 
     try:
         # in the case that the start time is set to a point after the simulation begins
@@ -220,51 +217,28 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
         # run for the specified time
         result = simulator.simulate(start, dur, steps + 1)
         outputs = {}
-        for index, row in enumerate(result.transpose()):
-            if not index == 0:
-                for i, name in enumerate(floating_species_list):
-                    spec_index = sbml_species_ids.index(name)
-                    spec_name = sbml_species_names[spec_index]
-                    if spec_index == index:
-                        outputs[spec_name] = row
-
+        for colname in result.colnames:
+            if 'time' not in colname:
+                for spec_name, spec_id in mapping.items():
+                    if colname.replace("[", "").replace("]", "") == spec_id:
+                        data = result[colname]
+                        outputs[spec_name] = data.tolist()
         return outputs
     except:
         error_message = handle_sbml_exception()
         return {"error": error_message}
 
 
-def run_sbml_copasi(sbml_fp: str, start, dur, steps):
+def run_sbml_copasi(sbml_fp, start, dur, steps):
     try:
-        simulator = load_model(sbml_fp)
-        species_info = get_species(model=simulator)
-        sbml_ids = list(species_info['sbml_id'])  # matches libsbml and solver ids
-        basico_species_names = list(species_info.index)  # sbml species NAMES, as copasi is familiar with the names
-        # remove EmptySet reference if applicable
-        for _id in basico_species_names:
-            if "EmptySet" in _id:
-                sbml_ids.remove(_id)
-                basico_species_names.remove(_id)
-        # set time
         t = np.linspace(start, dur, steps + 1)
-        # get outputs
-        names = [f'[{name}]' for name in basico_species_names]
-        _tc = run_time_course_with_output(
-            output_selection=names,
-            start_time=t[0],
-            duration=t[-1],
-            values=t,
-            model=simulator,
-            update_model=True,
-            use_numbers=True
-        )
-        tc = _tc.to_dict()
-        results = {}
-        for i, name in enumerate(names):
-            tc_observable_data = tc.get(name)
-            if tc_observable_data is not None:
-                results[basico_species_names[i]] = list(tc_observable_data.values())
-        return results
+        model = load_model(sbml_fp)
+        specs = get_species(model=model).index.tolist()
+        for spec in specs:
+            if spec == "EmptySet" or "EmptySet" in spec:
+                specs.remove(spec)
+        tc = run_time_course(model=model, update_model=True, values=t)
+        return {spec: tc[spec].values.tolist() for spec in specs}
     except:
         error_message = handle_sbml_exception()
         return {"error": error_message}
