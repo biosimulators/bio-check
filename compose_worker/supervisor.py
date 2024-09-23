@@ -185,7 +185,8 @@ class Supervisor:
                         timestamp=self.db_connector.timestamp(),
                         status=JobStatus.COMPLETED.value,
                         results=result_data,
-                        source=source_name
+                        source=source_name,
+                        requested_simulators=pending_job['simulators']
                     )
                     # remove in progress job
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})

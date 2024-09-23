@@ -201,7 +201,7 @@ async def run_utc(
 
 @app.post(
     "/verify-omex",  # "/biosimulators-utc-comparison",
-    response_model=PendingOmexVerificationJob,
+    # response_model=PendingOmexVerificationJob,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
     tags=["Verification"],
@@ -215,7 +215,7 @@ async def verify_omex(
         expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
-) -> PendingOmexVerificationJob:
+):
     try:
         # request specific params
         if comparison_id is None:
@@ -268,14 +268,15 @@ async def verify_omex(
         if report_fp:
             os.remove(report_fp)
 
-        return PendingOmexVerificationJob(**pending_job_doc)
+        # return PendingOmexVerificationJob(**pending_job_doc)
+        return pending_job_doc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
     "/verify-sbml",
-    response_model=PendingSbmlVerificationJob,
+    # response_model=PendingSbmlVerificationJob,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
     tags=["Verification"],
@@ -292,7 +293,7 @@ async def verify_sbml(
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data.")
-) -> PendingSbmlVerificationJob:
+):
     try:
         expected_results = None
         if isinstance(expected_results, str) and expected_results.strip() == "":
@@ -592,7 +593,6 @@ async def fetch_results(job_id: str):
 
     # state-case: job is completed
     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
-    print('COMPLETED GOT JOB: ', job)
     if job is not None:
         job.pop('_id', None)
         return {'content': job}
@@ -600,17 +600,17 @@ async def fetch_results(job_id: str):
     # state-case: job has failed
     if job is None:
         job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
-        print('FAILED GOT JOB: ', job)
+        if job is not None:
+            job.pop('_id', None)
+            return {'content': job}
 
     # state-case: job is not in completed:
     if job is None:
         job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
-        print('IN_PROGRESS GOT JOB: ', job)
 
     # state-case: job is not in progress:
     if job is None:
         job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
-        print('GOT JOB: ', job)
 
     # return-case: job exists as either completed, failed, in_progress, or pending
     if not isinstance(job, type(None)):
