@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   mongodb:
@@ -15,7 +15,7 @@ services:
     build:
       context: ./compose_api
       dockerfile: ./Dockerfile-compose_api
-    image: ghcr.io/biosimulators/bio-check-compose_api:1.11.1
+    image: ghcr.io/biosimulators/bio-check-compose_api:1.11.2  # .1 CURRENT
     container_name: api
     environment:
       - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
@@ -34,7 +34,7 @@ services:
       context: ./compose_worker
       dockerfile: ./Dockerfile-compose_worker
 
-    image: ghcr.io/biosimulators/bio-check-compose_worker:1.11.1
+    image: ghcr.io/biosimulators/bio-check-compose_worker:1.11.2
     container_name: worker
     environment:
       - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose

@@ -2,11 +2,6 @@ openapi: 3.1.0
 info:
   title: bio-compose
   version: 0.1.0
-servers:
-- url: https://biochecknet.biosimulations.org
-  description: Production server
-- url: http://localhost:8000
-  description: Development server
 paths:
   /:
     get:
@@ -632,12 +627,6 @@ components:
           format: binary
           title: Uploaded File
           description: A deterministic SBML model.
-        expected_results:
-          type: string
-          format: binary
-          title: Expected Results
-          description: reports.h5 file defining the expected results to be included
-            in the comparison.
       type: object
       required:
       - uploaded_file

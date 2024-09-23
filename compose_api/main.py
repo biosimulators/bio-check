@@ -34,16 +34,20 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 APP_TITLE = "bio-compose"
 APP_VERSION = "0.1.0"
-APP_SERVERS = [
-    {
-        "url": "https://biochecknet.biosimulations.org",
-        "description": "Production server"
-    },
-    {
-        "url": "http://localhost:8000",
-        "description": "Development server"
-    }
-]
+# APP_SERVERS = [
+#     {
+#         "url": "https://biochecknet.biosimulations.org",
+#         "description": "Production server"
+#     },
+#     {
+#         "url": "http://localhost:3001",
+#         "description": "Main Development server"
+#     },
+#     {
+#         "url": "http://localhost:8000",
+#         "description": "Alternate Development server"
+#     }
+# ]
 
 APP_ORIGINS = [
     'http://127.0.0.1:8000',
@@ -71,7 +75,7 @@ APP_ORIGINS = [
 # -- app components -- #
 
 router = APIRouter()
-app = FastAPI(title=APP_TITLE, version=APP_VERSION, servers=APP_SERVERS)
+app = FastAPI(title=APP_TITLE, version=APP_VERSION)  # , servers=APP_SERVERS)
 
 # add origins
 app.add_middleware(
@@ -82,7 +86,7 @@ app.add_middleware(
     allow_headers=["*"])
 
 # add servers
-app.servers = APP_SERVERS
+# app.servers = APP_SERVERS
 
 
 # -- mongo db -- #
@@ -284,12 +288,15 @@ async def verify_sbml(
         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
-        expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
+        # expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
-        selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
+        selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data.")
 ) -> PendingSbmlVerificationJob:
     try:
+        expected_results = None
+        if isinstance(expected_results, str) and expected_results.strip() == "":
+            expected_results = None
         # request specific params
         if comparison_id is None:
             compare_id = "utc_comparison_sbml"
@@ -313,13 +320,15 @@ async def verify_sbml(
         # Save uploaded reports file to Google Cloud Storage if applicable
         report_fp = None
         report_blob_dest = None
-        if expected_results:
+        if expected_results is not None:
             # handle incorrect files upload
             properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
             if properly_formatted_report:
                 report_fp = await save_uploaded_file(expected_results, save_dest)
                 report_blob_dest = upload_prefix + report_fp.split("/")[-1]
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
+        else:
+            report_blob_dest = None
         report_location = report_blob_dest
 
         pending_job_doc = await db_connector.insert_job_async(
@@ -343,7 +352,8 @@ async def verify_sbml(
         # clean up local temp files
         os.remove(fp)
 
-        return PendingSbmlVerificationJob(**pending_job_doc)
+        # return PendingSbmlVerificationJob(**pending_job_doc)
+        return pending_job_doc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -582,18 +592,25 @@ async def fetch_results(job_id: str):
 
     # state-case: job is completed
     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
+    print('COMPLETED GOT JOB: ', job)
+    if job is not None:
+        job.pop('_id', None)
+        return {'content': job}
 
     # state-case: job has failed
     if job is None:
         job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
+        print('FAILED GOT JOB: ', job)
 
     # state-case: job is not in completed:
     if job is None:
         job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
+        print('IN_PROGRESS GOT JOB: ', job)
 
     # state-case: job is not in progress:
     if job is None:
         job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
+        print('GOT JOB: ', job)
 
     # return-case: job exists as either completed, failed, in_progress, or pending
     if not isinstance(job, type(None)):
@@ -615,7 +632,8 @@ async def fetch_results(job_id: str):
                 remote_fp = None
 
                 if isinstance(job_data, list):
-                    return OutputData(content=job)
+                    # return OutputData(content=job)
+                    return {'content': job}
 
                 # output-type-case: output is saved as a dict
                 if isinstance(job_data, dict):
@@ -624,7 +642,8 @@ async def fetch_results(job_id: str):
                         remote_fp = job_data['results_file']
                     # status/output-case: job is complete and output content is raw data and so return the full data TODO: do something better here
                     else:
-                        return OutputData(content=job)
+                        # return OutputData(content=job)
+                        return {'content': job}
 
                 # output-type-case: output is saved as flattened (str) and thus also a file download
                 elif isinstance(job_data, str):
@@ -635,7 +654,8 @@ async def fetch_results(job_id: str):
                     temp_dest = mkdtemp()
                     local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
-                    return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+                    # return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+                    return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
 
         # status/content-case: job is either pending or in progress and does not contain files to download
         else:
@@ -643,7 +663,8 @@ async def fetch_results(job_id: str):
             status = job['status']
             job['status'] = 'SUBMITTED:' + status
 
-            return OutputData(content=job)
+            # return OutputData(content=job)
+            return {'content': job}
 
     # return-case: no job exists in any collection by that id
     else:

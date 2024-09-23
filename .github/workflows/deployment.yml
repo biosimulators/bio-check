@@ -1,0 +1,79 @@
+name: Continuous Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-microservices:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to GHCR
+      - name: Log in to GHCR
+        run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
+
+      # Step 3: Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version  # Check if Docker Compose is installed correctly
+
+      - name: Install Python and PyYAML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+          pip install pyyaml
+
+      # Step 5: Extract API container version
+      - name: Extract API container version
+        id: extract_api_version
+        run: |
+          API_VERSION=$(python3 .github/parse_container_version.py api)
+          echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
+          echo "API Version: $API_VERSION"
+
+      # Step 6: Extract worker container version
+      - name: Extract worker container version
+        id: extract_worker_version
+        run: |
+          WORKER_VERSION=$(python3 .github/parse_container_version.py worker)
+          echo "WORKER_VERSION=$WORKER_VERSION" >> $GITHUB_ENV
+          echo "WORKER Version: $WORKER_VERSION"
+
+      # Step 7: Debug output of extracted versions
+      - name: Debug output of extracted versions
+        run: |
+          echo "API_VERSION=${{ env.API_VERSION }}"
+          echo "WORKER_VERSION=${{ env.WORKER_VERSION }}"
+
+      # Step 8: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 9: Build Docker containers with Docker Compose
+      - name: Build Docker containers with Docker Compose
+        run: docker-compose build --no-cache
+
+      # Step 10: Change permissions for push script
+      - name: Change push script permissions
+        run: chmod +x ./assets/scripts/push_image.sh
+
+      # Step 11: Deploy API microservice container to GHCR
+      - name: Deploy API microservice container to GHCR
+        run: |
+          ./assets/scripts/push_image.sh compose_api ${{ env.API_VERSION }}
+        env:
+          REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
+
+      # Step 12: Deploy Worker microservice container to GHCR
+      - name: Deploy worker microservice container to GHCR
+        run: |
+          ./assets/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }}
+        env:
+          REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
