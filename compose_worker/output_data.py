@@ -249,7 +249,15 @@ def run_sbml_copasi(sbml_fp: str, start, dur, steps):
         t = np.linspace(start, dur, steps + 1)
         # get outputs
         names = [f'[{name}]' for name in basico_species_names]
-        _tc = run_time_course_with_output(output_selection=names, start_time=t[0], duration=t[-1], values=t, model=simulator, update_model=True, use_numbers=True)
+        _tc = run_time_course_with_output(
+            output_selection=names,
+            start_time=t[0],
+            duration=t[-1],
+            values=t,
+            model=simulator,
+            update_model=True,
+            use_numbers=True
+        )
         tc = _tc.to_dict()
         results = {}
         for i, name in enumerate(names):

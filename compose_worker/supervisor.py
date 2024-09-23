@@ -143,14 +143,6 @@ class Supervisor:
                         **in_progress_entry
                     )
 
-                    # store new in_progress_job
-                    # in_progress_job = await self.db_connector.insert_job_async(
-                    #     collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value,
-                    #     job_id=job_id,
-                    #     timestamp=self.db_connector.timestamp(),
-                    #     status=JobStatus.IN_PROGRESS.value,
-                    #     source=source_name
-                    # )
                     # remove job from pending
                     self.db_connector.db.pending_jobs.delete_one({'job_id': job_id})
 
@@ -166,6 +158,7 @@ class Supervisor:
                     # check: files
                     elif job_id.startswith('files'):
                         worker = FilesWorker(job=pending_job)
+                    # TODO: uncomment below to implement sse composition execution
                     # check: composition
                     # elif job_id.startswith('composition-run'):
                     #     worker = CompositionWorker(job=pending_job)
