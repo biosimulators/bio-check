@@ -34,7 +34,7 @@ else
   echo "Using worker version: $worker_version"
 
   ./assets/scripts/push_image.sh compose_api "$api_version" AlexPatrie
-  ./assets/scripts/push_image.sh compose_api "$worker_version" AlexPatrie
+  ./assets/scripts/push_image.sh compose_worker "$worker_version" AlexPatrie
 fi
 
 # optionally deploy to k8
