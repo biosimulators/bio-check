@@ -33,8 +33,12 @@ COPY . /app/worker
 RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
 # add deps with extras
-RUN poetry add pysces --extras=sbml \
-    && poetry add biosimulators-utils --extras=logging
+RUN yes | poetry cache clear PyPI --all \
+    && poetry add biosimulators-utils@^0.1.188 --extras=logging \
+    && poetry add pysces --extras=sbml
+
+# RUN poetry add pysces --extras=sbml \
+#     && poetry add biosimulators-utils --extras=logging
 
 WORKDIR /app/worker
 

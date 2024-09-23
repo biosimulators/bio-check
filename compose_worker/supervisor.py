@@ -157,34 +157,33 @@ class Supervisor:
                 # run job again
                 try:
                     # check: run simulations
+
                     if job_id.startswith('simulation-execution'):
                         worker = SimulationRunWorker(job=pending_job)
                     # check: verifications
                     elif job_id.startswith('verification'):
-                        # otherwise: create new worker with job
                         worker = VerificationWorker(job=pending_job)
                     # check: files
                     elif job_id.startswith('files'):
                         worker = FilesWorker(job=pending_job)
-
                     # check: composition
-                    if job_id.startswith('composition-run'):
-                        worker = CompositionWorker(job=pending_job)
-                        await worker.run(conn=self.db_connector)
-                        # result_data = worker.job_result
-                        # await self.db_connector.insert_job_async(
-                        #     collection_name=DatabaseCollections.COMPLETED_JOBS.value,
-                        #     job_id=job_id,
-                        #     timestamp=self.db_connector.timestamp(),
-                        #     status=JobStatus.COMPLETED.value,
-                        #     source=source_name,
-                        #     simulator=simulator,
-                        #     results=result_data['data']
-                        # )
-                    else:
-                        # when worker completes, dismiss worker (if in parallel)
-                        await worker.run()
+                    # elif job_id.startswith('composition-run'):
+                    #     worker = CompositionWorker(job=pending_job)
+                    #     await worker.run(conn=self.db_connector)
+                    #     result_data = worker.job_result
+                    #     simulator = pending_job.get('simulator', 'copasi')
+                    #     await self.db_connector.insert_job_async(
+                    #         collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                    #         job_id=job_id,
+                    #         timestamp=self.db_connector.timestamp(),
+                    #         status=JobStatus.COMPLETED.value,
+                    #         source=source_name,
+                    #         simulator=simulator,
+                    #         results=result_data['data']
+                    #     )
 
+                    # when worker completes, dismiss worker (if in parallel)
+                    await worker.run()
                     # create new completed job using the worker's job_result
                     result_data = worker.job_result
                     await self.db_connector.insert_job_async(

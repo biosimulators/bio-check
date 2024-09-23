@@ -138,6 +138,9 @@ def get_sbml_species_mapping(sbml_fp: str):
     # parse and handle names/ids
     sbml_species_ids = []
     for spec in sbml_model_object.getListOfSpecies():
+        spec_name = spec.name
+        if not spec_name:
+            spec.name = spec.getId()
         if not spec.name == "":
             sbml_species_ids.append(spec)
     names = list(map(lambda s: s.name, sbml_species_ids))
@@ -204,8 +207,10 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
 
 def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
     simulator = te.loadSBMLModel(sbml_fp)
-    floating_species_list = simulator.getFloatingSpeciesIds()
-    sbml_species_names = list(get_sbml_species_mapping(sbml_fp).keys())
+    floating_species_list = simulator.getFloatingSpeciesIds()  # SBML IDS
+    mapping = get_sbml_species_mapping(sbml_fp)
+    sbml_species_names = list(mapping.keys())  # SBML NAMES
+    sbml_species_ids = list(mapping.values())
 
     try:
         # in the case that the start time is set to a point after the simulation begins
@@ -218,7 +223,10 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
         for index, row in enumerate(result.transpose()):
             if not index == 0:
                 for i, name in enumerate(floating_species_list):
-                    outputs[sbml_species_names[i]] = row
+                    spec_index = sbml_species_ids.index(name)
+                    spec_name = sbml_species_names[spec_index]
+                    if spec_index == index:
+                        outputs[spec_name] = row
 
         return outputs
     except:
