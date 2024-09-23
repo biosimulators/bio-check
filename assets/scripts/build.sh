@@ -12,15 +12,18 @@ set -e
 # clear system
 yes | docker system prune -a && yes | docker buildx prune -a
 
-# clear pycaches
-python3 ./assets/scripts/rm_pycache.py
 
 # build/push images
 if [ "$arg" != "-a" ]; then
   # build/push single image
   lib=arg
   docker compose build "$lib" --no-cache
+
   version=$(python3 ./.github/parse_container_version.py "$lib")
+
+  # clear pycaches
+  python3 ./assets/scripts/rm_pycache.py
+
   ./assets/scripts/push_image.sh "$lib" "$version" AlexPatrie
 else
   # build/push all
@@ -32,6 +35,9 @@ else
 
   worker_version=$(python3 ./.github/parse_container_version.py compose_worker)
   echo "Using worker version: $worker_version"
+
+  # clear pycaches
+  python3 ./assets/scripts/rm_pycache.py
 
   ./assets/scripts/push_image.sh compose_api "$api_version" AlexPatrie
   ./assets/scripts/push_image.sh compose_worker "$worker_version" AlexPatrie
