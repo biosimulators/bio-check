@@ -1,5 +1,0 @@
-biosimulators-copasi
-biosimulators-tellurium
-copasi-basico
-biosimulators-utils[logging]==0.1.187
-process-bigraph

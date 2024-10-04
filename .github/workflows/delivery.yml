@@ -30,9 +30,6 @@ jobs:
       - name: Extract API container version
         id: extract_api_version
         run: |
-          API_VERSION=$(python3 .github/parse_docker_compose.py api -v)
-          echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
-          echo "API Version: $API_VERSION"
           API_IMAGE=$(python3 .github/parse_container_version.py api -i)
           echo "API_IMAGE=$API_IMAGE" >> $GITHUB_ENV
           echo "API Image: $API_IMAGE"
@@ -40,9 +37,6 @@ jobs:
       - name: Extract worker container version
         id: extract_worker_version
         run: |
-          WORKER_VERSION=$(python3 .github/parse_docker_compose.py worker -v)
-          echo "WORKER_VERSION=$WORKER_VERSION" >> $GITHUB_ENV
-          echo "WORKER Version: $WORKER_VERSION"
           WORKER_IMAGE=$(python3 .github/parse_container_version.py worker -i)
           echo "WORKER_IMAGE=$WORKER_IMAGE" >> $GITHUB_ENV
           echo "WORKER Image: $WORKER_IMAGE"
