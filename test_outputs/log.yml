@@ -1,0 +1,49 @@
+duration: 7
+exception: null
+output: Processing simulation.sedml.  Done
+sedDocuments:
+- duration: null
+  exception: null
+  location: simulation.sedml
+  output: Initializing SED-ML document... done. Successful translation of SED-ML file.
+    Building solvers and starting simulation of all tasks... Generating outputs...
+    Generating CSV file... Done. Generating HDF5 file...
+  outputs:
+  - dataSets:
+    - id: data_set_time
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MAPK
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MAPK_P
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MAPK_PP
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MKK
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MKK_P
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MKK_PP
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MKKK
+      status: SUCCEEDED
+    - id: data_set_dynamics_species_MKKK_P
+      status: SUCCEEDED
+    duration: null
+    exception: null
+    id: report
+    output: null
+    skipReason: null
+    status: SUCCEEDED
+  skipReason: null
+  status: SUCCEEDED
+  tasks:
+  - algorithm: KISAO_0000019
+    duration: 1
+    exception: null
+    id: task_1
+    output: Initializing simulation job 0 ... done. Starting simulation... done.
+    simulatorDetails: null
+    skipReason: null
+    status: SUCCEEDED
+skipReason: null
+status: SUCCEEDED

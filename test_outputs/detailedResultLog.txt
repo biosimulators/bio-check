@@ -1,0 +1,3 @@
+BaseName,Models,Sims,Tasks,Outputs,BioModels,HasOverrides,HasScans,NumSimsSuccessful
+new-simulators10760380385803382926,1,1,1,1,1,false,false,1
+new-simulators10760380385803382926,1,1,1,1,1,false,false,1
