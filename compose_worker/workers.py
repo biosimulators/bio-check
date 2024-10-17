@@ -106,7 +106,7 @@ class SimulationRunWorker(Worker):
         start = self.job_params['start']
         end = self.job_params['end']
         steps = self.job_params['steps']
-        simulator = self.job_params['simulator']
+        simulator = self.job_params.get('simulators')[0]
 
         result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
         self.job_result = result[simulator]
@@ -751,7 +751,7 @@ class CompositionWorker(Worker):
         doc = self.job_params['composite_spec']
         process_name = list(doc.keys())[0]
         duration = self.job_params['duration']
-        simulator = self.job_params['simulator']
+        simulator = self.job_params['simulators'][0]
         job_id = self.job_params['job_id']
         new_job = {'job_id': job_id}
         out_dir = tempfile.mkdtemp()

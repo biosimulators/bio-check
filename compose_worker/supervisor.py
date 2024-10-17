@@ -133,10 +133,12 @@ class Supervisor:
                 job_in_progress = self.job_exists(job_id=job_id, collection_name="in_progress_jobs")
                 if not job_in_progress:
                     in_progress_entry = {'job_id': job_id, 'timestamp': self.db_connector.timestamp(), 'status': JobStatus.IN_PROGRESS.value, 'source': source}
+
+                    # special handling of composition jobs TODO: move this to the supervisor below
                     if job_id.startswith('composition-run'):
-                        in_progress_entry['composite_spec'] = pending_job['composite_spec']
-                        in_progress_entry['simulator'] = pending_job['simulator']
-                        in_progress_entry['duration'] = pending_job['duration']
+                        in_progress_entry['composite_spec'] = pending_job.get('composite_spec')
+                        in_progress_entry['simulator'] = pending_job.get('simulators')
+                        in_progress_entry['duration'] = pending_job.get('duration')
 
                     in_progress_job = await self.db_connector.insert_job_async(
                         collection_name="in_progress_jobs",
@@ -158,25 +160,10 @@ class Supervisor:
                     # check: files
                     elif job_id.startswith('files'):
                         worker = FilesWorker(job=pending_job)
-                    # TODO: uncomment below to implement sse composition execution
-                    # check: composition
-                    # elif job_id.startswith('composition-run'):
-                    #     worker = CompositionWorker(job=pending_job)
-                    #     await worker.run(conn=self.db_connector)
-                    #     result_data = worker.job_result
-                    #     simulator = pending_job.get('simulator', 'copasi')
-                    #     await self.db_connector.insert_job_async(
-                    #         collection_name=DatabaseCollections.COMPLETED_JOBS.value,
-                    #         job_id=job_id,
-                    #         timestamp=self.db_connector.timestamp(),
-                    #         status=JobStatus.COMPLETED.value,
-                    #         source=source_name,
-                    #         simulator=simulator,
-                    #         results=result_data['data']
-                    #     )
 
                     # when worker completes, dismiss worker (if in parallel)
                     await worker.run()
+
                     # create new completed job using the worker's job_result
                     result_data = worker.job_result
                     await self.db_connector.insert_job_async(
@@ -186,8 +173,9 @@ class Supervisor:
                         status=JobStatus.COMPLETED.value,
                         results=result_data,
                         source=source_name,
-                        requested_simulators=pending_job['simulators']
+                        requested_simulators=pending_job.get('simulators')
                     )
+
                     # remove in progress job
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
                 except:

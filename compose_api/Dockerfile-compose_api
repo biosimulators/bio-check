@@ -3,7 +3,7 @@
 # TODO: Ensure read from .BASE_VERSION
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-WORKDIR /app
+RUN mkdir api
 
 COPY . /app/api
 
