@@ -600,14 +600,13 @@ async def fetch_results(job_id: str):
 
         # output-case: output content in dict is a downloadable file
         if isinstance(job_data, dict):
-            if "results_file" in job_data.keys():
-                remote_fp = job_data['results_file']
-                if remote_fp is not None:
-                    temp_dest = mkdtemp()
-                    local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+            remote_fp = job_data.get("results").get("results_file")
+            if remote_fp is not None:
+                temp_dest = mkdtemp()
+                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
 
-                    return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
-                    # return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
+                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+                # return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
 
         # otherwise, return job content
         return {'content': job}

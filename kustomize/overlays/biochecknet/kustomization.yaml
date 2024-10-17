@@ -8,7 +8,7 @@ namespace: biochecknet
 # PREVIOUS (MOST CURRENTLY RELEASED) VERSIONS AS OF 10/17(SMOLDYN BUG): api: 1.11.4, worker: 1.11.6
 images:
 - name: ghcr.io/biosimulators/bio-check-compose_api
-  newTag: 1.11.7
+  newTag: 1.11.8
 - name: ghcr.io/biosimulators/bio-check-compose_worker
   newTag: 1.11.6
 - name: mongo
