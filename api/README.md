@@ -1,1 +1,0 @@
-### This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
