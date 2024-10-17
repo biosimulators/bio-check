@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 0.1.1
+  version: 0.1.2
 paths:
   /:
     get:
@@ -607,14 +607,6 @@ components:
           format: binary
           title: Uploaded File
           description: OMEX/COMBINE archive containing a deterministic SBML model
-        expected_results:
-          anyOf:
-          - type: string
-            format: binary
-          - type: 'null'
-          title: Expected Results
-          description: reports.h5 file defining the expected results to be included
-            in the comparison.
       type: object
       required:
       - uploaded_file
