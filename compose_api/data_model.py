@@ -7,6 +7,44 @@ from pydantic import Field
 from shared import BaseModel, Job, JobStatus
 
 
+class ApiJob(BaseModel):
+    job_id: str
+    timestamp: str
+    status: str
+    path: str
+    simulators: List[str]
+
+
+class SmoldynJob(ApiJob):
+    duration: int
+    dt: Optional[float]
+
+
+class UtcJob(ApiJob):
+    start: int
+    end: int
+    steps: int
+
+
+class VerificationJob(ApiJob):
+    include_outputs: Optional[bool] = True
+    selection_list: Optional[List[str]] = None
+    expected_results: Optional[str] = None
+    comparison_id: Optional[str] = None
+    rTol: Optional[float] = None
+    aTol: Optional[float] = None
+
+
+class OmexVerificationJob(VerificationJob):
+    pass
+
+
+class SbmlVerificationJob(VerificationJob):
+    start: int
+    end: int
+    steps: int
+
+
 # -- verification --
 
 class PendingOmexVerificationJob(Job):

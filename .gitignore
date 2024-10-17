@@ -19,3 +19,5 @@ bucket.sh
 NOTES
 scratch.ipynb
 test.ipynb
+.ipynb_checkpoints
+.ipynb_checkpoints/

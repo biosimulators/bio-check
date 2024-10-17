@@ -11,7 +11,7 @@ from typing import *
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
 from fastapi.responses import FileResponse
-from pydantic import BeforeValidator, Field
+from pydantic import BeforeValidator, Field, BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
@@ -153,7 +153,8 @@ async def run_smoldyn(
             status=JobStatus.PENDING.value,
             path=uploaded_file_location,
             duration=duration,
-            dt=dt
+            dt=dt,
+            simulators=["smoldyn"]
         )
 
         return pending_job
@@ -189,7 +190,7 @@ async def run_utc(
             start=start,
             end=end,
             steps=steps,
-            simulator=simulator
+            simulators=[simulator]
         )
 
         return pending_job
@@ -437,7 +438,7 @@ async def new_utc_composition(source: UploadFile = File(...),simulator: str = Qu
         status=JobStatus.PENDING.value,
         job_id=job_id,
         path=uploaded_file_location,
-        simulator=simulator,
+        simulators=[simulator],
         timestamp=_time,
         duration=duration,
         composite_spec=doc

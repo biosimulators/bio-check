@@ -9,7 +9,7 @@ push="$2"
 prune="$3"  # --prune
 
 if [ "$prune" == "--prune" ] || [ "$push" == "--prune" ]; then
-  docker system prune -a -f
+  docker system prune -f
 fi
 
 echo "Building base image..."
