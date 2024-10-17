@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 0.1.0
+  version: 0.1.1
 paths:
   /:
     get:
@@ -197,8 +197,7 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PendingOmexVerificationJob'
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -314,8 +313,7 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PendingSbmlVerificationJob'
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -552,8 +550,7 @@ components:
           title: Uploaded File
           description: A file containing results that can be parse by Simularium (spatial).
         agent_parameters:
-          allOf:
-          - $ref: '#/components/schemas/AgentParameters'
+          $ref: '#/components/schemas/AgentParameters'
           description: Parameters for the simularium agents defining either radius
             or mass and density.
       type: object
@@ -611,8 +608,10 @@ components:
           title: Uploaded File
           description: OMEX/COMBINE archive containing a deterministic SBML model
         expected_results:
-          type: string
-          format: binary
+          anyOf:
+          - type: string
+            format: binary
+          - type: 'null'
           title: Expected Results
           description: reports.h5 file defining the expected results to be included
             in the comparison.
@@ -655,138 +654,6 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    PendingOmexVerificationJob:
-      properties:
-        job_id:
-          type: string
-          title: Job Id
-        status:
-          type: string
-          title: Status
-        timestamp:
-          type: string
-          title: Timestamp
-        comparison_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Comparison Id
-        path:
-          type: string
-          title: Path
-        simulators:
-          items:
-            type: string
-          type: array
-          title: Simulators
-        expected_results:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Expected Results
-        include_output:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Include Output
-          default: true
-        rTol:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Rtol
-        aTol:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Atol
-        selection_list:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Selection List
-      type: object
-      required:
-      - job_id
-      - status
-      - timestamp
-      - path
-      - simulators
-      title: PendingOmexVerificationJob
-    PendingSbmlVerificationJob:
-      properties:
-        job_id:
-          type: string
-          title: Job Id
-        status:
-          type: string
-          title: Status
-        timestamp:
-          type: string
-          title: Timestamp
-        comparison_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Comparison Id
-        path:
-          type: string
-          title: Path
-        start:
-          type: integer
-          title: Start
-        end:
-          type: integer
-          title: End
-        steps:
-          type: integer
-          title: Steps
-        simulators:
-          items:
-            type: string
-          type: array
-          title: Simulators
-        expected_results:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Expected Results
-        include_output:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Include Output
-          default: true
-        rTol:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Rtol
-        aTol:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Atol
-        selection_list:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Selection List
-      type: object
-      required:
-      - job_id
-      - status
-      - timestamp
-      - path
-      - start
-      - end
-      - steps
-      - simulators
-      title: PendingSbmlVerificationJob
     Simulator:
       properties:
         name:

@@ -33,7 +33,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 APP_TITLE = "bio-compose"
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 # APP_SERVERS = [
 #     {
 #         "url": "https://biochecknet.biosimulations.org",
@@ -213,7 +213,7 @@ async def verify_omex(
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
-        expected_results: UploadFile = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
+        expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
 ):
