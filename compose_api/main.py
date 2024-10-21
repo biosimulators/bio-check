@@ -56,10 +56,11 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 APP_TITLE = "bio-compose"
-with open('.CONTAINER_VERSION', 'r') as f:
-    APP_VERSION = f.read().strip()
+APP_VERSION = "1.11.9"
 
-# APP_VERSION = "0.1.3"
+# TODO: allow parsing of this prior to image build
+# with open('.CONTAINER_VERSION', 'r') as f:
+#     APP_VERSION = f.read().strip()
 # APP_SERVERS = [
 #     {
 #         "url": "https://biochecknet.biosimulations.org",
