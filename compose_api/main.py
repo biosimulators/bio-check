@@ -3,20 +3,43 @@ import os
 import logging
 import uuid
 from enum import Enum
+from typing import *
 
 import dotenv
 from tempfile import mkdtemp
-from typing import *
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
 from fastapi.responses import FileResponse
 from pydantic import BeforeValidator, Field, BaseModel
 from starlette.middleware.cors import CORSMiddleware
+from sympy.multipledispatch.dispatcher import source
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
+from compose_api.data_model import ObservableData
 # from bio_check import MONGO_URI
-from data_model import DbClientResponse, UtcComparisonResult, PendingSmoldynJob, CompatibleSimulators, Simulator, PendingUtcJob, OutputData, PendingSimulariumJob, CompositionSpecification, PendingSbmlVerificationJob, PendingOmexVerificationJob, PendingCompositionJob, AgentParameters
+from data_model import (
+    SmoldynJob,
+    VerificationOutput,
+    SmoldynOutput,
+    OmexVerificationRun,
+    SbmlVerificationRun,
+    SmoldynRun,
+    VerificationRun,
+    DbClientResponse,
+    UtcComparisonResult,
+    PendingSmoldynJob,
+    CompatibleSimulators,
+    Simulator,
+    PendingUtcJob,
+    OutputData,
+    PendingSimulariumJob,
+    CompositionSpecification,
+    PendingSbmlVerificationJob,
+    PendingOmexVerificationJob,
+    PendingCompositionJob,
+    AgentParameters
+)
 from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix, BaseModel
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
 from log_config import setup_logging
@@ -33,7 +56,10 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 APP_TITLE = "bio-compose"
-APP_VERSION = "0.1.3"
+with open('.CONTAINER_VERSION', 'r') as f:
+    APP_VERSION = f.read().strip()
+
+# APP_VERSION = "0.1.3"
 # APP_SERVERS = [
 #     {
 #         "url": "https://biochecknet.biosimulations.org",
@@ -129,8 +155,8 @@ def root():
 # run simulations
 
 @app.post(
-    "/run-smoldyn",  # "/biosimulators-utc-comparison",
-    # response_model=PendingSmoldynJob,
+    "/run-smoldyn",
+    response_model=SmoldynRun,
     name="Run a smoldyn simulation",
     operation_id="run-smoldyn",
     tags=["Simulation Execution"],
@@ -140,14 +166,15 @@ async def run_smoldyn(
         duration: int = Query(default=None, description="Simulation Duration"),
         dt: float = Query(default=None, description="Interval of step with which simulation runs"),
         # initial_molecule_state: List = Body(default=None, description="Mapping of species names to initial molecule conditions including counts and location.")
-):
+) -> SmoldynRun:
     try:
+        # get job params
         job_id = "simulation-execution-smoldyn" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
-        pending_job = await db_connector.insert_job_async(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
+        # instantiate new return
+        smoldyn_run = SmoldynRun(
             job_id=job_id,
             timestamp=_time,
             status=JobStatus.PENDING.value,
@@ -157,7 +184,20 @@ async def run_smoldyn(
             simulators=["smoldyn"]
         )
 
-        return pending_job
+        # insert job
+        pending_job = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            job_id=smoldyn_run.job_id,
+            timestamp=smoldyn_run.timestamp,
+            status=smoldyn_run.status,
+            path=smoldyn_run.path,
+            duration=smoldyn_run.duration,
+            dt=smoldyn_run.dt,
+            simulators=smoldyn_run.simulators
+        )
+
+        # return typed obj
+        return smoldyn_run
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -180,7 +220,6 @@ async def run_utc(
         job_id = "simulation-execution-utc" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.xml')
-
         pending_job = await db_connector.insert_job_async(
             collection_name=DatabaseCollections.PENDING_JOBS.value,
             job_id=job_id,
@@ -200,9 +239,161 @@ async def run_utc(
 
 # verification
 
+# EXISTING CONTENT:
+# @app.post(
+#     "/verify-omex",  # "/biosimulators-utc-comparison",
+#     # response_model=PendingOmexVerificationJob,
+#     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
+#     operation_id="verify-omex",
+#     tags=["Verification"],
+#     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
+# async def verify_omex(
+#         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
+#         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+#         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+#         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
+#         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
+#         # expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
+#         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
+#         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
+# ):
+#     try:
+#         # request specific params
+#         if comparison_id is None:
+#             compare_id = "utc_comparison_omex"
+#         else:
+#             compare_id = comparison_id
+#
+#         job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
+#         _time = db_connector.timestamp()
+#         upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+#         save_dest = mkdtemp()
+#         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
+#
+#         # Save uploaded omex file to Google Cloud Storage
+#         uploaded_file_location = None
+#         properly_formatted_omex = check_upload_file_extension(uploaded_file, 'uploaded_file', '.omex')
+#         if properly_formatted_omex:
+#             blob_dest = upload_prefix + fp.split("/")[-1]
+#             upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+#             uploaded_file_location = blob_dest
+#         # Save uploaded reports file to Google Cloud Storage if applicable
+#         # report_fp = None
+#         # report_blob_dest = None
+#         # if expected_results:
+#         #     # handle incorrect files upload
+#         #     properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
+#         #     if properly_formatted_report:
+#         #         report_fp = await save_uploaded_file(expected_results, save_dest)
+#         #         report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+#         #     upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
+#         # report_location = report_blob_dest
+#         pending_job_doc = await db_connector.insert_job_async(
+#             collection_name=DatabaseCollections.PENDING_JOBS.value,
+#             status=JobStatus.PENDING.value,
+#             job_id=job_id,
+#             path=uploaded_file_location,
+#             simulators=simulators,
+#             timestamp=_time,
+#             # expected_results=report_location,
+#             include_outputs=include_outputs,
+#             rTol=rTol,
+#             aTol=aTol,
+#             selection_list=selection_list
+#         )
+#         # clean up local temp files
+#         os.remove(fp)
+#         # if report_fp:
+#         # os.remove(report_fp)
+#         # return PendingOmexVerificationJob(**pending_job_doc)
+#         return pending_job_doc
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#
+#
+# @app.post(
+#     "/verify-sbml",
+#     # response_model=PendingSbmlVerificationJob,
+#     name="Uniform Time Course Comparison from SBML file",
+#     operation_id="verify-sbml",
+#     tags=["Verification"],
+#     summary="Compare UTC outputs from a deterministic SBML model.")
+# async def verify_sbml(
+#         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
+#         start: int = Query(..., description="Start time of the simulation (output start time)"),
+#         end: int = Query(..., description="End time of simulation (end)"),
+#         steps: int = Query(..., description="Number of simulation steps to run"),
+#         simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+#         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
+#         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
+#         # expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
+#         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
+#         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
+#         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data.")
+# ):
+#     try:
+#         expected_results = None
+#         if isinstance(expected_results, str) and expected_results.strip() == "":
+#             expected_results = None
+#         # request specific params
+#         if comparison_id is None:
+#             compare_id = "utc_comparison_sbml"
+#         else:
+#             compare_id = comparison_id
+#         job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
+#         _time = db_connector.timestamp()
+#         upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+#         save_dest = mkdtemp()
+#         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
+#         # Save uploaded omex file to Google Cloud Storage
+#         uploaded_file_location = None
+#         properly_formatted_sbml = check_upload_file_extension(uploaded_file, 'uploaded_file', '.xml')
+#         if properly_formatted_sbml:
+#             blob_dest = upload_prefix + fp.split("/")[-1]
+#             upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+#             uploaded_file_location = blob_dest
+#         # Save uploaded reports file to Google Cloud Storage if applicable
+#         report_fp = None
+#         report_blob_dest = None
+#         if expected_results is not None:
+#             # handle incorrect files upload
+#             properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
+#             if properly_formatted_report:
+#                 report_fp = await save_uploaded_file(expected_results, save_dest)
+#                 report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+#             upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
+#         else:
+#             report_blob_dest = None
+#         report_location = report_blob_dest
+#         pending_job_doc = await db_connector.insert_job_async(
+#             collection_name=DatabaseCollections.PENDING_JOBS.value,
+#             status=JobStatus.PENDING.value,
+#             job_id=job_id,
+#             comparison_id=compare_id,
+#             path=uploaded_file_location,
+#             simulators=simulators,
+#             timestamp=_time,
+#             start=start,
+#             end=end,
+#             steps=steps,
+#             include_outputs=include_outputs,
+#             expected_results=report_location,
+#             rTol=rTol,
+#             aTol=aTol,
+#             selection_list=selection_list
+#         )
+#
+#         # clean up local temp files
+#         os.remove(fp)
+#         # return PendingSbmlVerificationJob(**pending_job_doc)
+#         return pending_job_doc
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post(
-    "/verify-omex",  # "/biosimulators-utc-comparison",
-    # response_model=PendingOmexVerificationJob,
+    "/verify-omex",
+    response_model=OmexVerificationRun,
     name="Uniform Time Course Comparison from OMEX/COMBINE archive",
     operation_id="verify-omex",
     tags=["Verification"],
@@ -216,14 +407,13 @@ async def verify_omex(
         # expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison.")
-):
+) -> OmexVerificationRun:
     try:
         # request specific params
         if comparison_id is None:
             compare_id = "utc_comparison_omex"
         else:
             compare_id = comparison_id
-
         job_id = "verification-" + compare_id + "-" + str(uuid.uuid4())
         _time = db_connector.timestamp()
         upload_prefix, bucket_prefix = file_upload_prefix(job_id)
@@ -237,7 +427,6 @@ async def verify_omex(
             blob_dest = upload_prefix + fp.split("/")[-1]
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
             uploaded_file_location = blob_dest
-
         # Save uploaded reports file to Google Cloud Storage if applicable
         # report_fp = None
         # report_blob_dest = None
@@ -250,18 +439,33 @@ async def verify_omex(
         #     upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
         # report_location = report_blob_dest
 
-        pending_job_doc = await db_connector.insert_job_async(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
+        # instantiate new omex verification
+        omex_verification = OmexVerificationRun(
             status=JobStatus.PENDING.value,
             job_id=job_id,
             path=uploaded_file_location,
             simulators=simulators,
             timestamp=_time,
-            # expected_results=report_location,
             include_outputs=include_outputs,
             rTol=rTol,
             aTol=aTol,
-            selection_list=selection_list
+            selection_list=selection_list,
+            # expected_results=report_location,
+        )
+
+        # insert pending job with verification object fields
+        pending_job_doc = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            status=omex_verification.status,
+            job_id=omex_verification.job_id,
+            path=omex_verification.path,
+            simulators=omex_verification.simulators,
+            timestamp=omex_verification.timestamp,
+            include_outputs=omex_verification.include_outputs,
+            rTol=omex_verification.rTol,
+            aTol=omex_verification.aTol,
+            selection_list=omex_verification.selection_list,
+            # expected_results=omex_verification.expected_results,
         )
 
         # clean up local temp files
@@ -269,15 +473,14 @@ async def verify_omex(
         # if report_fp:
         # os.remove(report_fp)
 
-        # return PendingOmexVerificationJob(**pending_job_doc)
-        return pending_job_doc
+        return omex_verification
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
     "/verify-sbml",
-    # response_model=PendingSbmlVerificationJob,
+    response_model=SbmlVerificationRun,
     name="Uniform Time Course Comparison from SBML file",
     operation_id="verify-sbml",
     tags=["Verification"],
@@ -294,7 +497,7 @@ async def verify_sbml(
         rTol: Optional[float] = Query(default=None, description="Relative tolerance to use for proximity comparison."),
         aTol: Optional[float] = Query(default=None, description="Absolute tolerance to use for proximity comparison."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data.")
-):
+) -> SbmlVerificationRun:
     try:
         expected_results = None
         if isinstance(expected_results, str) and expected_results.strip() == "":
@@ -311,30 +514,28 @@ async def verify_sbml(
         save_dest = mkdtemp()
         fp = await save_uploaded_file(uploaded_file, save_dest)  # save uploaded file to ephemeral store
 
-        # Save uploaded omex file to Google Cloud Storage
+        # Save uploaded sbml file to Google Cloud Storage
         uploaded_file_location = None
         properly_formatted_sbml = check_upload_file_extension(uploaded_file, 'uploaded_file', '.xml')
         if properly_formatted_sbml:
             blob_dest = upload_prefix + fp.split("/")[-1]
             upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
             uploaded_file_location = blob_dest
-
         # Save uploaded reports file to Google Cloud Storage if applicable
-        report_fp = None
-        report_blob_dest = None
-        if expected_results is not None:
-            # handle incorrect files upload
-            properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
-            if properly_formatted_report:
-                report_fp = await save_uploaded_file(expected_results, save_dest)
-                report_blob_dest = upload_prefix + report_fp.split("/")[-1]
-            upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
-        else:
-            report_blob_dest = None
-        report_location = report_blob_dest
+        # report_fp = None
+        # report_blob_dest = None
+        # if expected_results is not None:
+        #     # handle incorrect files upload
+        #     properly_formatted_report = check_upload_file_extension(expected_results, 'expected_results', '.h5')
+        #     if properly_formatted_report:
+        #         report_fp = await save_uploaded_file(expected_results, save_dest)
+        #         report_blob_dest = upload_prefix + report_fp.split("/")[-1]
+        #     upload_blob(bucket_name=BUCKET_NAME, source_file_name=report_fp, destination_blob_name=report_blob_dest)
+        # else:
+        #     report_blob_dest = None
+        # report_location = report_blob_dest
 
-        pending_job_doc = await db_connector.insert_job_async(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
+        sbml_verification = SbmlVerificationRun(
             status=JobStatus.PENDING.value,
             job_id=job_id,
             comparison_id=compare_id,
@@ -345,17 +546,33 @@ async def verify_sbml(
             end=end,
             steps=steps,
             include_outputs=include_outputs,
-            expected_results=report_location,
             rTol=rTol,
             aTol=aTol,
-            selection_list=selection_list
+            selection_list=selection_list,
+            # expected_results=report_location,
         )
 
+        pending_job_doc = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            status=sbml_verification.status,
+            job_id=sbml_verification.job_id,
+            comparison_id=sbml_verification.comparison_id,
+            path=sbml_verification.path,
+            simulators=sbml_verification.simulators,
+            timestamp=sbml_verification.timestamp,
+            start=sbml_verification.start,
+            end=sbml_verification.end,
+            steps=sbml_verification.steps,
+            include_outputs=sbml_verification.include_outputs,
+            rTol=sbml_verification.rTol,
+            aTol=sbml_verification.aTol,
+            selection_list=sbml_verification.selection_list,
+            # expected_results=sbml_verification.expected_results,
+        )
         # clean up local temp files
         os.remove(fp)
 
-        # return PendingSbmlVerificationJob(**pending_job_doc)
-        return pending_job_doc
+        return sbml_verification
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -584,10 +801,126 @@ async def new_utc_composition(source: UploadFile = File(...),simulator: str = Qu
 
 
 @app.get(
+    "/get-smoldyn-output/{job_id}",
+    operation_id='get-smoldyn-output',
+    tags=["Results"],
+    summary='Get the results of an existing Smoldyn simulation run as either a downloadable file or job progression status.')
+async def get_smoldyn_output(job_id: str):
+    # state-case: job is completed
+    if "smoldyn" not in job_id:
+        raise HTTPException(status_code=404, detail="This must be a Smoldyn job query.")
+
+    job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
+    if job is not None:
+        # rm mongo index
+        job.pop('_id', None)
+
+        # parse filepath in bucket and create file response
+        job_data = job
+        if isinstance(job_data, dict):
+            remote_fp = job_data.get("results").get("results_file")
+            if remote_fp is not None:
+                temp_dest = mkdtemp()
+                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+
+                # return downloadable file blob
+                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])  # TODO: return special smoldyn file instance
+
+    # state-case: job has failed
+    if job is None:
+        job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
+
+    # state-case: job is not in completed:
+    if job is None:
+        job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
+
+    # state-case: job is not in progress:
+    if job is None:
+        job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
+
+    # case: job is either failed, in prog, or pending
+    if job is not None:
+        # rm mongo index
+        job.pop('_id', None)
+
+        # specify source safely
+        src = job.get('source', job.get('path'))
+        if src is not None:
+            source = src.split('/')[-1]
+        else:
+            source = None
+
+        # return json job status
+        return SmoldynJob(
+            job_id=job_id,
+            timestamp=job.get('timestamp'),
+            status=job.get('status'),
+            source=source
+        )
+
+
+@app.get(
+    "/get-verification-output/{job_id}",
+    response_model=VerificationOutput,
+    operation_id='get-verification-output',
+    tags=["Results"],
+    summary='Get the results of an existing verification run.')
+async def get_verification_output(job_id: str) -> VerificationOutput:
+    if "verification" not in job_id:
+        raise HTTPException(status_code=404, detail="This must be a verification job query.")
+
+    # state-case: job is completed
+    job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
+
+    # state-case: job has failed
+    if job is None:
+        job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
+
+    # state-case: job is not in completed:
+    if job is None:
+        job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
+
+    # state-case: job is not in progress:
+    if job is None:
+        job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
+
+    if job is not None:
+        job.pop('_id', None)
+        # data = [
+        #     ObservableData(name=obs_name, mse=obs_data['mse'], proximity=obs_data['proximity'], output_data=obs_data['output_data'])
+        #     for obs_name, obs_data in job.get('results').items() if "rmse" not in obs_name
+        # ]
+        # return VerificationOutput(
+        #     job_id=job_id,
+        #     timestamp=job.get('timestamp'),
+        #     status=job.get('status'),
+        #     source=job.get('source'),
+        #     requested_simulators=job.get('requested_simulators'),
+        #     results=data
+        # )
+
+        output = VerificationOutput(
+            job_id=job_id,
+            timestamp=job.get('timestamp'),
+            status=job.get('status'),
+            source=job.get('source', job.get('path')).split('/')[-1],
+            results=job.get('results')
+        )
+        requested_simulators = job.get('simulators', job.get('requested_simulators'))
+        if requested_simulators is not None:
+            output.requested_simulators = requested_simulators
+
+        return output
+    else:
+        raise HTTPException(status_code=404, detail=f"Job with id: {job_id} not found. Please check the job_id and try again.")
+
+
+# BELOW IS THE EXISTING GET OUTPUT!
+@app.get(
     "/get-output/{job_id}",
     # response_model=OutputData,
-    operation_id='get-verify-output',
-    tags=["Data"],
+    operation_id='get-output',
+    tags=["Results"],
     summary='Get the results of an existing simulation run.')
 async def fetch_results(job_id: str):
     # TODO: refactor this!

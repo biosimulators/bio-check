@@ -1,13 +1,17 @@
 # -- api models -- #
 from enum import Enum
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Union
 
+from pyarrow import timestamp
 from pydantic import Field
+from fastapi.responses import FileResponse
 
 from shared import BaseModel, Job, JobStatus
 
 
-class ApiJob(BaseModel):
+# PENDING JOBS:
+
+class ApiRun(BaseModel):
     job_id: str
     timestamp: str
     status: str
@@ -15,34 +19,90 @@ class ApiJob(BaseModel):
     simulators: List[str]
 
 
-class SmoldynJob(ApiJob):
-    duration: int
-    dt: Optional[float]
+class SmoldynRun(ApiRun):
+    duration: Optional[int] = None
+    dt: Optional[float] = None
+    simulators: List[str] = ["smoldyn"]
 
 
-class UtcJob(ApiJob):
+class UtcRun(ApiRun):
     start: int
     end: int
     steps: int
 
 
-class VerificationJob(ApiJob):
+class VerificationRun(ApiRun):
     include_outputs: Optional[bool] = True
     selection_list: Optional[List[str]] = None
-    expected_results: Optional[str] = None
+    # expected_results: Optional[str] = None
     comparison_id: Optional[str] = None
     rTol: Optional[float] = None
     aTol: Optional[float] = None
 
 
-class OmexVerificationJob(VerificationJob):
+class OmexVerificationRun(VerificationRun):
     pass
 
 
-class SbmlVerificationJob(VerificationJob):
+class SbmlVerificationRun(VerificationRun):
     start: int
     end: int
     steps: int
+
+
+# IN PROGRESS JOBS:
+
+# TODO: Implement this:
+class IncompleteJob(BaseModel):
+    job_id: str
+    timestamp: str
+    status: str
+    source: Optional[str] = None
+
+
+class SmoldynJob(IncompleteJob):
+    pass
+
+
+# COMPLETED JOBS:
+
+# TODO: parse results and make object specs
+class ObservableData(BaseModel):
+    name: str
+    mse: Dict[str, Any]   # Dict[str, float]]
+    proximity: Dict[str, Any]   #  Dict[str, bool]]
+    output_data: Dict[str, Any]   #  List[float]]
+
+
+class Output(BaseModel):
+    job_id: str
+    timestamp: str
+    status: str
+    source: Optional[str] = None
+
+
+class SmoldynOutput(FileResponse):
+    pass
+
+
+class VerificationOutput(Output):
+    """
+    Return schema for get-verification-output.
+
+    Parameters:
+        job_id: str
+        timestamp: str
+        status: str --> may be COMPLETE, IN_PROGRESS, FAILED, or PENDING
+        source: str
+        requested_simulators: List[str]
+        results: Optional[dict] = None TODO: parse this
+    """
+    requested_simulators: Optional[List[str] ]= None
+    results: Optional[Union[Dict[str, Any], List[ObservableData]]] = None
+
+
+class OutputData(BaseModel):
+    content: Union[VerificationOutput, SmoldynOutput]
 
 
 # -- verification --
@@ -172,11 +232,11 @@ class DbClientResponse(BaseModel):
 
 # -- data --
 
-class OutputData(BaseModel):
+class _OutputData(BaseModel):
     content: Any
 
 
-class UtcComparisonResult(OutputData):
+class UtcComparisonResult(_OutputData):
     pass
 
 
