@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 0.1.3
+  version: 1.11.8
 paths:
   /:
     get:
@@ -47,7 +47,8 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/SmoldynRun'
         '422':
           description: Validation Error
           content:
@@ -197,7 +198,8 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OmexVerificationRun'
         '422':
           description: Validation Error
           content:
@@ -313,7 +315,8 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/SbmlVerificationRun'
         '422':
           description: Validation Error
           content:
@@ -373,12 +376,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /get-smoldyn-output/{job_id}:
+    get:
+      tags:
+      - Results
+      summary: Get the results of an existing Smoldyn simulation run as either a downloadable
+        file or job progression status.
+      operationId: get-smoldyn-output
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /get-verification-output/{job_id}:
+    get:
+      tags:
+      - Results
+      summary: Get the results of an existing verification run.
+      operationId: get-verification-output
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationOutput'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /get-output/{job_id}:
     get:
       tags:
-      - Data
+      - Results
       summary: Get the results of an existing simulation run.
-      operationId: get-verify-output
+      operationId: get-output
       parameters:
       - name: job_id
         in: path
@@ -646,6 +701,149 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    ObservableData:
+      properties:
+        name:
+          type: string
+          title: Name
+        mse:
+          type: object
+          title: Mse
+        proximity:
+          type: object
+          title: Proximity
+        output_data:
+          type: object
+          title: Output Data
+      type: object
+      required:
+      - name
+      - mse
+      - proximity
+      - output_data
+      title: ObservableData
+    OmexVerificationRun:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        timestamp:
+          type: string
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+        path:
+          type: string
+          title: Path
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+        include_outputs:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Include Outputs
+          default: true
+        selection_list:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Selection List
+        comparison_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comparison Id
+        rTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtol
+        aTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Atol
+      type: object
+      required:
+      - job_id
+      - timestamp
+      - status
+      - path
+      - simulators
+      title: OmexVerificationRun
+    SbmlVerificationRun:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        timestamp:
+          type: string
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+        path:
+          type: string
+          title: Path
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+        include_outputs:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Include Outputs
+          default: true
+        selection_list:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Selection List
+        comparison_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comparison Id
+        rTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtol
+        aTol:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Atol
+        start:
+          type: integer
+          title: Start
+        end:
+          type: integer
+          title: End
+        steps:
+          type: integer
+          title: Steps
+      type: object
+      required:
+      - job_id
+      - timestamp
+      - status
+      - path
+      - simulators
+      - start
+      - end
+      - steps
+      title: SbmlVerificationRun
     Simulator:
       properties:
         name:
@@ -660,6 +858,44 @@ components:
       required:
       - name
       title: Simulator
+    SmoldynRun:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        timestamp:
+          type: string
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+        path:
+          type: string
+          title: Path
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+          default:
+          - smoldyn
+        duration:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration
+        dt:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Dt
+      type: object
+      required:
+      - job_id
+      - timestamp
+      - status
+      - path
+      title: SmoldynRun
     ValidationError:
       properties:
         loc:
@@ -681,3 +917,44 @@ components:
       - msg
       - type
       title: ValidationError
+    VerificationOutput:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        timestamp:
+          type: string
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        requested_simulators:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Requested Simulators
+        results:
+          anyOf:
+          - type: object
+          - items:
+              $ref: '#/components/schemas/ObservableData'
+            type: array
+          - type: 'null'
+          title: Results
+      type: object
+      required:
+      - job_id
+      - timestamp
+      - status
+      title: VerificationOutput
+      description: "Return schema for get-verification-output.\n\nParameters:\n  \
+        \  job_id: str\n    timestamp: str\n    status: str --> may be COMPLETE, IN_PROGRESS,\
+        \ FAILED, or PENDING\n    source: str\n    requested_simulators: List[str]\n\
+        \    results: Optional[dict] = None TODO: parse this"
