@@ -895,7 +895,7 @@ async def get_verification_output(job_id: str) -> VerificationOutput:
                     data.append(obs)
                 else:
                     for simulator_name, data_table in obs_data.items():
-                        obs = SimulatorRMSE(simulator=simulator_name, rmse_matrix=data_table)
+                        obs = SimulatorRMSE(simulator=simulator_name, rmse_scores=data_table)
                         data.append(obs)
 
         output = VerificationOutput(

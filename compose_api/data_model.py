@@ -76,7 +76,7 @@ class ObservableData(BaseModel):
 
 class SimulatorRMSE(BaseModel):
     simulator: str
-    rmse_matrix: Dict[str, float]
+    rmse_scores: Dict[str, float]
 
 
 class Output(BaseModel):
