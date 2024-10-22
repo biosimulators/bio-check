@@ -2,21 +2,18 @@
 
 set -e
 
-version="$1"
-arg1="$2"
-un=AlexPatrie
+arg1="$1"
 
 # optionally prune/clear system and cache prior to build
 if [ "$arg1" == "-p" ]; then
   yes | docker system prune -a
+  yes | docker buildx prune -a
 fi
+
+# remove pycache to clean images
+sudo rm -r compose_api/__pycache__
+sudo rm -r compose_worker/__pycache__
 
 # build and push containers
-./assets/scripts/build_api.sh "$version" "$un" && ./assets/scripts/build_worker.sh "$version" "$un"
+docker compose build --no-cache
 
-# optionally apply changes to container versions in Kustomization
-if [ "$arg1" == "-k" ]; then
-  cd kustomize \
-    && kubectl kustomize overlays/biochecknet | kubectl apply -f - \
-    && cd ..
-fi

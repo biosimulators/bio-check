@@ -19,6 +19,7 @@ from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 from compose_api.data_model import ObservableData
 # from bio_check import MONGO_URI
 from data_model import (
+    SimulatorRMSE,
     SmoldynJob,
     VerificationOutput,
     SmoldynOutput,
@@ -887,25 +888,25 @@ async def get_verification_output(job_id: str) -> VerificationOutput:
 
     if job is not None:
         job.pop('_id', None)
-        # data = [
-        #     ObservableData(name=obs_name, mse=obs_data['mse'], proximity=obs_data['proximity'], output_data=obs_data['output_data'])
-        #     for obs_name, obs_data in job.get('results').items() if "rmse" not in obs_name
-        # ]
-        # return VerificationOutput(
-        #     job_id=job_id,
-        #     timestamp=job.get('timestamp'),
-        #     status=job.get('status'),
-        #     source=job.get('source'),
-        #     requested_simulators=job.get('requested_simulators'),
-        #     results=data
-        # )
+        results = job.get('results')
+        data = []
+        if results is not None:
+            for name, obs_data in results.items():
+                if not name == "rmse":
+                    obs = ObservableData(observable_name=name, mse=obs_data['mse'], proximity=obs_data['proximity'], output_data=obs_data['output_data'])
+                    data.append(obs)
+                else:
+                    for simulator_name, data_table in obs_data.items():
+                        obs = SimulatorRMSE(simulator=simulator_name, rmse_matrix=data_table)
+                        data.append(obs)
 
         output = VerificationOutput(
             job_id=job_id,
             timestamp=job.get('timestamp'),
             status=job.get('status'),
             source=job.get('source', job.get('path')).split('/')[-1],
-            results=job.get('results')
+            results=data,  # Change this to the results below if there is an issue
+            # results=job.get('results')
         )
         requested_simulators = job.get('simulators', job.get('requested_simulators'))
         if requested_simulators is not None:

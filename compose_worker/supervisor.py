@@ -132,13 +132,19 @@ class Supervisor:
                 # change job status for client by inserting a new in progress job
                 job_in_progress = self.job_exists(job_id=job_id, collection_name="in_progress_jobs")
                 if not job_in_progress:
-                    in_progress_entry = {'job_id': job_id, 'timestamp': self.db_connector.timestamp(), 'status': JobStatus.IN_PROGRESS.value, 'source': source}
+                    in_progress_entry = {
+                        'job_id': job_id,
+                        'timestamp': self.db_connector.timestamp(),
+                        'status': JobStatus.IN_PROGRESS.value,
+                        'requested_simulators': pending_job.get('simulators'),
+                        'source': source
+                    }
 
                     # special handling of composition jobs TODO: move this to the supervisor below
-                    if job_id.startswith('composition-run'):
-                        in_progress_entry['composite_spec'] = pending_job.get('composite_spec')
-                        in_progress_entry['simulator'] = pending_job.get('simulators')
-                        in_progress_entry['duration'] = pending_job.get('duration')
+                    # if job_id.startswith('composition-run'):
+                    #     in_progress_entry['composite_spec'] = pending_job.get('composite_spec')
+                    #     in_progress_entry['simulator'] = pending_job.get('simulators')
+                    #     in_progress_entry['duration'] = pending_job.get('duration')
 
                     in_progress_job = await self.db_connector.insert_job_async(
                         collection_name="in_progress_jobs",

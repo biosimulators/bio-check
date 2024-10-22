@@ -68,10 +68,15 @@ class SmoldynJob(IncompleteJob):
 
 # TODO: parse results and make object specs
 class ObservableData(BaseModel):
-    name: str
+    observable_name: str
     mse: Dict[str, Any]   # Dict[str, float]]
     proximity: Dict[str, Any]   #  Dict[str, bool]]
-    output_data: Dict[str, Any]   #  List[float]]
+    output_data: Dict[str, Union[List[float], str]]   #  List[float]]
+
+
+class SimulatorRMSE(BaseModel):
+    simulator: str
+    rmse_matrix: Dict[str, float]
 
 
 class Output(BaseModel):
@@ -97,8 +102,8 @@ class VerificationOutput(Output):
         requested_simulators: List[str]
         results: Optional[dict] = None TODO: parse this
     """
-    requested_simulators: Optional[List[str] ]= None
-    results: Optional[Union[Dict[str, Any], List[ObservableData]]] = None
+    requested_simulators: Optional[List[str]] = None
+    results: Optional[Union[List[Union[ObservableData, SimulatorRMSE, Any]], Dict[str, Any]]] = None
 
 
 class OutputData(BaseModel):
