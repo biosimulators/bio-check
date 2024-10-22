@@ -4,13 +4,13 @@ kind: Kustomization
 
 namespace: biochecknet
 
-# CURRENT STABLE VERSIONS OF CONTAINERS: api: 1.11.0, worker: 1.11.0
-# PREVIOUS (MOST CURRENTLY RELEASED) VERSIONS AS OF 10/17(SMOLDYN BUG): api: 1.11.4, worker: 1.11.6
+# CURRENT STABLE VERSIONS OF CONTAINERS: api: 1.11.8, worker: 1.11.6
+
 images:
 - name: ghcr.io/biosimulators/bio-check-compose_api
-  newTag: 1.11.8
+  newTag: 1.11.9
 - name: ghcr.io/biosimulators/bio-check-compose_worker
-  newTag: 1.11.6
+  newTag: 1.11.7
 - name: mongo
   newTag: 8.0-rc
 
