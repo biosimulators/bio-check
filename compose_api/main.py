@@ -2,7 +2,6 @@ import asyncio
 import os
 import logging
 import uuid
-from enum import Enum
 from typing import *
 
 import dotenv
@@ -13,12 +12,11 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, 
 from fastapi.responses import FileResponse
 from pydantic import BeforeValidator, Field, BaseModel
 from starlette.middleware.cors import CORSMiddleware
-from sympy.multipledispatch.dispatcher import source
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
-from compose_api.data_model import ObservableData
 # from bio_check import MONGO_URI
 from data_model import (
+    ObservableData,
     SimulatorRMSE,
     SmoldynJob,
     VerificationOutput,

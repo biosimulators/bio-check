@@ -703,9 +703,9 @@ components:
       title: HTTPValidationError
     ObservableData:
       properties:
-        name:
+        observable_name:
           type: string
-          title: Name
+          title: Observable Name
         mse:
           type: object
           title: Mse
@@ -713,11 +713,17 @@ components:
           type: object
           title: Proximity
         output_data:
+          additionalProperties:
+            anyOf:
+            - items:
+                type: number
+              type: array
+            - type: string
           type: object
           title: Output Data
       type: object
       required:
-      - name
+      - observable_name
       - mse
       - proximity
       - output_data
@@ -858,6 +864,21 @@ components:
       required:
       - name
       title: Simulator
+    SimulatorRMSE:
+      properties:
+        simulator:
+          type: string
+          title: Simulator
+        rmse_matrix:
+          additionalProperties:
+            type: number
+          type: object
+          title: Rmse Matrix
+      type: object
+      required:
+      - simulator
+      - rmse_matrix
+      title: SimulatorRMSE
     SmoldynRun:
       properties:
         job_id:
@@ -942,10 +963,13 @@ components:
           title: Requested Simulators
         results:
           anyOf:
-          - type: object
           - items:
-              $ref: '#/components/schemas/ObservableData'
+              anyOf:
+              - $ref: '#/components/schemas/ObservableData'
+              - $ref: '#/components/schemas/SimulatorRMSE'
+              - {}
             type: array
+          - type: object
           - type: 'null'
           title: Results
       type: object
