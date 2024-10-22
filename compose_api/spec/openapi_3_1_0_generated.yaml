@@ -869,15 +869,15 @@ components:
         simulator:
           type: string
           title: Simulator
-        rmse_matrix:
+        rmse_scores:
           additionalProperties:
             type: number
           type: object
-          title: Rmse Matrix
+          title: Rmse Scores
       type: object
       required:
       - simulator
-      - rmse_matrix
+      - rmse_scores
       title: SimulatorRMSE
     SmoldynRun:
       properties:
