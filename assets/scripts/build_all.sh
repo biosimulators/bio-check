@@ -23,3 +23,8 @@ docker compose build --no-cache
 if [ "$arg2" == "-r" ]; then
   docker compose up
 fi
+
+if [ "$arg1" == "-r" ]; then
+  docker compose up
+fi
+

@@ -1,6 +1,9 @@
+biosimulators-utils[sbml,logging]
 biosimulators-amici
 biosimulators-copasi
+biosimulators-pysces
+biosimulators-masspy
 biosimulators-tellurium
-meson-python
-meson
-ninja
+cython
+scipy
+matplotlib

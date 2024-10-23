@@ -338,7 +338,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     make_dir(output_root_dir)
 
     output_data = {}
-    sims = simulators or ['amici', 'copasi', 'tellurium']  # ,'pysces']
+    sims = simulators or ['amici', 'copasi', 'tellurium', 'pysces']
     sim_config = Config(
         LOG=False,
         ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy[alg_policy.upper()],
