@@ -130,7 +130,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends libfreetype6
 
 COPY . /app/worker
 
-# install requirements
+# install requirements in poetry via pip prox
 RUN poetry run pip install -r /app/worker/requirements.worker.txt
 
 # install masspy TODO: do this

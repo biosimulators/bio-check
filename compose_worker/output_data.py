@@ -181,7 +181,7 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
         # instantiate model from compilation contents
         with open(psc_fp, 'r', encoding='UTF-8') as F:
             pscS = F.read()
-            F.close()
+            # F.close()
 
         model = pysces.model(modelname, loader='string', fString=pscS)
 
@@ -354,7 +354,11 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
                 os.mkdir(sim_output_dir)
 
             # execute simulator-specific simulation
-            exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+            exec_func(
+                archive_filename=omex_fp,
+                out_dir=sim_output_dir,
+                config=sim_config if not sim == "pysces" else None
+            )
             report_path = os.path.join(sim_output_dir, 'reports.h5')
 
             sim_data = read_h5_reports(report_path)
@@ -407,7 +411,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     #     output[simulator_name] = sim_data
     output = {}
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
-    simulators = simulators or ['amici', 'copasi', 'tellurium']  # 'pysces',
+    simulators = simulators or ['amici', 'copasi', 'tellurium', 'pysces']
     all_output_ids = []
     for simulator in simulators:
         results = {}

@@ -1,37 +1,48 @@
 # This project configuration should relate only to the high level notebook api (as primary deps).
 [tool.poetry]
 name = "bio-compose-server"
-version = "1.5.1"
+version = "1.5.2"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
 packages = [{include = "compose_api"}, {include = "compose_worker"}]
 
+
 [tool.poetry.dependencies]
 python = "^3.10"
 requests-toolbelt = "^1.0.0"
-seaborn = "^0.13.2"
-antimony = "^2.15.0"
-amici = "^0.26.3"
-
-[tool.poetry.group.dev.dependencies]
-fastapi = "^0.115.2"
+python-dotenv = "^1.0.1"
+google-cloud-storage = "^2.18.2"
+pymongo = {version = "^4.10.1", extras = ["srv"]}
 python-multipart = "^0.0.12"
+
+
+[tool.poetry.group.api.dependencies]
+fastapi = "^0.115.3"
 pydantic-settings = "^2.6.0"
 pydantic = "^2.9.2"
-python-dotenv = "^1.0.1"
 uvicorn = "^0.32.0"
 pyyaml = "^6.0.2"
 httpx = "^0.27.2"
-pymongo = {version = "^4.10.1", extras = ["srv"]}
-google-cloud-storage = "^2.18.2"
 toml = "^0.10.2"
+
+
+[tool.poetry.group.worker.dependencies]
+biosimulators-amici = "^0.1.24"
+biosimulators-copasi = "^0.2.22"
+biosimulators-pysces = "^0.1.33"
+biosimulators-tellurium = "^0.1.44"
+
+
+[tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
+
 
 [tool.pytest.ini_options]
 testpaths = ["compose_api", "compose_worker"]
 addopts = "--ignore=setup.py"
 python_files = "tests.py"
+
 
 [build-system]
 requires = ["poetry-core"]

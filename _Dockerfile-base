@@ -1,7 +1,5 @@
 # FROM ghcr.io/biosimulators/biosimulators:latest THE STABLE VERSION OF BIOSIMULATOR PROCESSES IMAGE IS 0.0.4
-# FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
-
-FROM ubuntu:22.04
+FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
 
 LABEL authors="alexanderpatrie"
 
@@ -46,14 +44,14 @@ RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
     && poetry check
 
 # TODO: fix this eventually, but for now (10/2024) biosimulators-processes is not used
-# RUN rm -r biosimulator_processes
+RUN rm -r biosimulator_processes
 
 # remove existing cobra installation TODO: clean this up
-# RUN poetry remove cobra && poetry remove zarr
+RUN poetry remove cobra && poetry remove zarr
 
 # install project deps (shared)
-# RUN chmod +x /app/assets/install_deps.sh \
-#     && /app/assets/install_deps.sh /app/assets/requirements.base.txt
+RUN chmod +x /app/assets/install_deps.sh \
+    && /app/assets/install_deps.sh /app/assets/requirements.base.txt
 
 
 # TODO: create shared tooling module which is a set of the sum of api and worker data_model.py & shared.py
