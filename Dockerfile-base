@@ -47,7 +47,7 @@ RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
 RUN rm -r biosimulator_processes
 
 # remove existing cobra installation TODO: clean this up
-RUN poetry remove cobra
+RUN poetry remove cobra && poetry remove zarr
 
 # install project deps (shared)
 RUN chmod +x /app/assets/install_deps.sh \

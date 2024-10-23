@@ -9,8 +9,6 @@ COPY . /app/api
 
 EXPOSE 3001
 
-# RUN mv /app/biosimulator_processes /app/api/biosimulator_processes
-
 RUN /app/assets/install_deps.sh /app/api/requirements.api.txt
 
 WORKDIR /app/api

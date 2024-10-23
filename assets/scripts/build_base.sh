@@ -5,10 +5,11 @@
 set -e
 
 version="$1"
-push="$2"
-prune="$3"  # --prune
+argA="$2"
+argB="$3"  # --prune
+argC="$4"
 
-if [ "$prune" == "--prune" ] || [ "$push" == "--prune" ]; then
+if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ] || [ "$argC" == "--prune" ]; then
   docker system prune -f -a
 fi
 
@@ -21,6 +22,10 @@ docker tag ghcr.io/biosimulators/bio-check-base:"$version" ghcr.io/biosimulators
 echo "New base image tagged:"
 docker images
 
-if [ "$push" == "--push" ]; then
+if [ "$argA" == "--push" ] || [ "$argB" == "--push" ] || [ "$argC" == "--push" ]; then
   ./assets/scripts/push_base.sh "$version"
+fi
+
+if [ "$argA" == "--run" ] || [ "$argB" == "--run" ] || [ "$argC" == "--run" ]; then
+  ./assets/scripts/run_container.sh base latest
 fi
