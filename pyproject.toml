@@ -5,7 +5,8 @@ version = "1.5.2"
 description = "Simulation Verification Service and API"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "compose_api"}, {include = "compose_worker"}]
+package-mode = false
+# packages = [{include = "compose_api"}, {include = "compose_worker"}]
 
 
 [tool.poetry.dependencies]
@@ -38,10 +39,18 @@ biosimulators-tellurium = "^0.1.44"
 pytest = "^8.3.3"
 
 
+# [[tool.poetry.group.api.package]]
+# include = "compose_api"
+
+
+# [[tool.poetry.group.worker.package]]
+# include = "compose_worker"
+
+
 [tool.pytest.ini_options]
-testpaths = ["compose_api", "compose_worker"]
 addopts = "--ignore=setup.py"
 python_files = "tests.py"
+# testpaths = ["compose_api", "compose_worker"]
 
 
 [build-system]

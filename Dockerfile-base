@@ -13,6 +13,15 @@ RUN mkdir /.google
 COPY ./assets/.biosimulations.json /.google/.bio-check.json
 # COPY ./.bio-check.json /.google/.bio-check.json
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10  \
+    ca-certificates \
+    libhdf5-dev \
+    libhdf5-serial-dev \
+    python3-pip  \
+    python3-dev \
+    build-essential
+
 # hdf5/amici env deps
 RUN apt-get update && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev
 
@@ -23,6 +32,7 @@ RUN mkdir /app/data
 
 # copy assets
 COPY ./assets/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY pyproject.toml poetry.lock /app/
 
 # Configure PySCeS from assets
 COPY ./assets/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
@@ -40,10 +50,30 @@ COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elow
 # create readme for poetry
 RUN echo "BioCompose Server" > /app/README.md
 
+# install poetry and deps
+RUN python3.10 -m pip install --upgrade pip \
+    && python3.10 -m pip install poetry \
+    && poetry config virtualenvs.in-project true \
+    && poetry env use 3.10 \
+    && poetry install --without=api,worker
+
+# install smoldyn
+RUN . /app/.venv/bin/activate \
+    && wget https://www.smoldyn.org/smoldyn-2.73.tgz \
+    && tar -xzf smoldyn-2.73.tgz \
+    && cd smoldyn-2.73 \
+    && cd build \
+    && cmake .. -DENABLE_PYTHON=ON -DPYTHON_EXECUTABLE=$(which python3.10) \
+    && make \
+    && make install
+# && rm -rf /var/lib/apt/lists/* \
+# && apt-get clean \
+# && apt-get autoclean
+
 # fix python version constraint, lock env, and check compatible
-RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
-    && poetry lock \
-    && poetry check
+# RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
+#     && poetry lock \
+#     && poetry check
 
 # TODO: fix this eventually, but for now (10/2024) biosimulators-processes is not used
 # RUN rm -r biosimulator_processes
