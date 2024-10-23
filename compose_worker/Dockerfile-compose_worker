@@ -132,6 +132,7 @@ COPY . /app/worker
 
 # install requirements
 RUN poetry run pip install -r /app/worker/requirements.worker.txt
+# RUN poetry run pip install biosimulators-masspy
 # RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
 WORKDIR /app/worker

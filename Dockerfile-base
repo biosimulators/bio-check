@@ -43,21 +43,13 @@ RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
     && poetry lock \
     && poetry check
 
+# TODO: fix this eventually, but for now (10/2024) biosimulators-processes is not used
+# RUN poetry remove biosimulators-processes
+
 # install project deps (shared)
 RUN chmod +x /app/assets/install_deps.sh \
     && /app/assets/install_deps.sh /app/assets/requirements.base.txt
 
 
-
-
-# RUN poetry add $(cat /app/assets/requirements.base.txt)
-
-# RUN chmod +x /app/assets/remove_deps.sh \
-#     && chmod +x /app/assets/update_deps.sh \
-#     && pip install --upgrade pip  \
-#     && /app/assets/remove_deps.sh \
-#     && pip install --no-cache-dir -r /app/assets/requirements.base.txt \
-#     && pip install --upgrade google-cloud-storage
-
-# shared tooling module
+# TODO: create shared tooling module which is a set of the sum of api and worker data_model.py & shared.py
 # COPY ./assets/shared.py /app/shared.py
