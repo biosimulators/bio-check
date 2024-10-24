@@ -53,7 +53,7 @@ COPY . /app/worker
 ENV PATH="/root/.local/bin:$PATH"
 
 # Install only worker deps TODO: include toml in base deps
-RUN poetry add toml --group=worker --lock && poetry install --only=worker --no-cache
+RUN poetry install --only=worker --no-cache
 
 # Install Assimulo from source for Pysces
 RUN apt-get update \
@@ -71,13 +71,15 @@ RUN apt-get update \
 # && rm -rf build \
 # && poetry run python3 setup.py install --sundials-home=/usr/local --blas-home=/usr/lib/x86_64-linux-gnu
 
-# install masspy TODO: do this
-# RUN poetry run pip install biosimulators-masspy
-
 # revert numpy back to original spec
 RUN poetry remove numpy
 # RUN poetry run pip install numpy==$(poetry run python3 -c "import toml; print(toml.load('/app/pyproject.toml')['tool']['poetry']['group']['worker']['dependencies']['numpy'].strip('<'))") \
 #     && poetry lock
+
+# install masspy TODO: implement this
+RUN git clone https://github.com/biosimulators/Biosimulators_MASSpy.git \
+    && cd Biosimulators_MASSpy \
+    && rm pyproject.toml
 
 WORKDIR /app/worker
 

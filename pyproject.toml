@@ -17,6 +17,7 @@ google-cloud-storage = "^2.18.2"
 pymongo = {version = "^4.10.1", extras = ["srv"]}
 python-multipart = "^0.0.12"
 fastapi = "^0.115.3"
+toml = "^0.10.2"
 
 
 [tool.poetry.group.api.dependencies]
@@ -25,21 +26,22 @@ pydantic = "^2.9.2"
 uvicorn = "^0.32.0"
 pyyaml = "^6.0.2"
 httpx = "^0.27.2"
-toml = "^0.10.2"
 
 
 [tool.poetry.group.worker.dependencies]
 numpy = "<2"
+cobra = "<0.24.0"
 biosimulators-amici = "^0.1.24"
 biosimulators-copasi = "^0.2.22"
-biosimulators-pysces = "^0.1.33"
 biosimulators-tellurium = "^0.1.44"
+biosimulators-pysces = "^0.1.33"
 smoldyn = "^2.73"
 process-bigraph = "^0.0.21"
 simulariumio = "^1.11.0"
 cython = "^3.0.11"
 wheel = "^0.44.0"
-
+masspy = "^0.1.7"
+docker = "^7.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
