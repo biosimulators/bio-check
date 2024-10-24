@@ -46,84 +46,67 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     gfortran \
     libgfortran5
 
-# && rm -rf /var/lib/apt/lists/*
-
 ###################################
 # PySCeS
 
 # SUNDIALS
 # ignore certificate checking because certificate was expired as of 2021-11-10
-ARG SUNDIALS_VERSION=2.6.2
-RUN apt-get install -y --no-install-recommends \
-        wget \
-        cmake \
-        make \
-        g++ \
-    \
-    && cd /tmp \
-    && wget --no-check-certificate https://computing.llnl.gov/sites/default/files/inline-files/sundials-${SUNDIALS_VERSION}.tar.gz \
-    && tar xvvf sundials-${SUNDIALS_VERSION}.tar.gz \
-    && cd sundials-${SUNDIALS_VERSION} \
-    && mkdir build \
-    && cd build \
-    && cmake .. \
-    && make \
-    && make install \
-    \
-    && cd /tmp \
-    && rm sundials-${SUNDIALS_VERSION}.tar.gz \
-    && rm -r sundials-${SUNDIALS_VERSION}
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
-# Assimulo
-RUN apt-get install -y --no-install-recommends \
-        g++ \
-        gfortran \
-        libblas-dev \
-        liblapack-dev \
-        git
-
-# PySCeS
-RUN apt-get install -y --no-install-recommends \
-        git \
-        gcc \
-        gfortran \
-        libgfortran5
+# ARG SUNDIALS_VERSION=2.6.2
+# RUN apt-get install -y --no-install-recommends \
+#         wget \
+#         cmake \
+#         make \
+#         g++ \
+#     \
+#     && cd /tmp \
+#     && wget --no-check-certificate https://computing.llnl.gov/sites/default/files/inline-files/sundials-${SUNDIALS_VERSION}.tar.gz \
+#     && tar xvvf sundials-${SUNDIALS_VERSION}.tar.gz \
+#     && cd sundials-${SUNDIALS_VERSION} \
+#     && mkdir build \
+#     && cd build \
+#     && cmake .. \
+#     && make \
+#     && make install \
+#     \
+#     && cd /tmp \
+#     && rm sundials-${SUNDIALS_VERSION}.tar.gz \
+#     && rm -r sundials-${SUNDIALS_VERSION}
+# ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 # install assimulo because pipenv fails to install it
 # ARG ASSIMULO_VERSION=3.2.9
 # RUN pip install git+https://github.com/modelon-community/Assimulo.git@Assimulo-${ASSIMULO_VERSION}
 
-RUN pip install "cython<1.0" numpy scipy matplotlib
+# RUN pip install "cython<1.0" numpy scipy matplotlib
 
 # install SUNDIALS and Assimulo
-ARG ASSIMULO_VERSION=3.4.3
-RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends \
-        libsundials-dev \
-        g++ \
-        libblas-dev \
-        liblapack-dev
-        # libsundials-arkode5 \
-        # libsundials-cvode6 \
-        # libsundials-cvodes6 \
-        # libsundials-ida6 \
-        # libsundials-idas5 \
-        # libsundials-kinsol6 \
-        # libsundials-nvecserial6
-    # && pip install --install-option="--optimize=1" \
-    #         --install-option="--extra-fortran-link-flags=-shared" \
-    #         --install-option="--sundials-home=/usr" \
-    #         --install-option="--blas-home=/usr/lib/x86_64-linux-gnu" \
-    #         --install-option="--lapack-home=/usr" \
-    #         --install-option="--extra-fortran-compile-flags=-fallow-argument-mismatch"  \
-    #         --install-option="--extra-c-flags=-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION" \
-    #         git+https://github.com/modelon-community/Assimulo.git@Assimulo-${ASSIMULO_VERSION}  \
-    # \
-
-# fonts for matplotlib
-RUN apt-get update -y && apt-get install -y --no-install-recommends libfreetype6
-# && rm -rf /var/lib/apt/lists/*
+# ARG ASSIMULO_VERSION=3.4.3
+# RUN apt-get update -y \
+#     && apt-get install -y --no-install-recommends \
+#         libsundials-dev \
+#         g++ \
+#         libblas-dev \
+#         liblapack-dev
+#         # libsundials-arkode5 \
+#         # libsundials-cvode6 \
+#         # libsundials-cvodes6 \
+#         # libsundials-ida6 \
+#         # libsundials-idas5 \
+#         # libsundials-kinsol6 \
+#         # libsundials-nvecserial6
+#     # && pip install --install-option="--optimize=1" \
+#     #         --install-option="--extra-fortran-link-flags=-shared" \
+#     #         --install-option="--sundials-home=/usr" \
+#     #         --install-option="--blas-home=/usr/lib/x86_64-linux-gnu" \
+#     #         --install-option="--lapack-home=/usr" \
+#     #         --install-option="--extra-fortran-compile-flags=-fallow-argument-mismatch"  \
+#     #         --install-option="--extra-c-flags=-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION" \
+#     #         git+https://github.com/modelon-community/Assimulo.git@Assimulo-${ASSIMULO_VERSION}  \
+#     # \
+#
+# # fonts for matplotlib
+# RUN apt-get update -y && apt-get install -y --no-install-recommends libfreetype6
+# # && rm -rf /var/lib/apt/lists/*
 
 ############################################
 # App content
@@ -131,7 +114,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends libfreetype6
 COPY . /app/worker
 
 # install requirements in poetry via pip prox
-RUN poetry run pip install -r /app/worker/requirements.worker.txt
+# RUN poetry run pip install -r /app/worker/requirements.worker.txt
 
 # install masspy TODO: do this
 # RUN poetry run pip install biosimulators-masspy
@@ -139,8 +122,10 @@ RUN poetry run pip install -r /app/worker/requirements.worker.txt
 # install with poetry TODO: remove this eventually
 # RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
-WORKDIR /app/worker
+# RUN poetry install --only=worker && poetry check
 
-RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
-
-ENTRYPOINT ["poetry", "run", "python3", "main.py"]
+# WORKDIR /app/worker
+#
+# RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
+#
+# ENTRYPOINT ["poetry", "run", "python3", "main.py"]
