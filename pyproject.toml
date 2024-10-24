@@ -29,6 +29,7 @@ toml = "^0.10.2"
 
 
 [tool.poetry.group.worker.dependencies]
+numpy = "<2"
 biosimulators-amici = "^0.1.24"
 biosimulators-copasi = "^0.2.22"
 biosimulators-pysces = "^0.1.33"
@@ -36,6 +37,8 @@ biosimulators-tellurium = "^0.1.44"
 smoldyn = "^2.73"
 process-bigraph = "^0.0.21"
 simulariumio = "^1.11.0"
+cython = "^3.0.11"
+wheel = "^0.44.0"
 
 
 [tool.poetry.group.dev.dependencies]
