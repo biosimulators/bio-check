@@ -24,9 +24,9 @@ except:
     )
 
 from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from shared import CORE
+from shared import PROCESS_TYPES
 
-
+CORE = PROCESS_TYPES
 process_registry = ProcessTypes().process_registry
 
 

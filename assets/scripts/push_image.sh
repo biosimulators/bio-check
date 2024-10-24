@@ -21,8 +21,10 @@ fi
 # push version
 docker push ghcr.io/biosimulators/bio-check-"$lib":"$version"
 
-# tag version as latest
-docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulators/bio-check-"$lib":latest
+# tag version as latest if api or worker
+if [ "$lib" != "base" ]; then
+  docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulators/bio-check-"$lib":latest
+fi
 
 # push newest latest
 docker push ghcr.io/biosimulators/bio-check-"$lib":latest

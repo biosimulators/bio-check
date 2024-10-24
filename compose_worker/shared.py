@@ -9,14 +9,11 @@ from enum import Enum
 from typing import *
 
 from dotenv import load_dotenv
-from google.cloud import storage
 from process_bigraph import ProcessTypes
-from pydantic import BaseModel as _BaseModel, ConfigDict
-from fastapi import UploadFile
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
-from biosimulators_processes import CORE
+# from biosimulators_processes import CORE
 
 
 # -- globally-shared content-- #
@@ -26,8 +23,10 @@ load_dotenv('../assets/dev/.env_dev')
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
-PROCESS_TYPES = CORE
+PROCESS_TYPES = ProcessTypes()  # CORE
 
+
+# -- shared functions -- #
 
 def check_jobs(coll):
     from main import db_connector as conn
@@ -76,12 +75,7 @@ async def load_arrows(timer):
         print(disp)
 
 
-# -- base models --
-
-class BaseModel(_BaseModel):
-    """Base Pydantic Model with custom app configuration"""
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+# -- base python dataclass with to_dict() method -- #
 
 @dataclass
 class BaseClass:
@@ -89,6 +83,8 @@ class BaseClass:
     def to_dict(self):
         return asdict(self)
 
+
+# -- jobs -- #
 
 class JobStatus(Enum):
     PENDING = "PENDING"
@@ -103,35 +99,7 @@ class DatabaseCollections(Enum):
     COMPLETED_JOBS = "COMPLETED_JOBS".lower()
 
 
-class MultipleConnectorError(Exception):
-    def __init__(self, message: str):
-        self.message = message
-
-
-# -- jobs --
-
-class Job(BaseModel):
-    job_id: str
-    status: str
-    timestamp: str
-    comparison_id: str
-
-
-class InProgressJob(Job):
-    job_id: str
-    status: str
-    timestamp: str
-    comparison_id: str
-    worker_id: str
-
-
-class CompletedJob(Job):
-    job_id: str
-    status: str
-    timestamp: str
-    comparison_id: str
-    results: Dict
-
+# -- database connectors: currently exclusive to mongodb. TODO: create a dbconnector for a relational db -- #
 
 class DatabaseConnector(ABC):
     """Abstract class that is both serializable and interacts with the database (of any type). """
@@ -248,3 +216,7 @@ class MongoDbConnector(DatabaseConnector):
     def _parse_enum_input(self, _input: Any) -> str:
         return _input.value if isinstance(_input, Enum) else _input
 
+
+class MultipleConnectorError(Exception):
+    def __init__(self, message: str):
+        self.message = message
