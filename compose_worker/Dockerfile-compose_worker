@@ -124,7 +124,7 @@ COPY . /app/worker
 
 ENV PATH="/root/.local/bin:$PATH"
 
-RUN poetry install --only=worker && poetry check && poetry add process-bigraph
+RUN poetry install --only=worker
 
 WORKDIR /app/worker
 
