@@ -6,10 +6,10 @@ set -e
 
 version="$1"
 argA="$2"
-argB="$3"  # --prune
+argB="$3"  # -p
 argC="$4"
 
-if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ] || [ "$argC" == "--prune" ]; then
+if [ "$argA" == "-p" ] || [ "$argB" == "-p" ] || [ "$argC" == "-p" ]; then
   docker system prune -f -a
 fi
 
