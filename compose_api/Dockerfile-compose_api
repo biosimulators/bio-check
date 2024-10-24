@@ -9,7 +9,7 @@ COPY . /app/api
 
 EXPOSE 3001
 
-RUN /app/assets/install_deps.sh /app/api/requirements.api.txt
+# RUN /app/assets/install_deps.sh /app/api/requirements.api.txt
 
 WORKDIR /app/api
 

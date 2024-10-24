@@ -20,10 +20,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libhdf5-serial-dev \
     python3-pip  \
     python3-dev \
-    build-essential
+    build-essential \
+    libncurses5  \
+    libxml2 \
+    cmake  \
+    make  \
+    libx11-dev  \
+    libc6-dev  \
+    libx11-6  \
+    libgl1-mesa-dev \
+    libc6  \
+    gcc  \
+    libatlas-base-dev \
+    swig \
+    pkg-config  \
+    curl  \
+    tar  \
+    libgl1-mesa-glx  \
+    libice6  \
+    libpython3.10  \
+    libsm6 \
+    wget
 
 # hdf5/amici env deps
-RUN apt-get update && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev
+RUN apt-get update && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev gnupg
 
 # handle main content
 WORKDIR /app
@@ -58,17 +78,27 @@ RUN python3.10 -m pip install --upgrade pip \
     && poetry install --without=api,worker
 
 # install smoldyn
-RUN . /app/.venv/bin/activate \
-    && wget https://www.smoldyn.org/smoldyn-2.73.tgz \
-    && tar -xzf smoldyn-2.73.tgz \
-    && cd smoldyn-2.73 \
-    && cd build \
-    && cmake .. -DENABLE_PYTHON=ON -DPYTHON_EXECUTABLE=$(which python3.10) \
-    && make \
-    && make install
+# RUN . /app/.venv/bin/activate \
+#     && wget https://www.smoldyn.org/smoldyn-2.73.tgz \
+#     && tar -xzf smoldyn-2.73.tgz \
+#     && cd smoldyn-2.73 \
+#     && cd build \
+#     && cmake .. -DENABLE_PYTHON=ON -DPYTHON_EXECUTABLE=$(which python3.10) \
+#     && make \
+#     && make install
 # && rm -rf /var/lib/apt/lists/* \
 # && apt-get clean \
 # && apt-get autoclean
+
+# RUN . /app/.venv/bin/activate \
+#     && curl -O https://download.opensuse.org/repositories/home:/dilawar/xUbuntu_22.04/amd64/smoldyn_2.64.4-1+2.1_amd64.deb \
+#     && dpkg -i smoldyn_2.64.4-1+2.1_amd64.deb
+
+# RUN . /app/.venv/bin/activate \
+#     && echo 'deb http://download.opensuse.org/repositories/home:/dilawar/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/home:dilawar.list \
+#     && curl -fsSL https://download.opensuse.org/repositories/home:dilawar/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/home_dilawar.gpg > /dev/null \
+#     && apt update \
+#     && apt install smoldyn
 
 # fix python version constraint, lock env, and check compatible
 # RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
