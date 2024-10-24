@@ -122,10 +122,12 @@ COPY . /app/worker
 # install with poetry TODO: remove this eventually
 # RUN /app/assets/install_deps.sh /app/worker/requirements.worker.txt
 
-# RUN poetry install --only=worker && poetry check
+ENV PATH="/root/.local/bin:$PATH"
 
-# WORKDIR /app/worker
-#
-# RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
-#
-# ENTRYPOINT ["poetry", "run", "python3", "main.py"]
+RUN poetry install --only=worker && poetry check && poetry add process-bigraph
+
+WORKDIR /app/worker
+
+RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
+
+ENTRYPOINT ["poetry", "run", "python3", "main.py"]

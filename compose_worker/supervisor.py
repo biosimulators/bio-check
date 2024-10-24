@@ -3,7 +3,6 @@ from functools import partial
 from asyncio import sleep
 from typing import *
 from dotenv import load_dotenv
-from nbclient.client import timestamp
 from pymongo.collection import Collection as MongoCollection
 
 from shared import handle_exception
