@@ -174,21 +174,16 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     try:
         # convert sbml to psc
         pysces.model_dir = compilation_dir
-        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)
-        # pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp)
+        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)  # sbmldir=os.path.dirname(sbml_fp)
 
         # instantiate model from compilation contents
         with open(psc_fp, 'r', encoding='utf-8', errors='replace') as F:
             pscS = F.read()
-        #  F.close()
 
         model = pysces.model(psc_fp, loader='string', fString=pscS)
         # model = pysces.model(psc_fp)
 
         # run the simulation with specified time params
-        # model.sim_start = start
-        # model.sim_stop = dur
-        # model.sim_points = steps + 1
         t = np.linspace(start, dur, steps + 1)
         model.sim_time = t
         model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
@@ -200,7 +195,6 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
 
         # get raw output data and transpose for correct shape
         # data = model.data_sim.getSpecies().transpose().tolist()
-
         # remove time reporting TODO: do this more gracefully
         # data.pop(0)
         # return dict(zip(obs_names, data))
