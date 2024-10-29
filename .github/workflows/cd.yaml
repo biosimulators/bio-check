@@ -32,6 +32,9 @@ jobs:
     needs: configure-environment
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Get base image version
         run: |
           BASE_VERSION=$(echo ./assets/.BASE_VERSION)
@@ -53,6 +56,9 @@ jobs:
     needs: build-base-image
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       # Step 5: Extract API container version
       - name: Extract API container version
         id: extract_api_version
@@ -79,6 +85,9 @@ jobs:
     needs: get-microservice-versions
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       # Step 8: Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -91,6 +100,9 @@ jobs:
     needs: build-microservice-images
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       # Step 10: Change permissions for push script
       - name: Change push script permissions
         run: chmod +x ./assets/scripts/push_image.sh
