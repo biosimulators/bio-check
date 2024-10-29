@@ -165,14 +165,12 @@ def handle_sbml_exception() -> str:
 def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     import pysces
     import os
-
     # # model compilation
-    compilation_dir = mkdtemp()
+    compilation_dir = '/Pysces/psc'  # mkdtemp()
     sbml_filename = sbml_fp.split('/')[-1]
     psc_filename = sbml_filename + '.psc'
     psc_fp = os.path.join(compilation_dir, psc_filename)
     modelname = sbml_filename.replace('.xml', '')
-
     try:
         # convert sbml to psc
         pysces.model_dir = compilation_dir
@@ -198,10 +196,18 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
         obs_names = list(sbml_species_mapping.keys())
         obs_ids = list(sbml_species_mapping.values())
 
-        return {
-            obs_names[i]: model.data_sim.getSimData(obs_id)
-            for i, obs_id in enumerate(obs_ids)
-        }
+        # get raw output data and transpose for correct shape
+        data = model.data_sim.getSpecies().transpose().tolist()
+
+        # remove time reporting TODO: do this more gracefully
+        data.pop(0)
+
+        # return {
+        #     obs_names[i]: model.data_sim.getSimData(obs_id)
+        #     for i, obs_id in enumerate(obs_ids)
+        # }
+
+        return dict(zip(obs_names, data))
     except:
         error_message = handle_sbml_exception()
         return {"error": error_message}
