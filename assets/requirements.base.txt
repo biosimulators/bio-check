@@ -1,16 +1,4 @@
-fastapi
 python-multipart
-pydantic-settings
-pydantic
 python-dotenv
-uvicorn
-tensorstore
-aiofiles
-aiobotocore
-pyyaml
-httpx
 pymongo[srv]
 google-cloud-storage
-amici
-simulariumio
-biosimulators-processes

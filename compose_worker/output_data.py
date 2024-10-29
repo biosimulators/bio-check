@@ -165,39 +165,41 @@ def handle_sbml_exception() -> str:
 def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     import pysces
     import os
-
     # # model compilation
-    compilation_dir = mkdtemp()
+    compilation_dir = '/Pysces/psc'  # mkdtemp()
     sbml_filename = sbml_fp.split('/')[-1]
     psc_filename = sbml_filename + '.psc'
     psc_fp = os.path.join(compilation_dir, psc_filename)
     modelname = sbml_filename.replace('.xml', '')
-
     try:
         # convert sbml to psc
         pysces.model_dir = compilation_dir
-        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp)
+        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)  # sbmldir=os.path.dirname(sbml_fp)
 
         # instantiate model from compilation contents
-        with open(psc_fp, 'r', encoding='UTF-8') as F:
+        with open(psc_fp, 'r', encoding='utf-8', errors='replace') as F:
             pscS = F.read()
-            F.close()
 
-        model = pysces.model(modelname, loader='string', fString=pscS)
+        model = pysces.model(psc_fp, loader='string', fString=pscS)
 
         # run the simulation with specified time params
-        model.sim_start = start
-        model.sim_stop = dur
-        model.sim_points = steps + 1
-        model.Simulate()
+        t = np.linspace(start, dur, steps + 1)
+        model.sim_time = t
+        model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
 
         # get output with mapping of internal species ids to external (shared) species names
         sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
         obs_names = list(sbml_species_mapping.keys())
         obs_ids = list(sbml_species_mapping.values())
 
+        # get raw output data and transpose for correct shape
+        # data = model.data_sim.getSpecies().transpose().tolist()
+        # remove time reporting TODO: do this more gracefully
+        # data.pop(0)
+        # return dict(zip(obs_names, data))
+
         return {
-            obs_names[i]: model.data_sim.getSimData(obs_id)
+            obs_names[i]: model.data_sim.getSimData(obs_id)[:, 1].tolist()
             for i, obs_id in enumerate(obs_ids)
         }
     except:
@@ -338,7 +340,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     make_dir(output_root_dir)
 
     output_data = {}
-    sims = simulators or ['amici', 'copasi', 'tellurium']  # ,'pysces']
+    sims = simulators or ['amici', 'copasi', 'tellurium']  # , 'pysces']
     sim_config = Config(
         LOG=False,
         ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy[alg_policy.upper()],
@@ -354,7 +356,11 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
                 os.mkdir(sim_output_dir)
 
             # execute simulator-specific simulation
-            exec_func(archive_filename=omex_fp, out_dir=sim_output_dir, config=sim_config)
+            exec_func(
+                archive_filename=omex_fp,
+                out_dir=sim_output_dir,
+                config=sim_config if not sim == "pysces" else None
+            )
             report_path = os.path.join(sim_output_dir, 'reports.h5')
 
             sim_data = read_h5_reports(report_path)
@@ -407,7 +413,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     #     output[simulator_name] = sim_data
     output = {}
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
-    simulators = simulators or ['amici', 'copasi', 'tellurium']  # 'pysces',
+    simulators = simulators or ['amici', 'copasi', 'tellurium', 'pysces']
     all_output_ids = []
     for simulator in simulators:
         results = {}

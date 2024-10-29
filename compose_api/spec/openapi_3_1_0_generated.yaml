@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 1.11.9
+  version: 1.11.10
 paths:
   /:
     get:
@@ -131,6 +131,7 @@ paths:
           default:
           - amici
           - copasi
+          - pysces
           - tellurium
           title: Simulators
         description: List of simulators to compare
@@ -248,6 +249,7 @@ paths:
           default:
           - amici
           - copasi
+          - pysces
           - tellurium
           title: Simulators
         description: List of simulators to compare
@@ -317,59 +319,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SbmlVerificationRun'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /get-process-bigraph-addresses:
-    get:
-      tags:
-      - Composition
-      summary: Get process bigraph implementation addresses for composition specifications.
-      operationId: get-process-bigraph-addresses
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                items:
-                  type: string
-                type: array
-                title: Response Get-Process-Bigraph-Addresses
-  /new-utc-composition:
-    post:
-      tags:
-      - Composition
-      summary: Create new UTC composition job for composition specifications.
-      operationId: new-utc-composition
-      parameters:
-      - name: simulator
-        in: query
-        required: true
-        schema:
-          type: string
-          title: Simulator
-      - name: duration
-        in: query
-        required: true
-        schema:
-          type: integer
-          title: Duration
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Body_new-utc-composition'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
         '422':
           description: Validation Error
           content:
@@ -623,16 +572,6 @@ components:
       required:
       - uploaded_file
       title: Body_get-compatible-for-verification
-    Body_new-utc-composition:
-      properties:
-        source:
-          type: string
-          format: binary
-          title: Source
-      type: object
-      required:
-      - source
-      title: Body_new-utc-composition
     Body_run-smoldyn:
       properties:
         uploaded_file:

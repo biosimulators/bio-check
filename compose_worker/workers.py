@@ -745,7 +745,7 @@ class CompositionWorker(Worker):
 
     async def run(self, conn):
         from process_bigraph import Composite
-        from biosimulators_processes import CORE
+        # from biosimulators_processes import CORE
         from uuid import uuid4
 
         doc = self.job_params['composite_spec']
@@ -761,7 +761,7 @@ class CompositionWorker(Worker):
         doc[process_name]['config']['model']['model_source'] = local_fp
 
         # make composite
-        composite = Composite(config={'state': doc}, core=CORE)
+        composite = Composite(config={'state': doc}, core=PROCESS_TYPES)
 
         for n in range(duration):
             # run composite

@@ -55,7 +55,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 APP_TITLE = "bio-compose"
-APP_VERSION = "1.11.9"
+APP_VERSION = "1.11.10"
 
 # TODO: allow parsing of this prior to image build
 # with open('.CONTAINER_VERSION', 'r') as f:
@@ -149,7 +149,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 @app.get("/")
 def root():
-    return {'bio-compose-api-endpoint-root': 'https://biochecknet.biosimulations.org'}
+    return {'root': 'https://biochecknet.biosimulations.org'}
 
 
 # run simulations
@@ -400,7 +400,7 @@ async def run_utc(
     summary="Compare UTC outputs from a deterministic SBML model within an OMEX/COMBINE archive.")
 async def verify_omex(
         uploaded_file: UploadFile = File(..., description="OMEX/COMBINE archive containing a deterministic SBML model"),
-        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+        simulators: List[str] = Query(default=["amici", "copasi", "pysces", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         selection_list: Optional[List[str]] = Query(default=None, description="List of observables to include in the return data."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
@@ -490,7 +490,7 @@ async def verify_sbml(
         start: int = Query(..., description="Start time of the simulation (output start time)"),
         end: int = Query(..., description="End time of simulation (end)"),
         steps: int = Query(..., description="Number of simulation steps to run"),
-        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+        simulators: List[str] = Query(default=["amici", "copasi", "pysces", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         # expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
@@ -575,229 +575,6 @@ async def verify_sbml(
         return sbml_verification
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get(
-    "/get-process-bigraph-addresses",
-    operation_id="get-process-bigraph-addresses",
-    tags=["Composition"],
-    summary="Get process bigraph implementation addresses for composition specifications.")
-def get_process_bigraph_addresses() -> List[str]:
-    try:
-        from biosimulators_processes import CORE
-        return list(CORE.process_registry.registry.keys())
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post(
-    "/new-utc-composition",
-    operation_id="new-utc-composition",
-    tags=["Composition"],
-    summary="Create new UTC composition job for composition specifications."
-)
-async def new_utc_composition(source: UploadFile = File(...),simulator: str = Query(...), duration: int = Query(...)):
-    # params
-    job_id = "composition-run_" + str(uuid.uuid4())
-    _time = db_connector.timestamp()
-    upload_prefix, bucket_prefix = file_upload_prefix(job_id)
-
-    # check extension
-    properly_formatted_sbml = check_upload_file_extension(source, 'source', '.xml')
-    if not properly_formatted_sbml:
-        raise HTTPException(status_code=500, detail="Improperly formatted SBML file")
-
-    # write file to bucket location
-    save_dest = mkdtemp()
-    fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
-    blob_dest = upload_prefix + fp.split("/")[-1]
-    upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-    uploaded_file_location = blob_dest
-
-    doc = {
-        simulator: {
-            '_type': 'process',
-            'address': f'local:{simulator}-process',
-            'config': {
-                'model': {
-                    'model_source': uploaded_file_location
-                }
-            },
-            'inputs': {
-                'time': ['time_store'],
-                'floating_species_concentrations': ['floating_species_concentrations_store'],
-                'model_parameters': ['model_parameters_store'],
-                'reactions': ['reactions_store']
-            },
-            'outputs': {
-                'time': ['time_store'],
-                'floating_species_concentrations': ['floating_species_concentrations_store'],
-            }
-        },
-        'emitter': {
-            '_type': 'step',
-            'address': 'local:ram-emitter',
-            'config': {
-                'emit': {
-                    'time': 'float',
-                    'floating_species_concentrations': 'tree[float]'
-                }
-            },
-            'inputs': {
-                'time': ['time_store'],
-                'floating_species_concentrations': ['floating_species_concentrations_store']
-            }
-        }
-    }
-
-    pending_job_doc = await db_connector.insert_job_async(
-        collection_name=DatabaseCollections.PENDING_JOBS.value,
-        status=JobStatus.PENDING.value,
-        job_id=job_id,
-        path=uploaded_file_location,
-        simulators=[simulator],
-        timestamp=_time,
-        duration=duration,
-        composite_spec=doc
-    )
-
-    return pending_job_doc
-
-
-# @app.post(
-#     "/new-smoldyn-composition",
-#     operation_id="new-smoldyn-composition",
-#     tags=["Composition"],
-#     summary="Create new smoldyn composition job for composition specifications."
-# )
-# async def new_smoldyn_composition(source: UploadFile = File(...), name: str = Query(...), duration: int = Query(...)):
-#     # params
-#     job_id = "composition-run_" + str(uuid.uuid4())
-#     _time = db_connector.timestamp()
-#     upload_prefix, bucket_prefix = file_upload_prefix(job_id)
-#
-#     # check extension
-#     properly_formatted_smoldyn = check_upload_file_extension(source, 'source', '.txt')
-#     if not properly_formatted_smoldyn:
-#         raise HTTPException(status_code=500, detail="Improperly formatted Smoldyn file")
-#
-#     # write file to bucket location
-#     save_dest = mkdtemp()
-#     fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
-#     blob_dest = upload_prefix + fp.split("/")[-1]
-#     upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-#     uploaded_file_location = blob_dest
-#
-#     doc = {
-#         name: {
-#             '_type': 'process',
-#             'address': f'local:smoldyn-process',
-#             'config': {
-#                 'model': {
-#                     'model_source': uploaded_file_location
-#                 }
-#             },
-#             'inputs': {
-#                 'species_counts': ['species_store'],
-#                 'molecules': ['molecules_store'],
-#             },
-#             'outputs': {
-#                 'species_counts': ['species_store'],
-#                 'molecules': ['molecules_store'],
-#             }
-#         },
-#         'emitter': {
-#             '_type': 'step',
-#             'address': 'local:ram-emitter',
-#             'config': {
-#                 'emit': {
-#                     'species_counts': 'tree[integer]',
-#                     'molecules': 'tree[string]'
-#                 }
-#             },
-#             'inputs': {
-#                 'species_counts': ['species_store'],
-#                 'molecules': ['molecules_store']
-#             }
-#         }
-#     }
-#
-#     pending_job_doc = await db_connector.insert_job_async(
-#         collection_name=DatabaseCollections.PENDING_JOBS.value,
-#         status=JobStatus.PENDING.value,
-#         job_id=job_id,
-#         path=uploaded_file_location,
-#         simulator='smoldyn',
-#         timestamp=_time,
-#         duration=duration,
-#         composite_spec=doc
-#     )
-#
-#     return pending_job_doc
-
-
-# @app.post(
-#     "/run-composition",
-#     # response_model=PendingCompositionJob,
-#     operation_id='run-composition',
-#     tags=["Composition"],
-#     summary='Run a composite simulation.')
-# async def run_composition(
-#         source: UploadFile = File(..., description="Upload source file"),
-#         composition_spec: CompositionSpecification = Body(..., description="ProcessBigraph-compliant specification of composition."),
-#         duration: int = Query(..., description="Duration of the simulation in seconds."),
-# ):
-#     try:
-#         # job params
-#         job_id = "composition-run" + str(uuid.uuid4())
-#         _time = db_connector.timestamp()
-#         if composition_spec.composition_id is None:
-#             composition_spec.composition_id = job_id
-#
-#         # insert a config with source (currently only supporting UTC MODEL CONFIG) TODO: expand this
-#         upload_prefix, bucket_prefix = file_upload_prefix(job_id)
-#         save_dest = mkdtemp()
-#         fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
-#
-#         # Save uploaded omex file to Google Cloud Storage
-#         uploaded_file_location = None
-#         properly_formatted_sbml = check_upload_file_extension(source, 'uploaded_file', '.xml')
-#         if properly_formatted_sbml:
-#             blob_dest = upload_prefix + fp.split("/")[-1]
-#             upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
-#             uploaded_file_location = blob_dest
-#
-#         # format process bigraph spec needed for Composite()
-#         spec = {}
-#         for node in composition_spec.nodes:
-#             name = node.name
-#             node_spec = node.model_dump()
-#             node_spec.pop("name")
-#             node_spec.pop("node_type")
-#             node_spec["_type"] = node.node_type
-#             spec[name] = node_spec
-#
-#             if 'emitter' not in node.address:
-#                 spec[name]['config'] = {
-#                     'model': {
-#                         'model_source': uploaded_file_location
-#                     }
-#                 }
-#
-#         # write job as dict to db
-#         # job = PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id)
-#         job = {'composition': spec, 'duration': duration, 'timestamp': _time, 'job_id': job_id}
-#         await db_connector.insert_job_async(collection_name=DatabaseCollections.PENDING_JOBS.value, **job)
-#
-#         return job
-#     except Exception as e:
-#         raise HTTPException(status_code=404, detail=str(e))
-
-
-# TODO: allow this for admins
-# @app.get("/get-jobs")
-# async def get_jobs(collection: str = Query(...)):
-#     return [job['job_id'] for job in db_connector.db[collection].find()]
 
 
 @app.get(
@@ -887,24 +664,24 @@ async def get_verification_output(job_id: str) -> VerificationOutput:
     if job is not None:
         job.pop('_id', None)
         results = job.get('results')
-        data = []
-        if results is not None:
-            for name, obs_data in results.items():
-                if not name == "rmse":
-                    obs = ObservableData(observable_name=name, mse=obs_data['mse'], proximity=obs_data['proximity'], output_data=obs_data['output_data'])
-                    data.append(obs)
-                else:
-                    for simulator_name, data_table in obs_data.items():
-                        obs = SimulatorRMSE(simulator=simulator_name, rmse_scores=data_table)
-                        data.append(obs)
+        # data = []
+        # if results is not None:
+        #     for name, obs_data in results.items():
+        #         if not name == "rmse":
+        #             obs = ObservableData(observable_name=name, mse=obs_data['mse'], proximity=obs_data['proximity'], output_data=obs_data['output_data'])
+        #             data.append(obs)
+        #         else:
+        #             for simulator_name, data_table in obs_data.items():
+        #                 obs = SimulatorRMSE(simulator=simulator_name, rmse_scores=data_table)
+        #                 data.append(obs)
 
         output = VerificationOutput(
             job_id=job_id,
             timestamp=job.get('timestamp'),
             status=job.get('status'),
             source=job.get('source', job.get('path')).split('/')[-1],
-            results=data,  # Change this to the results below if there is an issue
-            # results=job.get('results')
+            # results=data,  # Change this to the results below if there is an issue
+            results=results
         )
         requested_simulators = job.get('simulators', job.get('requested_simulators'))
         if requested_simulators is not None:
@@ -1064,7 +841,7 @@ async def generate_simularium_file(
 
     return new_job_submission
     # except Exception as e:
-        # raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
+    # raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
 
 
 @app.post(
@@ -1080,13 +857,6 @@ async def get_compatible_for_verification(
     try:
         filename = uploaded_file.filename
         simulators = COMPATIBLE_VERIFICATION_SIMULATORS.copy()  # TODO: dynamically extract this!
-
-        # handle filetype: amici is not compatible with sbml verification at the moment
-        # if not filename.endswith(".omex"):
-        #     for sim in simulators:
-        #         if sim[0] == 'amici':
-        #             simulators.remove(sim)
-
         compatible_sims = []
         for data in simulators:
             name = data[0]
@@ -1099,7 +869,230 @@ async def get_compatible_for_verification(
         raise HTTPException(status_code=404, detail="Comparison not found")
 
 
-# TODO: Implement smoldyn simularium execution!
+# Not-yet implemented content:
+
+# TODO: Uncomment to implement composition API and move this to a seperate API gateway.
+# @app.get(
+#     "/get-process-bigraph-addresses",
+#     operation_id="get-process-bigraph-addresses",
+#     tags=["Composition"],
+#     summary="Get process bigraph implementation addresses for composition specifications.")
+# def get_process_bigraph_addresses() -> List[str]:
+#     try:
+#         from biosimulators_processes import CORE
+#         return list(CORE.process_registry.registry.keys())
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
+# @app.post(
+#     "/new-utc-composition",
+#     operation_id="new-utc-composition",
+#     tags=["Composition"],
+#     summary="Create new UTC composition job for composition specifications."
+# )
+# async def new_utc_composition(source: UploadFile = File(...),simulator: str = Query(...), duration: int = Query(...)):
+#     # params
+#     job_id = "composition-run_" + str(uuid.uuid4())
+#     _time = db_connector.timestamp()
+#     upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+#
+#     # check extension
+#     properly_formatted_sbml = check_upload_file_extension(source, 'source', '.xml')
+#     if not properly_formatted_sbml:
+#         raise HTTPException(status_code=500, detail="Improperly formatted SBML file")
+#
+#     # write file to bucket location
+#     save_dest = mkdtemp()
+#     fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
+#     blob_dest = upload_prefix + fp.split("/")[-1]
+#     upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+#     uploaded_file_location = blob_dest
+#
+#     doc = {
+#         simulator: {
+#             '_type': 'process',
+#             'address': f'local:{simulator}-process',
+#             'config': {
+#                 'model': {
+#                     'model_source': uploaded_file_location
+#                 }
+#             },
+#             'inputs': {
+#                 'time': ['time_store'],
+#                 'floating_species_concentrations': ['floating_species_concentrations_store'],
+#                 'model_parameters': ['model_parameters_store'],
+#                 'reactions': ['reactions_store']
+#             },
+#             'outputs': {
+#                 'time': ['time_store'],
+#                 'floating_species_concentrations': ['floating_species_concentrations_store'],
+#             }
+#         },
+#         'emitter': {
+#             '_type': 'step',
+#             'address': 'local:ram-emitter',
+#             'config': {
+#                 'emit': {
+#                     'time': 'float',
+#                     'floating_species_concentrations': 'tree[float]'
+#                 }
+#             },
+#             'inputs': {
+#                 'time': ['time_store'],
+#                 'floating_species_concentrations': ['floating_species_concentrations_store']
+#             }
+#         }
+#     }
+#
+#     pending_job_doc = await db_connector.insert_job_async(
+#         collection_name=DatabaseCollections.PENDING_JOBS.value,
+#         status=JobStatus.PENDING.value,
+#         job_id=job_id,
+#         path=uploaded_file_location,
+#         simulators=[simulator],
+#         timestamp=_time,
+#         duration=duration,
+#         composite_spec=doc
+#     )
+#
+#     return pending_job_doc
+
+
+# @app.post(
+#     "/new-smoldyn-composition",
+#     operation_id="new-smoldyn-composition",
+#     tags=["Composition"],
+#     summary="Create new smoldyn composition job for composition specifications."
+# )
+# async def new_smoldyn_composition(source: UploadFile = File(...), name: str = Query(...), duration: int = Query(...)):
+#     # params
+#     job_id = "composition-run_" + str(uuid.uuid4())
+#     _time = db_connector.timestamp()
+#     upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+#
+#     # check extension
+#     properly_formatted_smoldyn = check_upload_file_extension(source, 'source', '.txt')
+#     if not properly_formatted_smoldyn:
+#         raise HTTPException(status_code=500, detail="Improperly formatted Smoldyn file")
+#
+#     # write file to bucket location
+#     save_dest = mkdtemp()
+#     fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
+#     blob_dest = upload_prefix + fp.split("/")[-1]
+#     upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+#     uploaded_file_location = blob_dest
+#
+#     doc = {
+#         name: {
+#             '_type': 'process',
+#             'address': f'local:smoldyn-process',
+#             'config': {
+#                 'model': {
+#                     'model_source': uploaded_file_location
+#                 }
+#             },
+#             'inputs': {
+#                 'species_counts': ['species_store'],
+#                 'molecules': ['molecules_store'],
+#             },
+#             'outputs': {
+#                 'species_counts': ['species_store'],
+#                 'molecules': ['molecules_store'],
+#             }
+#         },
+#         'emitter': {
+#             '_type': 'step',
+#             'address': 'local:ram-emitter',
+#             'config': {
+#                 'emit': {
+#                     'species_counts': 'tree[integer]',
+#                     'molecules': 'tree[string]'
+#                 }
+#             },
+#             'inputs': {
+#                 'species_counts': ['species_store'],
+#                 'molecules': ['molecules_store']
+#             }
+#         }
+#     }
+#
+#     pending_job_doc = await db_connector.insert_job_async(
+#         collection_name=DatabaseCollections.PENDING_JOBS.value,
+#         status=JobStatus.PENDING.value,
+#         job_id=job_id,
+#         path=uploaded_file_location,
+#         simulator='smoldyn',
+#         timestamp=_time,
+#         duration=duration,
+#         composite_spec=doc
+#     )
+#
+#     return pending_job_doc
+
+
+# @app.post(
+#     "/run-composition",
+#     # response_model=PendingCompositionJob,
+#     operation_id='run-composition',
+#     tags=["Composition"],
+#     summary='Run a composite simulation.')
+# async def run_composition(
+#         source: UploadFile = File(..., description="Upload source file"),
+#         composition_spec: CompositionSpecification = Body(..., description="ProcessBigraph-compliant specification of composition."),
+#         duration: int = Query(..., description="Duration of the simulation in seconds."),
+# ):
+#     try:
+#         # job params
+#         job_id = "composition-run" + str(uuid.uuid4())
+#         _time = db_connector.timestamp()
+#         if composition_spec.composition_id is None:
+#             composition_spec.composition_id = job_id
+#
+#         # insert a config with source (currently only supporting UTC MODEL CONFIG) TODO: expand this
+#         upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+#         save_dest = mkdtemp()
+#         fp = await save_uploaded_file(source, save_dest)  # save uploaded file to ephemeral store
+#
+#         # Save uploaded omex file to Google Cloud Storage
+#         uploaded_file_location = None
+#         properly_formatted_sbml = check_upload_file_extension(source, 'uploaded_file', '.xml')
+#         if properly_formatted_sbml:
+#             blob_dest = upload_prefix + fp.split("/")[-1]
+#             upload_blob(bucket_name=BUCKET_NAME, source_file_name=fp, destination_blob_name=blob_dest)
+#             uploaded_file_location = blob_dest
+#
+#         # format process bigraph spec needed for Composite()
+#         spec = {}
+#         for node in composition_spec.nodes:
+#             name = node.name
+#             node_spec = node.model_dump()
+#             node_spec.pop("name")
+#             node_spec.pop("node_type")
+#             node_spec["_type"] = node.node_type
+#             spec[name] = node_spec
+#
+#             if 'emitter' not in node.address:
+#                 spec[name]['config'] = {
+#                     'model': {
+#                         'model_source': uploaded_file_location
+#                     }
+#                 }
+#
+#         # write job as dict to db
+#         # job = PendingCompositionJob(composition=spec, duration=duration, timestamp=_time, job_id=job_id)
+#         job = {'composition': spec, 'duration': duration, 'timestamp': _time, 'job_id': job_id}
+#         await db_connector.insert_job_async(collection_name=DatabaseCollections.PENDING_JOBS.value, **job)
+#
+#         return job
+#     except Exception as e:
+#         raise HTTPException(status_code=404, detail=str(e))
+
+
+# TODO: allow this for admins
+# @app.get("/get-jobs")
+# async def get_jobs(collection: str = Query(...)):
+#     return [job['job_id'] for job in db_connector.db[collection].find()]
 
 
 # TODO: eventually implement this

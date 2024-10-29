@@ -2,7 +2,6 @@
 from enum import Enum
 from typing import List, Optional, Any, Dict, Union
 
-from pyarrow import timestamp
 from pydantic import Field
 from fastapi.responses import FileResponse
 

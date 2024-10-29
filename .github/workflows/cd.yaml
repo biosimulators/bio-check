@@ -1,10 +1,10 @@
-name: Continuous Deployment
+name: CD
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy-microservices:
+  configure-environment:
     runs-on: ubuntu-latest
     steps:
       # Step 1: Checkout repository
@@ -28,6 +28,31 @@ jobs:
           sudo apt-get install -y python3 python3-pip
           pip install pyyaml
 
+  build-base-image:
+    needs: configure-environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get base image version
+        run: |
+          BASE_VERSION=$(echo ./assets/.BASE_VERSION)
+          echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+          echo "Base Version: $BASE_VERSION"
+
+      - name: Build base image
+        run: |
+          sudo chmod +x ./assets/scripts/build_base.sh
+          ./assets/scripts/build_base.sh ${{ env.BASE_VERSION }}
+
+      - name: Push base image to GHCR
+        run: |
+          sudo chmod +x ./assets/scripts/push_base.sh
+          sudo chmod +x ./assets/scripts/push_image.sh
+          ./assets/scripts/push_base.sh ${{ env.BASE_VERSION }} ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+
+  get-microservice-versions:
+    needs: build-base-image
+    runs-on: ubuntu-latest
+    steps:
       # Step 5: Extract API container version
       - name: Extract API container version
         id: extract_api_version
@@ -50,6 +75,10 @@ jobs:
           echo "API_VERSION=${{ env.API_VERSION }}"
           echo "WORKER_VERSION=${{ env.WORKER_VERSION }}"
 
+  build-microservice-images:
+    needs: get-microservice-versions
+    runs-on: ubuntu-latest
+    steps:
       # Step 8: Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -58,6 +87,10 @@ jobs:
       - name: Build Docker containers with Docker Compose
         run: docker-compose build --no-cache
 
+  deploy-microservice-images:
+    needs: build-microservice-images
+    runs-on: ubuntu-latest
+    steps:
       # Step 10: Change permissions for push script
       - name: Change push script permissions
         run: chmod +x ./assets/scripts/push_image.sh
