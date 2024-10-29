@@ -176,14 +176,16 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     try:
         # convert sbml to psc
         pysces.model_dir = compilation_dir
-        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp)
+        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)
+        # pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, sbmldir=os.path.dirname(sbml_fp), pscfile=psc_fp)
 
         # instantiate model from compilation contents
-        with open(psc_fp, 'r', encoding='UTF-8') as F:
-            pscS = F.read()
-            # F.close()
+        # with open(psc_fp, 'r', encoding='UTF-8') as F:
+        #     pscS = F.read()
+        #     F.close()
 
-        model = pysces.model(modelname, loader='string', fString=pscS)
+        # model = pysces.model(modelname, loader='string', fString=pscS)
+        model = pysces.model(psc_fp)
 
         # run the simulation with specified time params
         model.sim_start = start
@@ -411,7 +413,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     #     output[simulator_name] = sim_data
     output = {}
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
-    simulators = simulators or ['amici', 'copasi', 'tellurium']  # , 'pysces']
+    simulators = simulators or ['amici', 'copasi', 'tellurium', 'pysces']
     all_output_ids = []
     for simulator in simulators:
         results = {}

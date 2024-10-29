@@ -53,7 +53,7 @@ COPY . /app/worker
 ENV PATH="/root/.local/bin:$PATH"
 
 # Install only worker deps TODO: include toml in base deps
-RUN poetry install --only=worker --no-cache
+RUN poetry install --only=worker,pysces --no-cache
 
 # Install Assimulo from source for Pysces
 # RUN apt-get update \
