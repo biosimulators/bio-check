@@ -197,17 +197,16 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
         obs_ids = list(sbml_species_mapping.values())
 
         # get raw output data and transpose for correct shape
-        data = model.data_sim.getSpecies().transpose().tolist()
+        # data = model.data_sim.getSpecies().transpose().tolist()
 
         # remove time reporting TODO: do this more gracefully
-        data.pop(0)
+        # data.pop(0)
+        # return dict(zip(obs_names, data))
 
-        # return {
-        #     obs_names[i]: model.data_sim.getSimData(obs_id)
-        #     for i, obs_id in enumerate(obs_ids)
-        # }
-
-        return dict(zip(obs_names, data))
+        return {
+            obs_names[i]: model.data_sim.getSimData(obs_id)[:, 1].tolist()
+            for i, obs_id in enumerate(obs_ids)
+        }
     except:
         error_message = handle_sbml_exception()
         return {"error": error_message}
