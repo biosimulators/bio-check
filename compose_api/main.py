@@ -490,7 +490,7 @@ async def verify_sbml(
         start: int = Query(..., description="Start time of the simulation (output start time)"),
         end: int = Query(..., description="End time of simulation (end)"),
         steps: int = Query(..., description="Number of simulation steps to run"),
-        simulators: List[str] = Query(default=["amici", "copasi", "tellurium"], description="List of simulators to compare"),
+        simulators: List[str] = Query(default=["amici", "copasi", "pysces", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
         # expected_results: Optional[UploadFile] = File(default=None, description="reports.h5 file defining the expected results to be included in the comparison."),
