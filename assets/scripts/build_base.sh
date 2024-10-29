@@ -14,7 +14,7 @@ if [ "$argA" == "-p" ] || [ "$argB" == "-p" ] || [ "$argC" == "-p" ]; then
 fi
 
 echo "Building base image..."
-docker build --platform linux/amd64 -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base:"$version" .
+docker build --platform linux/amd64 --no-cache -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base:"$version" .
 echo "Built base image."
 
 echo "Tagging new base image as latest..."
