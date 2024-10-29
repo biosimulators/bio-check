@@ -2,6 +2,7 @@
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
+
 # os deps
 RUN apt-get update && apt-get install -y libatlas-base-dev \
     libhdf5-serial-dev \
@@ -17,6 +18,7 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     gcc \
     gfortran \
     libgfortran5
+
 
 ###################################
 # PySCeS
@@ -50,10 +52,24 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
 
 COPY . /app/worker
 
+
 ENV PATH="/root/.local/bin:$PATH"
+
+
+# copy pysces config
+RUN mkdir -p /Pysces \
+    && mkdir -p /Pysces/psc \
+    && mkdir -p /root/Pysces \
+    && mkdir -p /root/Pysces/psc \
+    && chmod ugo+rw -R /Pysces
+
+COPY ./.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY ./.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+
 
 # Install only worker deps TODO: include toml in base deps
 RUN poetry install --only=worker,pysces --no-cache
+
 
 # Install Assimulo from source for Pysces
 # RUN apt-get update \
@@ -67,14 +83,18 @@ RUN poetry install --only=worker,pysces --no-cache
 #     && poetry run pip install --upgrade setuptools pip wheel Cython numpy \
 #     && poetry run python3 setup.py install --sundials-home=/usr/local --blas-home=/usr/lib/x86_64-linux-gnu
 
+
 # install masspy TODO: implement this
 # RUN git clone https://github.com/biosimulators/Biosimulators_MASSpy.git \
 #     && cd Biosimulators_MASSpy \
 #     && rm pyproject.toml
 
+
 WORKDIR /app/worker
 
+
 RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
+
 
 ENTRYPOINT ["poetry", "run", "python3", "main.py"]
 
