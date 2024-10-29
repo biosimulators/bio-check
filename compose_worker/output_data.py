@@ -181,7 +181,6 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
             pscS = F.read()
 
         model = pysces.model(psc_fp, loader='string', fString=pscS)
-        # model = pysces.model(psc_fp)
 
         # run the simulation with specified time params
         t = np.linspace(start, dur, steps + 1)
