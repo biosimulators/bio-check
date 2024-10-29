@@ -186,10 +186,12 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
         model = pysces.model(psc_fp)
 
         # run the simulation with specified time params
-        model.sim_start = start
-        model.sim_stop = dur
-        model.sim_points = steps + 1
-        model.Simulate()
+        # model.sim_start = start
+        # model.sim_stop = dur
+        # model.sim_points = steps + 1
+        t = np.linspace(start, dur, steps + 1)
+        model.sim_time = t
+        model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
 
         # get output with mapping of internal species ids to external (shared) species names
         sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
