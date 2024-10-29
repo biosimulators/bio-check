@@ -37,7 +37,7 @@ jobs:
 
       - name: Get base image version
         run: |
-          BASE_VERSION=$(echo ./assets/.BASE_VERSION)
+          BASE_VERSION=$(cat ./assets/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
           echo "Base Version: $BASE_VERSION"
 
