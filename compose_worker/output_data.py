@@ -338,7 +338,7 @@ def generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simula
     make_dir(output_root_dir)
 
     output_data = {}
-    sims = simulators or ['amici', 'copasi', 'tellurium', 'pysces']
+    sims = simulators or ['amici', 'copasi', 'tellurium']  # , 'pysces']
     sim_config = Config(
         LOG=False,
         ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy[alg_policy.upper()],
@@ -411,7 +411,7 @@ def generate_sbml_utc_outputs(sbml_fp: str, start: int, dur: int, steps: int, si
     #     output[simulator_name] = sim_data
     output = {}
     sbml_species_ids = list(get_sbml_species_mapping(sbml_fp).keys())
-    simulators = simulators or ['amici', 'copasi', 'tellurium', 'pysces']
+    simulators = simulators or ['amici', 'copasi', 'tellurium']  # , 'pysces']
     all_output_ids = []
     for simulator in simulators:
         results = {}
