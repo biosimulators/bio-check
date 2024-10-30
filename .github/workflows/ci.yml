@@ -24,7 +24,7 @@ jobs:
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
           echo "Base Version: $BASE_VERSION"
 
-      - name: Create gcloud config
+      - name: Create gcloud config artifact
         run: |
           echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/configs/.biosimulations.json
         env:
