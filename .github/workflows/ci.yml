@@ -5,7 +5,6 @@ on:
 
 jobs:
   build-base-image:
-    environment: bio-check-deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,4 +31,4 @@ jobs:
 
       - name: Test build base image
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
+          docker build --no-cache -f ./Dockerfile-base -t ghcr.io/biosimulations/bio-check-base:${{ env.BASE_VERSION }} .
