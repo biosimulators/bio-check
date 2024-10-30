@@ -83,4 +83,5 @@ RUN /opt/miniconda/envs/my-env/bin/python --version
 WORKDIR /app
 RUN mkdir /app/data
 
+ENTRYPOINT ["conda run python3 -c 'print(1);'"]
 
