@@ -12,9 +12,9 @@ if [ "$version" == "" ]; then
 fi
 
 # login to github
-if [ "$gh_username" != "" ]; then
-  ./assets/scripts/gh_login.sh "$gh_username"
-fi
+# if [ "$gh_username" != "" ]; then
+#   ./assets/scripts/gh_login.sh "$gh_username"
+# fi
 
 # yes | docker system prune
 
