@@ -18,7 +18,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Check if Docker Compose is installed correctly
 
-      - name: Get base image version
+      - name: Get new base image version
         run: |
           BASE_VERSION=$(cat ./assets/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
@@ -29,11 +29,6 @@ jobs:
           echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/configs/.biosimulations.json
         env:
           BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
-
-      - name: Get new base tag
-        run: |
-          BASE_IMG=ghcr.io/biosimulators/bio-check-base
-          echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
 
       - name: Test build base image
         run: |
