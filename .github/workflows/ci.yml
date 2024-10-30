@@ -4,16 +4,12 @@ on:
   push:
 
 jobs:
-  configure-environment:
+  build-base-image:
+    environment: bio-check-prod
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout repository
       - name: Checkout code
         uses: actions/checkout@v2
-
-      # Step 2: Log in to GHCR
-      - name: Test Log in to GHCR
-        run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
 
       # Step 3: Install Docker Compose
       - name: Install Docker Compose
@@ -21,13 +17,6 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Check if Docker Compose is installed correctly
-
-  build-base-image:
-    needs: configure-environment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Get base image version
         run: |
@@ -41,7 +30,11 @@ jobs:
         env:
           BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
 
-      - name: Build base image
+      - name: Get new base tag
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base:${{ env.BASE_VERSION }} .
-          docker images
+          BASE_IMG=ghcr.io/biosimulators/bio-check-base
+          echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
+
+      - name: Test build base image
+        run: |
+          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
