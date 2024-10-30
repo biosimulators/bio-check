@@ -1,34 +1,49 @@
+import os
 from tempfile import mkdtemp
 from typing import *
 from importlib import import_module
 
 import libsbml
 import numpy as np
-
-try:
-    from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
-except ImportError as e:
-    print(e)
-try:
-    from basico import *
-except ImportError as e:
-    print(e)
-try:
-    import tellurium as te
-except ImportError as e:
-    print(e)
-try:
-    from smoldyn import Simulation
-except ImportError as e:
-    print(e)
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
-# from biosimulators_simularium import execute as execute_simularium
 
 from shared import handle_exception
 from data_model import BiosimulationsRunOutputData
 from compatible import COMPATIBLE_UTC_SIMULATORS
 from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports
+
+AMICI_ENABLED = True
+COPASI_ENABLED = True
+PYSCES_ENABLED = True
+TELLURIUM_ENABLED = True
+SMOLDYN_ENABLED = True
+
+try:
+    from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
+except ImportError as e:
+    print(e)
+    AMICI_ENABLED = False
+try:
+    from basico import *
+except ImportError as e:
+    print(e)
+    COPASI_ENABLED = False
+try:
+    import tellurium as te
+except ImportError as e:
+    print(e)
+    TELLURIUM_ENABLED = False
+try:
+    from smoldyn import Simulation
+except ImportError as e:
+    print(e)
+    SMOLDYN_ENABLED = False
+try:
+    import pysces
+except ImportError as e:
+    print(e)
+    PYSCES_ENABLED = False
 
 
 # def generate_smoldyn_simularium(smoldyn_configuration_file: str, output_dest_dir: str, use_json: bool = True, agent_params=None, box_size=None):
@@ -148,11 +163,6 @@ def get_sbml_species_mapping(sbml_fp: str):
     return dict(zip(names, species_ids))
 
 
-# 1. add try/except to each sbml output generator: {error: msg}
-# 2. in output_stack: return {simname: output}
-# 3. In species comparison: for sim in stack.keys(): if isinstance(stack[sim], str): sims.remove(sim), stack.remove(..)
-
-
 def handle_sbml_exception() -> str:
     import traceback
     from pprint import pformat
@@ -162,28 +172,50 @@ def handle_sbml_exception() -> str:
     return error_message
 
 
+# def run_sbml_pysces(sbml_fp: str, start, dur, steps):
+#     import pysces
+#     import os
+#     import shutil
+#     # model compilation
+#     compilation_dir = '/Pysces/psc'
+#     # compilation_dir = mkdtemp()
+#     sbml_filename = sbml_fp.split('/')[-1]
+#     psc_filename = sbml_filename + '.psc'
+#     psc_fp = os.path.join(compilation_dir, psc_filename)
+#     try:
+#         # convert sbml to psc
+#         # pysces.model_dir = compilation_dir
+#         # pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)  # sbmldir=os.path.dirname(sbml_fp)
+#         # instantiate model from compilation contents
+#         # with open(psc_fp, 'r', encoding='utf-8', errors='replace') as F:
+#         #    pscS = F.read()
+#         # model = pysces.model(psc_fp, loader='string', fString=pscS)
+#         model = pysces.loadSBML(sbmlfile=sbml_fp, pscfile=psc_fp)
+#         # run the simulation with specified time params
+#         model.sim_time = np.linspace(start, dur, steps + 1)
+#         model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
+#         # get output with mapping of internal species ids to external (shared) species names
+#         sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
+#         obs_names = list(sbml_species_mapping.keys())
+#         obs_ids = list(sbml_species_mapping.values())
+#         data = {
+#             name: model.data_sim.getSimData(obs_id)[:, 1].tolist()
+#             for name, obs_id in sbml_species_mapping.items()
+#         }
+#         # clean up model dir
+#         shutil.rmtree(compilation_dir)
+#         return data
+#     except:
+#         error_message = handle_sbml_exception()
+#         return {"error": error_message}
+
+
 def run_sbml_pysces(sbml_fp: str, start, dur, steps):
-    import pysces
-    import os
-    import shutil
-
-    # model compilation
-    compilation_dir = '/Pysces/psc'
-    # compilation_dir = mkdtemp()
-    sbml_filename = sbml_fp.split('/')[-1]
-    psc_filename = sbml_filename + '.psc'
-    psc_fp = os.path.join(compilation_dir, psc_filename)
-
-    try:
-        # convert sbml to psc
-        pysces.model_dir = compilation_dir
-
-        # pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)  # sbmldir=os.path.dirname(sbml_fp)
-        # instantiate model from compilation contents
-        # with open(psc_fp, 'r', encoding='utf-8', errors='replace') as F:
-        #    pscS = F.read()
-        # model = pysces.model(psc_fp, loader='string', fString=pscS)
-
+    if PYSCES_ENABLED:
+        # model compilation
+        sbml_filename = sbml_fp.split('/')[-1]
+        psc_filename = sbml_filename + '.psc'
+        psc_fp = os.path.join(pysces.model_dir, psc_filename)
         model = pysces.loadSBML(sbmlfile=sbml_fp, pscfile=psc_fp)
 
         # run the simulation with specified time params
@@ -195,17 +227,13 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
         obs_names = list(sbml_species_mapping.keys())
         obs_ids = list(sbml_species_mapping.values())
         data = {
-            obs_names[i]: model.data_sim.getSimData(obs_id)[:, 1].tolist()
-            for i, obs_id in enumerate(obs_ids)
+            name: model.data_sim.getSimData(obs_id)[:, 1].tolist()
+            for name, obs_id in sbml_species_mapping.items()
         }
 
-        # clean up model dir
-        shutil.rmtree(compilation_dir)
-
         return data
-    except:
-        error_message = handle_sbml_exception()
-        return {"error": error_message}
+    else:
+        return OSError('Pysces is not properly installed in your environment.')
 
 
 def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
