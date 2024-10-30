@@ -75,7 +75,7 @@ RUN python3.10 -m pip install --upgrade pip \
     && python3.10 -m pip install poetry \
     && poetry config virtualenvs.in-project true \
     && poetry env use 3.10 \
-    && poetry install --without=api,worker,pysces,masspy
+    && poetry install --without=api,worker
 
 
 # install smoldyn
