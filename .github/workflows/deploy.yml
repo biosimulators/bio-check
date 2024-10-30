@@ -10,7 +10,6 @@ on:
 
 jobs:
   deploy-base-image:
-    environment: bio-check-deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
