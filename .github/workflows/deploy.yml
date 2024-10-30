@@ -103,7 +103,7 @@ jobs:
           docker-compose --version  # Check if Docker Compose is installed correctly
 
       - name: Build Docker containers with Docker Compose
-        run: docker-compose build --no-cache
+        run: docker-compose build
 
       - name: Authorize push script
         run: chmod +x ./assets/scripts/push_image.sh
