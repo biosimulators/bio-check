@@ -43,7 +43,7 @@ jobs:
 
       - name: Create gcloud config
         run: |
-          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/.biosimulations.json
+          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/configs/.biosimulations.json
         env:
           BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
 
