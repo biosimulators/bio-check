@@ -1,5 +1,6 @@
-name: Integration
+name: Test
 
+# TODO: add main here
 on:
   push:
 

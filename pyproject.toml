@@ -1,8 +1,8 @@
 # This project configuration should relate only to the high level notebook api (as primary deps).
 [tool.poetry]
 name = "bio-compose-server"
-version = "1.5.3"
-description = "Simulation Verification Service and API"
+version = "1.12.0"
+description = "Simulation Verification Service Microservices (api and worker)"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
 package-mode = false
@@ -43,7 +43,7 @@ pytest = "^8.3.3"
 [tool.pytest.ini_options]
 addopts = "--ignore=setup.py"
 python_files = "tests.py"
-# testpaths = ["compose_api", "compose_worker"]
+# testpaths = ["api", "compose_worker"]
 
 
 [build-system]

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/biosimulators/bio-check-compose_worker # push to ghcr.io/biosimulators
+          image: ghcr.io/biosimulators/bio-check-worker # bio-check-compose_worker
           imagePullPolicy: "Always"
           resources:
             requests:

@@ -3,7 +3,7 @@ import sys
 import shutil
 
 
-libs = ['compose_api', 'compose_worker']
+libs = ['api', 'compose_worker']
 
 
 for lib in libs:

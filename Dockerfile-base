@@ -1,3 +1,5 @@
+# Base image for app microservices. IMPORTANT: Current stable version in production is 0.1.5
+
 # FROM ghcr.io/biosimulators/biosimulators:latest THE STABLE VERSION OF BIOSIMULATOR PROCESSES IMAGE IS 0.0.4
 # FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
 
@@ -52,7 +54,8 @@ RUN mkdir /app/data
 
 # copy assets
 COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml /app/pyproject.toml
+# COPY pyproject.toml poetry.lock /app/
 
 # Configure PySCeS from assets
 COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
@@ -75,5 +78,6 @@ RUN python3.10 -m pip install --upgrade pip \
     && python3.10 -m pip install poetry \
     && poetry config virtualenvs.in-project true \
     && poetry env use 3.10 \
+    && poetry lock \
     && poetry install --without=api,worker
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-lib="$1"  # which lib container to run (base, compose_api, compose_worker)
+lib="$1"  # which lib container to run (base, api, compose_worker)
 version="$2"
 
 if [ "$version" == "" ]; then

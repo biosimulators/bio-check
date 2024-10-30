@@ -44,9 +44,9 @@ from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_ex
 from log_config import setup_logging
 
 
-# --load dev env -- #
+# -- load dev env -- #
 
-dotenv.load_dotenv("../assets/dev/.env_dev")
+dotenv.load_dotenv("../assets/dev/.env_dev")  # NOTE: create an env config at this filepath if dev
 
 
 # -- constraints -- #
@@ -55,7 +55,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 APP_TITLE = "bio-compose"
-APP_VERSION = "1.11.10"
+APP_VERSION = "1.12.0"
 
 # TODO: allow parsing of this prior to image build
 # with open('.CONTAINER_VERSION', 'r') as f:

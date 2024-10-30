@@ -1,7 +1,12 @@
-name: Deployment
+name: Deploy
 
+# on:
+#   workflow_dispatch:
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Test"]
+    types:
+      - completed
 
 jobs:
   deploy-base-image:
@@ -14,11 +19,14 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
 
-      - name: Get base image version
+      - name: Get base image tag and version
         run: |
           BASE_VERSION=$(cat ./assets/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+          BASE_IMG=ghcr.io/biosimulators/bio-check-base
+          echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
           echo "Base Version: $BASE_VERSION"
+          echo "Base Tag: $BASE_IMG"
 
       - name: Create gcloud config
         run: |
@@ -102,10 +110,16 @@ jobs:
 
       - name: Deploy API microservice container to GHCR
         run: |
-          rm compose_api/spec/openapi_3_1_0_generated.yaml
-          python3 compose_api/openapi_spec.py
-          sudo rm -r compose_api/__pycache__
-          ./assets/scripts/push_image.sh compose_api ${{ env.API_VERSION }}
+          rm api/spec/openapi_3_1_0_generated.yaml
+          python3 api/openapi_spec.py
+          sudo rm -r api/__pycache__
+          ./assets/scripts/push_image.sh api ${{ env.API_VERSION }}
+        # STABLE CONTENT:
+        # - run: |
+        #   rm compose_api/spec/openapi_3_1_0_generated.yaml
+        #   python3 compose_api/openapi_spec.py
+        #   sudo rm -r compose_api/__pycache__
+        #   ./assets/scripts/push_image.sh compose_api ${{ env.API_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
@@ -113,7 +127,11 @@ jobs:
       - name: Deploy worker microservice container to GHCR
         run: |
           sudo rm -r compose_api/__pycache__
-          ./assets/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }}
+          ./assets/scripts/push_image.sh worker ${{ env.WORKER_VERSION }}
+        # STABLE CONTENT:
+        # run: |
+        #   sudo rm -r compose_api/__pycache__
+        #   ./assets/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
