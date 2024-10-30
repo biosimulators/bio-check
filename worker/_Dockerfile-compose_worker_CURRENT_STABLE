@@ -1,4 +1,4 @@
-# Worker microservice
+# Worker microservice ORIGINAL CONTENT
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
@@ -24,27 +24,27 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
 
 # SUNDIALS --> installation path is default cmake (/usr/local) with LD_LIBRARY_PATH as runtime location
 # ignore certificate checking because certificate was expired as of 2021-11-10
-# ARG SUNDIALS_VERSION=2.6.2
-# RUN apt-get install -y --no-install-recommends \
-#         wget \
-#         cmake \
-#         make \
-#         g++ \
-#     \
-#     && cd /tmp \
-#     && wget --no-check-certificate https://computing.llnl.gov/sites/default/files/inline-files/sundials-${SUNDIALS_VERSION}.tar.gz \
-#     && tar xvvf sundials-${SUNDIALS_VERSION}.tar.gz \
-#     && cd sundials-${SUNDIALS_VERSION} \
-#     && mkdir build \
-#     && cd build \
-#     && CFLAGS="-fPIC" cmake .. \
-#     && make \
-#     && make install \
-#     \
-#     && cd /tmp \
-#     && rm sundials-${SUNDIALS_VERSION}.tar.gz \
-#     && rm -r sundials-${SUNDIALS_VERSION}
-# ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ARG SUNDIALS_VERSION=2.6.2
+RUN apt-get install -y --no-install-recommends \
+        wget \
+        cmake \
+        make \
+        g++ \
+    \
+    && cd /tmp \
+    && wget --no-check-certificate https://computing.llnl.gov/sites/default/files/inline-files/sundials-${SUNDIALS_VERSION}.tar.gz \
+    && tar xvvf sundials-${SUNDIALS_VERSION}.tar.gz \
+    && cd sundials-${SUNDIALS_VERSION} \
+    && mkdir build \
+    && cd build \
+    && CFLAGS="-fPIC" cmake .. \
+    && make \
+    && make install \
+    \
+    && cd /tmp \
+    && rm sundials-${SUNDIALS_VERSION}.tar.gz \
+    && rm -r sundials-${SUNDIALS_VERSION}
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 
 ############################################
@@ -54,6 +54,8 @@ COPY . /app/worker
 
 
 ENV PATH="/root/.local/bin:$PATH"
+ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml"
+ENV TEST_OMEX_FP="test_fixtures/Elowitz-Nature-2000-Repressilator.omex"
 
 
 # copy pysces config

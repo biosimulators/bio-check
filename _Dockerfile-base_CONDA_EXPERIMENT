@@ -1,0 +1,113 @@
+# FROM ghcr.io/biosimulators/biosimulators:latest THE STABLE VERSION OF BIOSIMULATOR PROCESSES IMAGE IS 0.0.4
+# FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
+
+
+FROM ubuntu:22.04
+
+LABEL authors="alexanderpatrie"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
+ENV PATH="/opt/miniconda/bin:$PATH"
+
+# handle app creds from google
+RUN mkdir /.google
+COPY ./assets/.biosimulations.json /.google/.bio-check.json
+
+# install os deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10  \
+    ca-certificates \
+    libhdf5-dev \
+    libhdf5-serial-dev \
+    python3-pip  \
+    python3-dev \
+    build-essential \
+    libncurses5  \
+    libxml2 \
+    cmake  \
+    make  \
+    libx11-dev  \
+    libc6-dev  \
+    libx11-6  \
+    libgl1-mesa-dev \
+    libc6  \
+    gcc  \
+    libatlas-base-dev \
+    swig \
+    pkg-config \
+    tar  \
+    libgl1-mesa-glx  \
+    libice6  \
+    libpython3.10  \
+    libsm6
+# && rm -rf /var/lib/apt/lists/*
+
+# install os deps for miniconda and hdf5
+RUN apt-get update  \
+    && apt-get install -y libatlas-base-dev \
+    libhdf5-serial-dev  \
+    swig  \
+    libboost-all-dev  \
+    gnupg \
+    wget \
+    bzip2 \
+    curl \
+    git \
+    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda
+
+# copy assets into image
+COPY ./assets/environment.base.yml /tmp/environment.yml
+COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
+COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
+COPY ./assets/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY ./assets/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+RUN echo "BioCompose Server" > /app/README.md \
+    && mkdir -p /Pysces \
+    && mkdir -p /Pysces/psc \
+    && mkdir -p /root/Pysces \
+    && mkdir -p /root/Pysces/psc \
+    && chmod ugo+rw -R /Pysces
+
+# set conda to use path and create env
+RUN conda env create -f /tmp/environment.yml
+
+# ensure conda env shell is active
+SHELL ["/bin/bash", "-c"]
+
+# test command with conda
+RUN /opt/miniconda/envs/my-env/bin/python --version
+
+# create app space
+WORKDIR /app
+RUN mkdir /app/data
+
+ENTRYPOINT ["conda run python3 -c 'print(1);'"]
+
+FROM ubuntu:22.04
+
+# Install Miniconda
+RUN apt-get update && apt-get install -y wget bzip2 && \
+    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh && \
+    /opt/miniconda/bin/conda clean -tipsy
+
+ENV PATH="/opt/miniconda/bin:$PATH"
+
+# Copy and create Conda environment
+COPY environment.yml /tmp/environment.yml
+RUN conda env create -f /tmp/environment.yml && conda clean -afy
+
+# Activate the Conda environment
+SHELL ["conda", "run", "-n", "my-env", "/bin/bash", "-c"]
+
+# Install Poetry and dependencies
+RUN pip install poetry
+COPY pyproject.toml poetry.lock /app/
+WORKDIR /app
+RUN poetry install --no-dev
+
+# Set entrypoint
+ENTRYPOINT ["conda", "run", "-n", "my-env", "python", "main.py"]

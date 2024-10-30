@@ -1,0 +1,28 @@
+name: Test
+
+# TODO: add main here
+on:
+  push:
+
+jobs:
+  build-base-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get new base image version
+        run: |
+          BASE_VERSION=$(cat ./assets/.BASE_VERSION)
+          echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+          echo "Base Version: $BASE_VERSION"
+
+      - name: Create gcloud config artifact
+        run: |
+          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/configs/.biosimulations.json
+        env:
+          BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
+
+      - name: Test build base image
+        run: |
+          docker build --no-cache -f ./Dockerfile-base -t ghcr.io/biosimulations/bio-check-base:${{ env.BASE_VERSION }} .

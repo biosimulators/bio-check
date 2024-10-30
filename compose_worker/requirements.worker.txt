@@ -1,8 +1,0 @@
-biosimulators-utils[sbml,logging]
-biosimulators-amici
-biosimulators-copasi
-biosimulators-pysces
-biosimulators-tellurium
-cython
-scipy
-matplotlib
