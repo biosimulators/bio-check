@@ -165,43 +165,44 @@ def handle_sbml_exception() -> str:
 def run_sbml_pysces(sbml_fp: str, start, dur, steps):
     import pysces
     import os
-    # # model compilation
-    compilation_dir = '/Pysces/psc'  # mkdtemp()
+    import shutil
+
+    # model compilation
+    compilation_dir = '/Pysces/psc'
+    # compilation_dir = mkdtemp()
     sbml_filename = sbml_fp.split('/')[-1]
     psc_filename = sbml_filename + '.psc'
     psc_fp = os.path.join(compilation_dir, psc_filename)
-    modelname = sbml_filename.replace('.xml', '')
+
     try:
         # convert sbml to psc
         pysces.model_dir = compilation_dir
-        pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)  # sbmldir=os.path.dirname(sbml_fp)
 
+        # pysces.interface.convertSBML2PSC(sbmlfile=sbml_fp, pscfile=psc_fp)  # sbmldir=os.path.dirname(sbml_fp)
         # instantiate model from compilation contents
-        with open(psc_fp, 'r', encoding='utf-8', errors='replace') as F:
-            pscS = F.read()
+        # with open(psc_fp, 'r', encoding='utf-8', errors='replace') as F:
+        #    pscS = F.read()
+        # model = pysces.model(psc_fp, loader='string', fString=pscS)
 
-        model = pysces.model(psc_fp, loader='string', fString=pscS)
+        model = pysces.loadSBML(sbmlfile=sbml_fp, pscfile=psc_fp)
 
         # run the simulation with specified time params
-        t = np.linspace(start, dur, steps + 1)
-        model.sim_time = t
+        model.sim_time = np.linspace(start, dur, steps + 1)
         model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
 
         # get output with mapping of internal species ids to external (shared) species names
         sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
         obs_names = list(sbml_species_mapping.keys())
         obs_ids = list(sbml_species_mapping.values())
-
-        # get raw output data and transpose for correct shape
-        # data = model.data_sim.getSpecies().transpose().tolist()
-        # remove time reporting TODO: do this more gracefully
-        # data.pop(0)
-        # return dict(zip(obs_names, data))
-
-        return {
+        data = {
             obs_names[i]: model.data_sim.getSimData(obs_id)[:, 1].tolist()
             for i, obs_id in enumerate(obs_ids)
         }
+
+        # clean up model dir
+        shutil.rmtree(compilation_dir)
+
+        return data
     except:
         error_message = handle_sbml_exception()
         return {"error": error_message}
