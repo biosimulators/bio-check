@@ -1,20 +1,18 @@
 # FROM ghcr.io/biosimulators/biosimulators:latest THE STABLE VERSION OF BIOSIMULATOR PROCESSES IMAGE IS 0.0.4
 # FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
 
-
 FROM ubuntu:22.04
 
 LABEL authors="alexanderpatrie"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
-ENV PATH="/opt/miniconda/bin:$PATH"
 
 # handle app creds from google
 RUN mkdir /.google
-COPY ./assets/.biosimulations.json /.google/.bio-check.json
+COPY assets/configs/.biosimulations.json /.google/.bio-check.json
+# COPY ./.bio-check.json /.google/.bio-check.json
 
-# install os deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10  \
     ca-certificates \
@@ -35,53 +33,89 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc  \
     libatlas-base-dev \
     swig \
-    pkg-config \
+    pkg-config  \
+    curl  \
     tar  \
     libgl1-mesa-glx  \
     libice6  \
     libpython3.10  \
-    libsm6
-# && rm -rf /var/lib/apt/lists/*
+    libsm6 \
+    wget
 
-# install os deps for miniconda and hdf5
-RUN apt-get update  \
-    && apt-get install -y libatlas-base-dev \
-    libhdf5-serial-dev  \
-    swig  \
-    libboost-all-dev  \
-    gnupg \
-    wget \
-    bzip2 \
-    curl \
-    git \
-    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
-    && bash /tmp/miniconda.sh -b -p /opt/miniconda
+# hdf5/amici env deps
+RUN apt-get update && apt-get install -y libatlas-base-dev libhdf5-serial-dev swig libboost-all-dev gnupg
 
-# copy assets into image
-COPY ./assets/environment.base.yml /tmp/environment.yml
-COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
-COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
-COPY ./assets/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
-COPY ./assets/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
-RUN echo "BioCompose Server" > /app/README.md \
-    && mkdir -p /Pysces \
+# handle main content
+WORKDIR /app
+
+RUN mkdir /app/data
+
+# copy assets
+COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY pyproject.toml poetry.lock /app/
+
+# Configure PySCeS from assets
+COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+RUN mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
     && chmod ugo+rw -R /Pysces
 
-# set conda to use path and create env
-RUN conda env create -f /tmp/environment.yml
+# copy example files TODO: optimize this.
+COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
+COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
 
-# ensure conda env shell is active
-SHELL ["/bin/bash", "-c"]
+# create readme for poetry
+RUN echo "BioCompose Server" > /app/README.md
 
-# test command with conda
-RUN /opt/miniconda/envs/my-env/bin/python --version
+# install poetry and deps
+RUN python3.10 -m pip install --upgrade pip \
+    && python3.10 -m pip install poetry \
+    && poetry config virtualenvs.in-project true \
+    && poetry env use 3.10 \
+    && poetry install --without=api,worker,pysces,masspy
 
-# create app space
-WORKDIR /app
-RUN mkdir /app/data
 
-ENTRYPOINT ["conda run python3 -c 'print(1);'"]
+# install smoldyn
+# RUN . /app/.venv/bin/activate \
+#     && wget https://www.smoldyn.org/smoldyn-2.73.tgz \
+#     && tar -xzf smoldyn-2.73.tgz \
+#     && cd smoldyn-2.73 \
+#     && cd build \
+#     && cmake .. -DENABLE_PYTHON=ON -DPYTHON_EXECUTABLE=$(which python3.10) \
+#     && make \
+#     && make install
+# && rm -rf /var/lib/apt/lists/* \
+# && apt-get clean \
+# && apt-get autoclean
 
+# RUN . /app/.venv/bin/activate \
+#     && curl -O https://download.opensuse.org/repositories/home:/dilawar/xUbuntu_22.04/amd64/smoldyn_2.64.4-1+2.1_amd64.deb \
+#     && dpkg -i smoldyn_2.64.4-1+2.1_amd64.deb
+
+# RUN . /app/.venv/bin/activate \
+#     && echo 'deb http://download.opensuse.org/repositories/home:/dilawar/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/home:dilawar.list \
+#     && curl -fsSL https://download.opensuse.org/repositories/home:dilawar/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/home_dilawar.gpg > /dev/null \
+#     && apt update \
+#     && apt install smoldyn
+
+# fix python version constraint, lock env, and check compatible
+# RUN sed -i 's/python = ">=3.10"/python = "^3.10"/' /app/pyproject.toml \
+#     && poetry lock \
+#     && poetry check
+
+# TODO: fix this eventually, but for now (10/2024) biosimulators-processes is not used
+# RUN rm -r biosimulator_processes
+
+# remove existing cobra installation TODO: clean this up
+# RUN poetry remove cobra && poetry remove zarr
+
+# install project deps (shared)
+# RUN chmod +x /app/assets/install_deps.sh \
+#     && /app/assets/install_deps.sh /app/assets/requirements.base.txt
+
+
+# TODO: create shared tooling module which is a set of the sum of api and worker data_model.py & shared.py
+# COPY ./assets/shared.py /app/shared.py

@@ -11,9 +11,9 @@ venv
 smoldyn-2.73-mac.tgz.1
 *.egg-info/
 assets/dev/.env_dev
-assets/.bio-check.json
-assets/.biosimulations-prodbucket.json
-assets/.biosimulations.json
+assets/configs/.bio-check.json
+assets/configs/.biosimulations-prodbucket.json
+assets/configs/.biosimulations.json
 bucket.sh
 .env_dev
 NOTES
