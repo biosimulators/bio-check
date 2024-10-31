@@ -10,10 +10,17 @@ LABEL authors="alexanderpatrie"
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
-# handle app creds from google
-RUN mkdir /.google
+# copy creds
 COPY assets/configs/.biosimulations.json /.google/.bio-check.json
 # COPY ./.bio-check.json /.google/.bio-check.json
+
+WORKDIR /app
+
+# copy assets
+COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY pyproject.toml /app/pyproject.toml
+COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 
 RUN apt-get update && apt-get install -y \
     python3.10  \
@@ -48,40 +55,30 @@ RUN apt-get update && apt-get install -y \
     swig  \
     libboost-all-dev  \
     gnupg \
-    && apt-get autoremove -y  \
-    && apt-get clean
- # && rm -rf /var/lib/apt/lists/*
-
-# handle main content
-WORKDIR /app
-
-RUN mkdir /app/data
-
-# copy assets
-COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
-COPY pyproject.toml /app/pyproject.toml
-
-# Configure PySCeS from assets
-COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
-COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
-RUN mkdir -p /Pysces \
+    && mkdir /.google \
+    && mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
-    && chmod ugo+rw -R /Pysces
-
-# copy example files TODO: optimize this.
-COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator.omex /app/data/Elowitz-Nature-2000-Repressilator.omex
-COPY ./model-examples/sbml-core/Elowitz-Nature-2000-Repressilator /app/data/Elowitz-Nature-2000-Repressilator
-
-# create readme for poetry
-RUN echo "BioCompose Server" > /app/README.md
-
-# install poetry deps
-RUN python3.10 -m pip install --upgrade pip \
+    && chmod ugo+rw -R /Pysces \
+    && echo "BioCompose Server" > /app/README.md \
+    && python3.10 -m pip install --upgrade pip \
     && python3.10 -m pip install poetry \
     && poetry config virtualenvs.in-project true \
     && poetry env use 3.10 \
     && poetry lock \
-    && poetry install --without=api,worker
+    && poetry install --without=api,worker \
+    && apt-get autoremove -y  \
+    && apt-get clean
+ # && rm -rf /var/lib/apt/lists/*
+
+
+
+# install poetry deps
+# RUN python3.10 -m pip install --upgrade pip \
+#     && python3.10 -m pip install poetry \
+#     && poetry config virtualenvs.in-project true \
+#     && poetry env use 3.10 \
+#     && poetry lock \
+#     && poetry install --without=api,worker
 
