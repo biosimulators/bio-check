@@ -1,8 +1,8 @@
-name: Test
+name: Continuous Integration
 
 # TODO: add main here
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   build-base-image:

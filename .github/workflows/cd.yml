@@ -1,10 +1,10 @@
-name: Deploy
+name: Continuous Deployment
 
 # on:
 #   workflow_dispatch:
 on:
   workflow_run:
-    workflows: ["Test"]
+    workflows: ["Continuous Integration"]
     types:
       - completed
 

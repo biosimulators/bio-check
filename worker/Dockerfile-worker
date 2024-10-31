@@ -16,28 +16,17 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     liblapack-dev \
     gcc \
     gfortran \
-    libgfortran5
-
-# install os deps for miniconda and hdf5
-RUN apt-get update  \
-    && apt-get install -y libatlas-base-dev \
-    libhdf5-serial-dev  \
-    swig  \
-    libboost-all-dev  \
-    gnupg \
-    wget \
+    libgfortran5 \
     bzip2 \
-    curl \
-    git
-# && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
-# && bash /tmp/miniconda.sh -b -p /opt/miniconda
+    && apt-get autoremove -y  \
+    && apt-get clean
 
 # Install Miniconda
-RUN apt-get update && apt-get install -y wget bzip2 && \
-    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
-    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
-    rm /tmp/miniconda.sh && \
-    /opt/miniconda/bin/conda clean -tipsy
+RUN apt-get update && apt-get install -y wget bzip2  \
+    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda  \
+    && rm /tmp/miniconda.sh  \
+    && /opt/miniconda/bin/conda clean -tipsy
 
 # Copy and create Conda environment
 COPY . /app/worker
@@ -86,6 +75,5 @@ ENTRYPOINT ["bash", "-c", "source activate worker-env && poetry run python3 main
 
 # install masspy TODO: do this
 # RUN poetry run pip install biosimulators-masspy
-
 
 
