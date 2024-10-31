@@ -25,15 +25,15 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     bzip2 \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
     && bash /tmp/miniconda.sh -b -p /opt/miniconda  \
-    && rm /tmp/miniconda.sh  \
-    && /opt/miniconda/bin/conda clean -tipsy \
     && conda env create -f /tmp/environment.worker.yml \
-    && conda clean -afy \
     && poetry install --only=worker --no-cache \
     && apt-get autoremove -y  \
     && apt-get clean
 # libncurses \
 # libxml \
+# && rm /tmp/miniconda.sh  \
+# && /opt/miniconda/bin/conda clean -tipsy \
+# && conda clean -afy \
 
 # Install Miniconda
 # RUN apt-get update && apt-get install -y wget bzip2  \
