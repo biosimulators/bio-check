@@ -1,6 +1,7 @@
 # Api container (CURRENTLY STABLE BASE IS LATEST 0.1.5
 
-FROM ghcr.io/biosimulators/bio-check-base:latest
+# FROM ghcr.io/biosimulators/bio-check-base:latest
+FROM ghcr.io/biosimulators/bio-check-base:0.2.2-test
 
 RUN mkdir api
 

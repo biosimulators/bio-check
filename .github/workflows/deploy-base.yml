@@ -30,13 +30,13 @@ jobs:
 
       - name: Build base image
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
+          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}-test .
 
       - name: Deploy new base version to GHCR
         run: |
-          docker push ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}
+          docker push ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}-test
 
       - name: Deploy new latest base version
         run: |
-          docker tag ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} ${{ env.BASE_IMG }}:latest
+          docker tag ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}-test ${{ env.BASE_IMG }}:latest
           docker push ${{ env.BASE_IMG }}:latest

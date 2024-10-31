@@ -1,5 +1,6 @@
 # Worker microservice
-FROM ghcr.io/biosimulators/bio-check-base:latest
+# FROM ghcr.io/biosimulators/bio-check-base:latest
+FROM ghcr.io/biosimulators/bio-check-base:0.2.2-test
 
 # os deps
 RUN apt-get update && apt-get install -y libatlas-base-dev \
