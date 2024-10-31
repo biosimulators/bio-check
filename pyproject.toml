@@ -5,7 +5,7 @@ version = "1.12.0"
 description = "Simulation Verification Service Microservices (api and worker)"
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-package-mode = false
+# package-mode = false
 
 
 [tool.poetry.dependencies]
