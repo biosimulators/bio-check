@@ -9,45 +9,7 @@ on:
 #       - completed
 
 jobs:
-  deploy-base-image:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Log in to GHCR
-        run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
-
-      - name: Get base image tag and version
-        run: |
-          BASE_VERSION=$(cat ./assets/.BASE_VERSION)
-          echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
-          BASE_IMG=ghcr.io/biosimulators/bio-check-base
-          echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
-          echo "Base Version: $BASE_VERSION"
-          echo "Base Tag: $BASE_IMG"
-
-      - name: Create gcloud config
-        run: |
-          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/configs/.biosimulations.json
-        env:
-          BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
-
-      - name: Build base image
-        run: |
-          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
-
-      - name: Deploy new base version to GHCR
-        run: |
-          docker push ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}
-
-      - name: Deploy new latest base version
-        run: |
-          docker tag ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} ${{ env.BASE_IMG }}:latest
-          docker push ${{ env.BASE_IMG }}:latest
-
   get-microservice-versions:
-    needs: deploy-base-image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
