@@ -55,7 +55,6 @@ RUN apt-get update && apt-get install -y \
     swig  \
     libboost-all-dev  \
     gnupg \
-    && mkdir /.google \
     && mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
