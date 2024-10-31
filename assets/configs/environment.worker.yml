@@ -10,4 +10,5 @@ dependencies:
   - pysces
   - pip
   - pip:
-    - biosimulators-pysces
+      - biosimulators-masspy
+      - biosimulators-pysces
