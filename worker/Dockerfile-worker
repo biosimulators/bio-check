@@ -4,8 +4,8 @@ FROM ghcr.io/biosimulators/bio-check-base:latest
 
 WORKDIR /app/worker
 
+COPY environment.worker.yml /tmp/environment.worker.yml
 COPY . /app/worker
-COPY ../assets/configs/environment.worker.yml /tmp/environment.worker.yml
 
 # os deps
 RUN apt-get update && apt-get install -y libatlas-base-dev \
