@@ -1,0 +1,96 @@
+# Worker microservice
+
+FROM ghcr.io/biosimulators/bio-check-base:latest
+
+# os deps
+RUN apt-get update && apt-get install -y libatlas-base-dev \
+    libhdf5-serial-dev \
+    swig \
+    libboost-all-dev \
+    git \
+    meson \
+    build-essential \
+    g++ \
+    gfortran \
+    libblas-dev \
+    liblapack-dev \
+    gcc \
+    gfortran \
+    libgfortran5 \
+    bzip2 \
+    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
+    && chmod +x /tmp/miniconda.sh \
+    && /tmp/miniconda.sh -b -p /opt/miniconda
+# && rm /tmp/miniconda.sh \
+# && conda clean -afy
+# && /opt/miniconda/bin/conda clean -t -i -p -s -y
+# libncurses \
+# libxml \
+
+# Install Miniconda
+# RUN apt-get update && apt-get install -y wget bzip2  \
+#     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
+#     && bash /tmp/miniconda.sh -b -p /opt/miniconda  \
+#     && rm /tmp/miniconda.sh  \
+#     && /opt/miniconda/bin/conda clean -tipsy
+
+# RUN conda env create -f /tmp/environment.worker.yml \
+#     && conda clean -afy
+# ENV PATH="/root/.local/bin:$PATH"
+
+ENV PATH="/opt/miniconda/bin:$PATH"
+
+COPY environment.worker.yml /tmp/environment.worker.yml
+COPY . /app/worker
+
+# RUN conda env create -f /tmp/environment.worker.yml \
+#     && conda install -c conda-forge -c pysces pysces \
+#     && poetry install --only=worker --no-cache \
+#     && apt-get autoremove -y  \
+#     && apt-get clean
+
+RUN conda create -n conda-env python=3.10 -y \
+    && conda install -c conda-forge -c pysces pysces -y \
+    && conda env update -n conda-env -f /tmp/environment.worker.yml \
+    && poetry install --only=worker --no-cache \
+    && apt-get autoremove -y  \
+    && apt-get clean
+
+# SHELL ["/bin/bash", "-c"]
+
+ENV PATH="/root/.poetry/bin:$PATH"
+ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml"
+ENV TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc"
+ENV TEST_OMEX_FP="test_fixtures/Elowitz-Nature-2000-Repressilator.omex"
+
+WORKDIR /app/worker
+
+# activate both Conda and Poetry environments in ENTRYPOINT
+# ENTRYPOINT ["/usr/bin/env", "bash", "-c", "source activate conda-env && poetry run python3 main.py"]
+
+
+#############################
+# Fenics
+
+# TODO: start the fenics implementation
+# RUN apt-get update && apt-get install -y petsc-dev \
+#     libopenmpi-dev \
+#     libspdlog-dev \
+#     libpugixml-dev \
+#     cmake \
+#     gcc \
+#     g++ \
+#     gfortran \
+#     && rm -rf /var/lib/apt/lists/* \
+#     && add-apt-repository ppa:fenics-packages/fenics -y \
+#     && apt update \
+#     && apt install -y fenicsx \
+#     && poetry run pip install meson-python meson ninja
+
+# install requirements in poetry via pip prox
+# RUN poetry run pip install -r /app/worker/requirements.worker.txt
+
+# install masspy TODO: do this
+# RUN poetry run pip install biosimulators-masspy
+
+

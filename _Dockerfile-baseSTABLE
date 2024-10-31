@@ -1,0 +1,83 @@
+# Base image for app microservices. IMPORTANT: Current stable version in production is 0.1.5
+
+# FROM ghcr.io/biosimulators/biosimulators:latest THE STABLE VERSION OF BIOSIMULATOR PROCESSES IMAGE IS 0.0.4
+# FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
+
+FROM ubuntu:22.04
+
+LABEL authors="alexanderpatrie"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
+
+# copy creds
+COPY assets/configs/.biosimulations.json /.google/.bio-check.json
+# COPY ./.bio-check.json /.google/.bio-check.json
+
+WORKDIR /app
+
+# copy assets
+COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY pyproject.toml /app/pyproject.toml
+COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+
+RUN apt-get update && apt-get install -y \
+    python3.10  \
+    ca-certificates \
+    libhdf5-dev \
+    libhdf5-serial-dev \
+    python3-pip  \
+    python3-dev \
+    build-essential \
+    libncurses5  \
+    libxml2 \
+    cmake  \
+    make  \
+    libx11-dev  \
+    libc6-dev  \
+    libx11-6  \
+    libgl1-mesa-dev \
+    libc6  \
+    gcc  \
+    libatlas-base-dev \
+    swig \
+    pkg-config  \
+    curl  \
+    tar  \
+    libgl1-mesa-glx  \
+    libice6  \
+    libpython3.10  \
+    libsm6 \
+    wget \
+    libatlas-base-dev  \
+    libhdf5-serial-dev  \
+    swig  \
+    libboost-all-dev  \
+    gnupg \
+    && mkdir -p /Pysces \
+    && mkdir -p /Pysces/psc \
+    && mkdir -p /root/Pysces \
+    && mkdir -p /root/Pysces/psc \
+    && chmod ugo+rw -R /Pysces \
+    && echo "BioCompose Server" > /app/README.md \
+    && python3.10 -m pip install --upgrade pip \
+    && python3.10 -m pip install poetry \
+    && poetry config virtualenvs.in-project true \
+    && poetry env use 3.10 \
+    && poetry lock \
+    && poetry install --without=api,worker \
+    && apt-get autoremove -y  \
+    && apt-get clean
+ # && rm -rf /var/lib/apt/lists/*
+
+
+
+# install poetry deps
+# RUN python3.10 -m pip install --upgrade pip \
+#     && python3.10 -m pip install poetry \
+#     && poetry config virtualenvs.in-project true \
+#     && poetry env use 3.10 \
+#     && poetry lock \
+#     && poetry install --without=api,worker
+

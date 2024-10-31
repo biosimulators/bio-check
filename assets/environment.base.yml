@@ -1,0 +1,10 @@
+name: conda-env
+channels:
+  - defaults
+  - conda-forge
+  - pysces
+  - chria
+dependencies:
+  - python=3.10
+  - poetry
+  - pip

@@ -1,26 +1,9 @@
-# Base image for app microservices. IMPORTANT: Current stable version in production is 0.1.5
-
-# FROM ghcr.io/biosimulators/biosimulators:latest THE STABLE VERSION OF BIOSIMULATOR PROCESSES IMAGE IS 0.0.4
-# FROM ghcr.io/vivarium-collective/biosimulator-processes:0.0.4
-
 FROM ubuntu:22.04
 
 LABEL authors="alexanderpatrie"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
-
-# copy creds
-COPY assets/configs/.biosimulations.json /.google/.bio-check.json
-# COPY ./.bio-check.json /.google/.bio-check.json
-
-WORKDIR /app
-
-# copy assets
-COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
-COPY pyproject.toml /app/pyproject.toml
-COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
-COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 
 RUN apt-get update && apt-get install -y \
     python3.10  \
@@ -55,29 +38,63 @@ RUN apt-get update && apt-get install -y \
     swig  \
     libboost-all-dev  \
     gnupg \
+    bzip2 \
     && mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
     && chmod ugo+rw -R /Pysces \
-    && echo "BioCompose Server" > /app/README.md \
     && python3.10 -m pip install --upgrade pip \
-    && python3.10 -m pip install poetry \
+    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
+    && chmod +x /tmp/miniconda.sh \
+    && /tmp/miniconda.sh -b -p /opt/conda
+
+# add conda to PATH
+ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
+
+# initialize Conda for bash
+RUN /opt/conda/bin/conda init bash
+
+# copy creds
+COPY assets/configs/.biosimulations.json /.google/.bio-check.json
+COPY assets/environment.base.yml /tmp/environment.base.yml
+
+RUN /opt/conda/bin/conda create -n conda-env python=3.10 poetry -c conda-forge -y
+
+SHELL ["/usr/bin/env", "bash", "-c"]
+
+# install both conda and poetry deps
+
+# RUN conda create -n conda-env python=3.10 -y \
+#     && echo "conda activate conda-env" >> ~/.bashrc
+
+RUN conda run python3 -m pip install --upgrade pip \
+    && conda env update -n conda-env -f /tmp/environment.base.yml
+
+# set up environment variables for Poetry
+ENV POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
+
+WORKDIR /app
+
+# copy assets
+COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
+COPY pyproject.toml /app/pyproject.toml
+COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+
+RUN echo "BioCompose Server" > /app/README.md \
+    && source ~/.bashrc  \
+    && conda init \
+    && conda activate conda-env  \
     && poetry config virtualenvs.in-project true \
-    && poetry env use 3.10 \
-    && poetry lock \
+    && poetry lock  \
     && poetry install --without=api,worker \
+    && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y  \
     && apt-get clean
- # && rm -rf /var/lib/apt/lists/*
-
-
-
-# install poetry deps
-# RUN python3.10 -m pip install --upgrade pip \
-#     && python3.10 -m pip install poetry \
-#     && poetry config virtualenvs.in-project true \
+#  \
 #     && poetry env use 3.10 \
 #     && poetry lock \
-#     && poetry install --without=api,worker
-
+#     && poetry install --without=api,worker \
+#     &&
