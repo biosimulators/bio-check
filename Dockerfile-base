@@ -85,14 +85,14 @@ COPY pyproject.toml /app/pyproject.toml
 COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 
-RUN echo "BioCompose Server" > /app/README.md
-#     && source ~/.bashrc  \
-#     && poetry config virtualenvs.in-project true \
-#     && poetry lock  \
-#     && poetry install --without=api,worker \
-#     && rm -rf /var/lib/apt/lists/* \
-#     && apt-get autoremove -y  \
-#     && apt-get clean
+RUN echo "BioCompose Server" > /app/README.md \
+  && source ~/.bashrc  \
+  && poetry config virtualenvs.in-project true \
+  && poetry lock  \
+  && poetry install --without=api,worker \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get autoremove -y  \
+  && apt-get clean
 #  \
 #     && poetry env use 3.10 \
 #     && poetry lock \
