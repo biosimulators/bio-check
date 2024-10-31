@@ -1,13 +1,26 @@
-name: worker-env
+# name: conda-env
+# channels:
+#   - defaults
+#   - conda-forge
+#   - pysces
+#   - chria
+# dependencies:
+#   - python~=3.10
+#   - assimulo
+#   - pysces
+#   - pip
+#   - pip:
+#       - biosimulators-masspy
+#       - biosimulators-pysces
+
+name: conda-env
 channels:
   - defaults
   - conda-forge
   - pysces
-  - https://conda.binstar.org/chria
+  - chria
 dependencies:
-  - python~=3.10
-  - assimulo
-  - pysces
+  - python=3.10
   - pip
   - pip:
       - biosimulators-masspy

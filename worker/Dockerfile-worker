@@ -2,11 +2,6 @@
 
 FROM ghcr.io/biosimulators/bio-check-base:latest
 
-WORKDIR /app/worker
-
-COPY environment.worker.yml /tmp/environment.worker.yml
-COPY . /app/worker
-
 # os deps
 RUN apt-get update && apt-get install -y libatlas-base-dev \
     libhdf5-serial-dev \
@@ -24,16 +19,13 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     libgfortran5 \
     bzip2 \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
-    && bash /tmp/miniconda.sh -b -p /opt/miniconda  \
-    && conda env create -f /tmp/environment.worker.yml \
-    && poetry install --only=worker --no-cache \
-    && apt-get autoremove -y  \
-    && apt-get clean
+    && chmod +x /tmp/miniconda.sh \
+    && /tmp/miniconda.sh -b -p /opt/miniconda
+# && rm /tmp/miniconda.sh \
+# && conda clean -afy
+# && /opt/miniconda/bin/conda clean -t -i -p -s -y
 # libncurses \
 # libxml \
-# && rm /tmp/miniconda.sh  \
-# && /opt/miniconda/bin/conda clean -tipsy \
-# && conda clean -afy \
 
 # Install Miniconda
 # RUN apt-get update && apt-get install -y wget bzip2  \
@@ -46,16 +38,35 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
 #     && conda clean -afy
 # ENV PATH="/root/.local/bin:$PATH"
 
-SHELL ["/bin/bash", "-c"]
-
 ENV PATH="/opt/miniconda/bin:$PATH"
+
+COPY environment.worker.yml /tmp/environment.worker.yml
+COPY . /app/worker
+
+# RUN conda env create -f /tmp/environment.worker.yml \
+#     && conda install -c conda-forge -c pysces pysces \
+#     && poetry install --only=worker --no-cache \
+#     && apt-get autoremove -y  \
+#     && apt-get clean
+
+RUN conda create -n conda-env python=3.10 -y \
+    && conda install -c conda-forge -c pysces pysces -y \
+    && conda env update -n conda-env -f /tmp/environment.worker.yml \
+    && poetry install --only=worker --no-cache \
+    && apt-get autoremove -y  \
+    && apt-get clean
+
+# SHELL ["/bin/bash", "-c"]
+
 ENV PATH="/root/.poetry/bin:$PATH"
 ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml"
 ENV TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc"
 ENV TEST_OMEX_FP="test_fixtures/Elowitz-Nature-2000-Repressilator.omex"
 
+WORKDIR /app/worker
+
 # activate both Conda and Poetry environments in ENTRYPOINT
-ENTRYPOINT ["bash", "-c", "source activate worker-env && poetry run python3 main.py"]
+ENTRYPOINT ["/usr/bin/env", "bash", "-c", "source activate conda-env && poetry run python3 main.py"]
 
 
 #############################
