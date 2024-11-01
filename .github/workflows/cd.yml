@@ -22,7 +22,7 @@ jobs:
             const workflow_id = 'deploy-base.yml';
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            await github.actions.createWorkflowDispatch({
+            await github.rest.actions.createWorkflowDispatch({
             owner,
             repo,
             workflow_id,
@@ -43,7 +43,7 @@ jobs:
             const workflow_id = 'deploy-microservices.yml';
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            await github.actions.createWorkflowDispatch({
+            await github.rest.actions.createWorkflowDispatch({
             owner,
             repo,
             workflow_id,
