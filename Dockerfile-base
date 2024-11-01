@@ -42,9 +42,12 @@ RUN apt-get update && apt-get install -y \
     libatlas-base-dev  \
     libhdf5-serial-dev  \
     swig  \
-    libboost-all-dev  \
     gnupg \
     bzip2 \
+    libboost-all-dev  \
+    libboost-chrono-dev \
+    libboost-math-dev \
+    libboost-serialization-dev \
     && mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
@@ -58,26 +61,20 @@ RUN apt-get update && apt-get install -y \
 # add conda to PATH
 ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
 
-# initialize Conda for bash
-# RUN /opt/conda/bin/conda init bash
-
-# copy creds
+# copy configs
 COPY assets/configs/.biosimulations.json /.google/.bio-check.json
 COPY assets/environment.base.yml /tmp/environment.base.yml
 
-# RUN /opt/conda/bin/conda create -n conda-env python=3.10 poetry -c conda-forge -y
-# RUN conda create -n conda-env python=3.10 -y
-
+# enforce more dynamic shell
 SHELL ["/usr/bin/env", "bash", "-c"]
 
-RUN conda init bash
-
-RUN conda create -n conda-env python=3.10 -y \
-    && echo "conda activate conda-env" >> ~/.bashrc
-
-RUN source ~/.bashrc \
-    && conda run python3 -m pip install --upgrade pip \
-    && conda env update -n conda-env -f /tmp/environment.base.yml
+# create conda env from yml and ensure env activation
+RUN conda init bash \
+    && conda create -n conda-env python=3.10 -y \
+    && conda run python3 -m pip3 install --upgrade pip \
+    && conda env update -n conda-env -f /tmp/environment.base.yml \
+    && echo "conda activate conda-env" >> ~/.bashrc \
+    && source ~/.bashrc
 
 # set up environment variables for Poetry
 ENV POETRY_VIRTUALENVS_CREATE=false \
@@ -95,11 +92,8 @@ RUN echo "BioCompose Server" > /app/README.md \
   && source ~/.bashrc  \
   && poetry config virtualenvs.in-project true \
   && poetry lock  \
-  && poetry install --without=api,worker \
-  && rm -rf /var/lib/apt/lists/* \
-  && apt-get autoremove -y  \
-  && apt-get clean
-#  \
+  && poetry install --without=api,worker,composition
+
 #     && poetry env use 3.10 \
 #     && poetry lock \
 #     && poetry install --without=api,worker \

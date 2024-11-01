@@ -1,7 +1,9 @@
 # Worker microservice
-# FROM ghcr.io/biosimulators/bio-check-base:latestn TODO: change this back to latest
 
+# FROM ghcr.io/biosimulators/bio-check-base:latest TODO: change this back to latest
 FROM ghcr.io/biosimulators/bio-check-base:0.2.2-test
+
+SHELL ["/usr/bin/env", "bash", "-c"]
 
 # os deps
 RUN apt-get update && apt-get install -y libatlas-base-dev \
@@ -22,10 +24,10 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     libxml2 \
     libncurses5
 
+# optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+sudo apt install libboost-chrono-dev libboost-math-dev libboost-serialization-dev
 COPY config/environment.worker.yml /tmp/environment.worker.yml
 COPY . /app/worker
-
-SHELL ["/usr/bin/env", "bash", "-c"]
 
 RUN source ~/.bashrc \
     && conda install -c conda-forge -c pysces pysces -y \
@@ -45,6 +47,7 @@ WORKDIR /app/worker
 
 ENTRYPOINT ["/usr/bin/env", "bash", "-c", "source ~/.bashrc && conda activate conda-env && poetry run python3 main.py"]
 
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run python3 main.py"]
 
 #############################
 # Fenics

@@ -37,6 +37,8 @@ simulariumio = "^1.11.0"
 
 [tool.poetry.group.composition.dependencies]
 process-bigraph = "^0.0.21"
+seaborn = "*"
+jupyterlab = "*"
 
 
 [tool.poetry.group.dev.dependencies]

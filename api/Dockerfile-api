@@ -1,7 +1,9 @@
-# Api container (CURRENTLY STABLE BASE IS LATEST 0.1.5
+# Api gateway microservice (CURRENTLY STABLE BASE IS LATEST 0.1.5
 
-# FROM ghcr.io/biosimulators/bio-check-base:latest
+# FROM ghcr.io/biosimulators/bio-check-base:latest TODO: change this back to latest below
 FROM ghcr.io/biosimulators/bio-check-base:0.2.2-test
+
+SHELL ["/usr/bin/env", "bash", "-c"]
 
 RUN mkdir api
 
@@ -9,17 +11,10 @@ COPY . /app/api
 
 EXPOSE 3001
 
-# RUN /app/assets/install_deps.sh /app/api/requirements.api.txt
-# ENV PATH="/root/.local/bin:$PATH"
-
-SHELL ["/usr/bin/env", "bash", "-c"]
-
-# RUN source ~/.bashrc \
-#     && poetry install --only=api
+RUN source ~/.bashrc \
+    && poetry install --only=api
 
 WORKDIR /app/api
 
-# RUN python3 -c "import os;files=os.listdir();import shutil;[shutil.rmtree(f) if '__pycache__' in f else None for f in files]"
-
-# ENTRYPOINT ["/usr/bin/env", "bash", "-c", "&&", "source", "~/.bashrc", "&&", "poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001", "--reload"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run uvicorn main:app --host 0.0.0.0 --port 3001 --reload"]
 
