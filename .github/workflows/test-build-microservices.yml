@@ -1,10 +1,12 @@
 name: Test Build Microservices
 
 # TODO: add main here
+# on:
+#   push:
+#     branches:
+#       - main
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   get-microservice-versions:
