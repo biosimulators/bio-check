@@ -12,7 +12,7 @@ COPY . /app/api
 EXPOSE 3001
 
 RUN source ~/.bashrc \
-    && poetry install --only=api
+    && poetry install --only=api --no-cache
 
 WORKDIR /app/api
 
