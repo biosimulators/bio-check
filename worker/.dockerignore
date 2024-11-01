@@ -37,4 +37,3 @@ tests.py
 !enter.sh
 bio_check/.env
 test.ipynb
-config/
