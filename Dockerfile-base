@@ -12,10 +12,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
 RUN apt-get update && apt-get install -y \
+    python3.10  \
+    python3-pip  \
+    python3-dev \
     ca-certificates \
     libhdf5-dev \
     libhdf5-serial-dev \
-    python3-dev \
     build-essential \
     libncurses5  \
     libxml2 \
@@ -55,8 +57,6 @@ RUN apt-get update && apt-get install -y \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
     && chmod +x /tmp/miniconda.sh \
     && /tmp/miniconda.sh -b -p /opt/conda
-# python3.10  \
-# python3-pip  \
 
 # add conda to PATH
 ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
