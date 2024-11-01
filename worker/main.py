@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 from shared import MongoDbConnector
 from log_config import setup_logging
-from supervisor import Supervisor, CompositionSupervisor
+from supervisor import Supervisor
+# from supervisor import CompositionSupervisor
 
 
 load_dotenv('../assets/dev/.env_dev')

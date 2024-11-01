@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     libxml2 \
     libncurses5
 
-COPY environment.worker.yml /tmp/environment.worker.yml
+COPY config/environment.worker.yml /tmp/environment.worker.yml
 COPY . /app/worker
 
 SHELL ["/usr/bin/env", "bash", "-c"]

@@ -32,11 +32,11 @@ smoldyn = "^2.73"
 biosimulators-amici = "^0.1.24"
 biosimulators-copasi = "^0.2.22"
 biosimulators-tellurium = "^0.1.44"
+simulariumio = "^1.11.0"
 
 
 [tool.poetry.group.composition.dependencies]
 process-bigraph = "^0.0.21"
-simulariumio = "^1.11.0"
 
 
 [tool.poetry.group.dev.dependencies]
