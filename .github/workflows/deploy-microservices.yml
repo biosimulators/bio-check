@@ -1,12 +1,12 @@
 name: Deploy Microservices
 
-on:
-  workflow_dispatch:
 # on:
-#   workflow_run:
-#     workflows: ["Continuous Integration"]
-#     types:
-#       - completed
+#   workflow_dispatch:
+on:
+  workflow_run:
+    workflows: ["Deploy Base Image"]
+    types:
+      - completed
 
 jobs:
   get-microservice-versions:
