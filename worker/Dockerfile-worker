@@ -47,6 +47,9 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
 
 WORKDIR /app/worker
 
+# TODO: make this permanent eventually:
+RUN mv ../shared.py .
+
 ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run python3 main.py"]
 
 

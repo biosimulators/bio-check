@@ -84,7 +84,7 @@ WORKDIR /app
 
 # copy assets
 COPY assets/configs/requirements.base.txt ./assets/scripts/remove_deps.sh ./assets/scripts/update_deps.sh ./assets/dropped.txt ./assets/scripts/install_deps.sh /app/assets/
-COPY pyproject.toml /app/pyproject.toml
+COPY pyproject.toml assets/shared.py /app/
 COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 
