@@ -2,7 +2,7 @@ name: Continuous Deployment
 
 on:
   # workflow_run:
-  #   workflows: ["Build"]  # Name of the workflow it depends on
+  #   workflows: ["Build"]
   #   types:
   #     - completed
   workflow_dispatch: {}
@@ -26,7 +26,7 @@ jobs:
             owner,
             repo,
             workflow_id,
-            ref: 'main' // Or use a specific branch
+            ref: 'main'
             });
 
   build-and-deploy-microservice-images:
