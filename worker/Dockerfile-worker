@@ -13,7 +13,8 @@ COPY config/environment.worker.yml /tmp/environment.worker.yml
 COPY . /app/worker
 
 # os deps
-RUN apt-get update && apt-get install -y libatlas-base-dev \
+RUN apt-get update && apt-get install -y \
+    libatlas-base-dev \
     libhdf5-serial-dev \
     swig \
     libboost-all-dev \
@@ -30,6 +31,7 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     bzip2 \
     libxml2 \
     libncurses5 \
+    && rm /app/worker/environment.worker.yml || echo "File not found: /app/worker/environment.worker.yml" \
     && source ~/.bashrc \
     && conda install -c conda-forge -c pysces pysces -y \
     && conda env update -n conda-env -f /tmp/environment.worker -y \
