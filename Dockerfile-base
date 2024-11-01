@@ -12,11 +12,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
 RUN apt-get update && apt-get install -y \
-    python3.10  \
     ca-certificates \
     libhdf5-dev \
     libhdf5-serial-dev \
-    python3-pip  \
     python3-dev \
     build-essential \
     libncurses5  \
@@ -57,6 +55,8 @@ RUN apt-get update && apt-get install -y \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
     && chmod +x /tmp/miniconda.sh \
     && /tmp/miniconda.sh -b -p /opt/conda
+# python3.10  \
+# python3-pip  \
 
 # add conda to PATH
 ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
@@ -71,7 +71,7 @@ SHELL ["/usr/bin/env", "bash", "-c"]
 # create conda env from yml and ensure env activation
 RUN conda init bash \
     && conda create -n conda-env python=3.10 -y \
-    && conda run python3 -m pip3 install --upgrade pip \
+    && conda run python3 -m pip install --upgrade pip \
     && conda env update -n conda-env -f /tmp/environment.base.yml \
     && echo "conda activate conda-env" >> ~/.bashrc \
     && source ~/.bashrc
@@ -93,10 +93,3 @@ RUN echo "BioCompose Server" > /app/README.md \
   && poetry config virtualenvs.in-project true \
   && poetry lock  \
   && poetry install --without=api,worker,composition
-
-#     && poetry env use 3.10 \
-#     && poetry lock \
-#     && poetry install --without=api,worker \
-#     &&
-#     && conda init \
-#     && conda activate conda-env  \
