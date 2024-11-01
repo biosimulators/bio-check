@@ -11,6 +11,9 @@ LABEL \
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
 
+# enforce more dynamic shell
+SHELL ["/usr/bin/env", "bash", "-c"]
+
 RUN apt-get update && apt-get install -y \
     python3.10  \
     python3-pip  \
@@ -64,9 +67,6 @@ ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
 # copy configs
 COPY assets/configs/.biosimulations.json /.google/.bio-check.json
 COPY assets/environment.base.yml /tmp/environment.base.yml
-
-# enforce more dynamic shell
-SHELL ["/usr/bin/env", "bash", "-c"]
 
 # create conda env from yml and ensure env activation
 RUN conda init bash \
