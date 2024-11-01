@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
     libncurses5
 
 # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
-sudo apt install libboost-chrono-dev libboost-math-dev libboost-serialization-dev
 COPY config/environment.worker.yml /tmp/environment.worker.yml
 COPY . /app/worker
 
