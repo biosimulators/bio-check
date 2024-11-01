@@ -24,12 +24,17 @@ RUN apt-get update && apt-get install -y libatlas-base-dev \
 COPY environment.worker.yml /tmp/environment.worker.yml
 COPY . /app/worker
 
-RUN conda install -c conda-forge -c pysces pysces -y \
+SHELL ["/usr/bin/env", "bash", "-c"]
+
+RUN source ~/.bashrc \
+    && conda install -c conda-forge -c pysces pysces -y \
     && conda env update -n conda-env -f /tmp/environment.worker.yml \
-    && /usr/bin/env bash -c "source ~/.bashrc && conda activate conda-env && poetry install --only=worker --no-cache" \
+    && poetry install --only=worker --no-cache \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y  \
     && apt-get clean
+
+# && /usr/bin/env bash -c "source ~/.bashrc && conda activate conda-env && poetry install --only=worker --no-cache" \
 
 ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
