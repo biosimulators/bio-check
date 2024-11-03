@@ -38,12 +38,12 @@ RUN source ~/.bashrc \
     && conda install -c conda-forge -c pysces pysces -y \
 	  && conda env update -n conda-env -f environment.worker.yml \
     && poetry install --only=worker --no-cache \
-    && rm environment.worker.yml || echo 1 \
+    && rm environment.worker.yml || echo "rm environment.worker.yml" > .ERRORS
     && apt-get autoremove -y  \
     && apt-get clean
 
 # TODO: make this permanent eventually:
-RUN mv ../shared.py .
+RUN mv ../shared.py . || echo "mv ../shared.py ." >> .ERRORS
 
 ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run python3 main.py"]
 
