@@ -30,23 +30,16 @@ RUN apt-get update && apt-get install -y \
     libgfortran5 \
     bzip2 \
     libxml2 \
-    libncurses5 \
-    && source ~/.bashrc \
+    libncurses5 
+
+WORKDIR /app/worker
+
+RUN source ~/.bashrc \
     && conda install -c conda-forge -c pysces pysces -y \
-	    && conda env update -n conda-env -f /app/worker/environment.worker \
+	  && conda env update -n conda-env -f /app/worker/environment.worker \
     && poetry install --only=worker --no-cache \
     && apt-get autoremove -y  \
     && apt-get clean
-
-# RUN source ~/.bashrc \
-#     && conda install -c conda-forge -c pysces pysces -y \
-#     && conda env update -n conda-env -f /tmp/environment.worker.yml \
-#     && poetry install --only=worker --no-cache \
-#     && rm -rf /var/lib/apt/lists/* \
-#     && apt-get autoremove -y  \
-#     && apt-get clean
-
-WORKDIR /app/worker
 
 # TODO: make this permanent eventually:
 RUN mv ../shared.py .
