@@ -36,8 +36,9 @@ WORKDIR /app/worker
 
 RUN source ~/.bashrc \
     && conda install -c conda-forge -c pysces pysces -y \
-	  && conda env update -n conda-env -f /app/worker/environment.worker \
+	  && conda env update -n conda-env -f environment.worker.yml \
     && poetry install --only=worker --no-cache \
+    && rm environment.worker.yml || echo 1 \
     && apt-get autoremove -y  \
     && apt-get clean
 
