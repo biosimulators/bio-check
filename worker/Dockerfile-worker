@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y \
     && rm /app/worker/environment.worker.yml || echo "File not found: /app/worker/environment.worker.yml" \
     && source ~/.bashrc \
     && conda install -c conda-forge -c pysces pysces -y \
-    && conda env update -n conda-env -f /tmp/environment.worker -y \
+	    && conda env update -n conda-env -f /tmp/environment.worker \
     && poetry install --only=worker --no-cache \
     && apt-get autoremove -y  \
     && apt-get clean
