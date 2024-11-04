@@ -4,36 +4,27 @@ set -e
 
 lib="$1"
 version="$2"
-gh_username="$3"
+# gh_username="$3"
 
 if [ "$version" == "" ]; then
   echo "You must pass a version as second arg."
   exit 1
 fi
 
-# login to github
-# if [ "$gh_username" != "" ]; then
-#   ./assets/scripts/gh_login.sh "$gh_username"
-# fi
-
-# yes | docker system prune
-
-# push version
+# push version to GHCR
+docker tag bio-check-"$lib" ghcr.io/biosimulators/bio-check-"$lib":"$version"
 docker push ghcr.io/biosimulators/bio-check-"$lib":"$version"
 
-# tag version as latest if api or worker
-if [ "$lib" != "base" ]; then
-  docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulators/bio-check-"$lib":latest
-fi
 
-# push newest latest
+# push newest latest to GHCR
+docker tag ghcr.io/biosimulators/bio-check-"$lib":"$version" ghcr.io/biosimulators/bio-check-"$lib":latest
 docker push ghcr.io/biosimulators/bio-check-"$lib":latest
 
 # handle version
 if [ "$lib" == "base" ]; then
   VERSION_FILE=./assets/.BASE_VERSION
 else
-  VERSION_FILE=./"$lib"/.CONTAINER_VERSION
+  VERSION_FILE=./"$lib"/.VERSION
 fi
 
 echo "$version" > "$VERSION_FILE"

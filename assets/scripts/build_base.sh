@@ -7,25 +7,26 @@ set -e
 version="$1"
 argA="$2"
 argB="$3"  # -p
-argC="$4"
 
-if [ "$argA" == "-p" ] || [ "$argB" == "-p" ] || [ "$argC" == "-p" ]; then
+if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ]; then
   docker system prune -f -a
 fi
 
 echo "Building base image..."
-docker build --platform linux/amd64 --no-cache -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-check-base:"$version" .
+docker build --platform linux/amd64 --no-cache -f ./Dockerfile-base -t bio-check-base:"$version" .
 echo "Built base image."
 
 echo "Tagging new base image as latest..."
-docker tag ghcr.io/biosimulators/bio-check-base:"$version" ghcr.io/biosimulators/bio-check-base:latest
+docker tag bio-check-base:"$version" bio-check-base:latest
 echo "New base image tagged:"
 docker images
 
-if [ "$argA" == "--push" ] || [ "$argB" == "--push" ] || [ "$argC" == "--push" ]; then
-  ./assets/scripts/push_base.sh "$version"
-fi
+if [ "$argA" == "--push" ] || [ "$argB" == "--push" ]; then
+  # push version to GHCR
+  docker tag bio-check-base:"$version" ghcr.io/biosimulators/bio-check-base:"$version"
+  docker push ghcr.io/biosimulators/bio-check-base:"$version"
 
-if [ "$argA" == "--run" ] || [ "$argB" == "--run" ] || [ "$argC" == "--run" ]; then
-  ./assets/scripts/run_container.sh base latest
+  # push newest latest to GHCR
+  docker tag ghcr.io/biosimulators/bio-check-base:"$version" ghcr.io/biosimulators/bio-check-base:latest
+  docker push ghcr.io/biosimulators/bio-check-base:latest
 fi

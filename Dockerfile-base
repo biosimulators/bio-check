@@ -11,74 +11,71 @@ LABEL org.opencontainers.image.title="bio-check-base" \
 SHELL ["/usr/bin/env", "bash", "-c"]
 
 # shared env
-ENV DEBIAN_FRONTEND=noninteractive
-ENV MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check"
-ENV POETRY_VIRTUALENVS_CREATE=false \
+ENV DEBIAN_FRONTEND=noninteractive\
+    MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check" \
+    POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1
 
-# add cluster configs
+# copy assets
 COPY assets/configs/.biosimulations.json /.google/.bio-check.json
 COPY assets/configs/environment.base.yml /tmp/environment.base.yml
-
-# add pysces dirs TODO: do we even need to do this?
 COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+COPY pyproject.toml assets/shared.py README.md /app/
 
 # cd /app
 WORKDIR /app
-
-# copy assets
-COPY assets/configs/requirements.base.txt ./assets/
-COPY pyproject.toml assets/shared.py README.md ./
-COPY assets/shared.py ./api/shared.py
-COPY assets/shared.py ./worker/shared.py
 
 RUN apt-get update && apt-get install -y \
     python3.10 \
     python3-pip \
     python3-dev \
     ca-certificates \
-    libhdf5-dev \
-    cmake \
-    make \
-    libc6-dev \
-    libx11-dev \
-    libc6 \
-    libgl1-mesa-dev \
-    pkg-config \
-    curl \
-    tar \
-    libgl1-mesa-glx \
-    libice6 \
-    libpython3.10 \
-    libsm6 \
-    wget \
-    gnupg \
-    libboost-chrono-dev \
-    libboost-math-dev \
-    libboost-serialization-dev \
-    && mkdir -p /Pysces \
-    && mkdir -p /Pysces/psc \
-    && mkdir -p /root/Pysces \
-    && mkdir -p /root/Pysces/psc \
+    && mkdir -p /Pysces/psc /root/Pysces/psc \
     && chmod ugo+rw -R /Pysces \
     && python3.10 -m pip install --upgrade pip \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
     && chmod +x /tmp/miniconda.sh \
-    && /tmp/miniconda.sh -b -p /opt/conda
-
-# add conda to PATH
-ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
-
-# create conda env from yml and ensure env activation
-RUN conda init bash \
-    && conda create -n conda-env python=3.10 -y \
-    && conda run python3 -m pip install --upgrade pip \
-    && conda env update -n conda-env -f /tmp/environment.base.yml \
+    && /tmp/miniconda.sh -b -p /opt/conda \
+    && /opt/conda/bin/conda init bash \
+    && /opt/conda/bin/conda create -n conda-env python=3.10 -y \
+    && /opt/conda/bin/conda run python3 -m pip install --upgrade pip \
+    && /opt/conda/bin/conda env update -n conda-env -f /tmp/environment.base.yml \
     && echo "conda activate conda-env" >> ~/.bashrc \
     && source ~/.bashrc \
-    && poetry lock  \
-    && poetry install --only=base
+    && /opt/conda/bin/conda run poetry lock \
+    && /opt/conda/bin/conda run poetry install --only=base
+
+# Add Conda to PATH
+ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
+
+# RUN apt-get update && apt-get install -y \
+#     python3.10 \
+#     python3-pip \
+#     python3-dev \
+#     ca-certificates \
+#     && mkdir -p /Pysces \
+#     && mkdir -p /Pysces/psc \
+#     && mkdir -p /root/Pysces \
+#     && mkdir -p /root/Pysces/psc \
+#     && chmod ugo+rw -R /Pysces \
+#     && python3.10 -m pip install --upgrade pip \
+#     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  \
+#     && chmod +x /tmp/miniconda.sh \
+#     && /tmp/miniconda.sh -b -p /opt/conda
+#
+# # add conda to PATH
+# ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
+#
+# # create conda env from yml and ensure env activation
+# RUN conda init bash \
+#     && conda create -n conda-env python=3.10 -y \
+#     && conda run python3 -m pip install --upgrade pip \
+#     && conda env update -n conda-env -f /tmp/environment.base.yml \
+#     && echo "conda activate conda-env" >> ~/.bashrc \
+#     && source ~/.bashrc \
+#     && poetry lock  \
+#     && poetry install --only=base
 
 # && poetry install --without=api,worker,composition \
 # && poetry config virtualenvs.in-project true \
