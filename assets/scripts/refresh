@@ -1,1 +1,0 @@
-python3 -c "from main import db_connector as conn;conn.refresh_jobs()"

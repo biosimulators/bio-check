@@ -16,11 +16,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1
 
-# copy assets
-COPY assets/configs/.biosimulations.json /.google/.bio-check.json
-COPY assets/configs/environment.base.yml /tmp/environment.base.yml
-COPY assets/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
-COPY assets/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+# copy docker
+COPY assets/docker/configs/.biosimulations.json /.google/.bio-check.json
+COPY assets/docker/configs/environment.base.yml /tmp/environment.base.yml
+COPY assets/docker/configs/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY assets/docker/configs/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 COPY pyproject.toml assets/shared.py /app/
 
 # cd /app

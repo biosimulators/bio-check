@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script is used to create a sealed secret for the ghcr.io credentials
-# this script should take 3 arguments as input: namespace, github username, github user email, and github token and output a sealed secret to stdout
+# this script should take 3 arguments as input: namespace, pipeline username, pipeline user email, and pipeline token and output a sealed secret to stdout
 # Example: ./sealed_secret_ghcr.sh remote GH_USERNAME GH_USER_EMAIL GH_PAT > output.yaml
 
 # validate the number of arguments

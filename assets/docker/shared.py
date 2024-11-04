@@ -22,7 +22,7 @@ from pymongo.database import Database
 
 
 # for dev only
-dotenv.load_dotenv("../assets/dev/.env_dev")
+dotenv.load_dotenv("/dev/.env_dev")
 
 
 # constraints/definitions
