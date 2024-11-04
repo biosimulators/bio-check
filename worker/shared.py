@@ -18,7 +18,7 @@ from pymongo.database import Database
 
 # -- globally-shared content-- #
 
-load_dotenv('../assets/dev/.env_dev')
+load_dotenv('../assets/dev/config/.env_dev')
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"

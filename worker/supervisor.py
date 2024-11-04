@@ -12,7 +12,7 @@ from log_config import setup_logging
 
 
 # for dev only
-load_dotenv('../assets/dev/.env_dev')
+load_dotenv('../assets/dev/config/.env_dev')
 
 
 # logging

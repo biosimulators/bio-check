@@ -1,4 +1,4 @@
-assets/dev/.env_dev
+assets/dev/config/.env_dev
 bio_check/__pycache__
 *.pyc
 *.pyo

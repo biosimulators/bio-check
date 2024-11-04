@@ -15,7 +15,7 @@ jobs:
 
       - name: Get base image tag and version
         run: |
-          BASE_VERSION=$(cat ./assets/.BASE_VERSION)
+          BASE_VERSION=$(cat ./assets/docker/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
           BASE_IMG=ghcr.io/biosimulators/bio-check-base
           echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
@@ -24,7 +24,7 @@ jobs:
 
       - name: Create gcloud config
         run: |
-          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/configs/.biosimulations.json
+          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/docker/configs/.biosimulations.json
         env:
           BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
 

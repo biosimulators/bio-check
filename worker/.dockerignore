@@ -37,3 +37,5 @@ tests.py
 !enter.sh
 bio_check/.env
 test.ipynb
+composition
+.test_fixtures

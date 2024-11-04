@@ -65,7 +65,8 @@ RUN source ~/.bashrc \
     && rm -rf config \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
-    && apt-get clean
+    && apt-get clean \
+    && conda clean --all --json -y
 
 ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run python3 main.py"]
 

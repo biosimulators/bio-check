@@ -10,7 +10,7 @@ from supervisor import Supervisor
 # from supervisor import CompositionSupervisor
 
 
-load_dotenv('../assets/dev/.env_dev')
+load_dotenv('../assets/dev/config/.env_dev')
 
 # sleep params
 DELAY_TIMER = 20
