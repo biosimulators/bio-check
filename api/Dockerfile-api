@@ -1,7 +1,6 @@
 # Api gateway microservice (CURRENTLY STABLE BASE IS LATEST 0.1.5
 
-# FROM ghcr.io/biosimulators/bio-check-base:latest TODO: change this back to latest below
-FROM ghcr.io/biosimulators/bio-check-base:0.2.2-test
+FROM ghcr.io/biosimulators/bio-check-base:latest
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
