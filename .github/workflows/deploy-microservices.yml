@@ -67,8 +67,11 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Check if Docker Compose is installed correctly
 
-      - name: Build Docker containers with Docker Compose
-        run: docker-compose build
+      - name: Build API microservice image
+        run: docker-compose build api
+
+      - name: Build worker microservice image
+        run: docker-compose build worker
 
       - name: Authorize push script
         run: chmod +x ./assets/scripts/push_image.sh
