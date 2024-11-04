@@ -5,8 +5,8 @@ arg2="$2"
 
 # optionally prune/clear system and cache prior to build
 if [ "$arg1" == "-p" ]; then
-  yes | docker system prune -a
-  yes | docker buildx prune -a
+  docker buildx prune -a -f
+  docker system prune -a -f
 fi
 
 # remove old spec, create new
