@@ -1,11 +1,11 @@
 name: Continuous Deployment
 
 on:
-  # workflow_run:
-  #   workflows: ["Build"]
-  #   types:
-  #     - completed
-  workflow_dispatch: {}
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+  # workflow_dispatch: {}
 
 
 jobs:
