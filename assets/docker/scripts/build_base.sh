@@ -14,7 +14,7 @@ if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ]; then
 fi
 
 echo "Building base image..."
-docker build --platform linux/amd64 --no-cache -f ./Dockerfile-base -t bio-check-base:"$version" .
+docker build --platform linux/amd64 -f ./Dockerfile-base -t bio-check-base:"$version" .
 echo "Built base image."
 
 echo "Tagging new base image as latest..."

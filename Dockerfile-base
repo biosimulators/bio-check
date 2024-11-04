@@ -20,7 +20,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/base-config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/base-config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
-COPY pyproject.toml assets/docker/shared.py assets/test_fixtures assets/docker/config /app/
+COPY pyproject.toml assets/docker/shared.py assets/test_fixtures /app/
+COPY assets/docker/config/base-config/ assets/docker/config/worker-config/ /app/config/
 
 # cd /app
 WORKDIR /app
@@ -49,7 +50,7 @@ ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
 RUN conda init bash \
     && conda create -n conda-env python=3.10 -y \
     && conda run python3 -m pip install --upgrade pip \
-    && conda env update -n conda-env -f /config/environment.base.yml \
+    && conda env update -n conda-env -f config/environment.base.yml \
     && echo "conda activate conda-env" >> ~/.bashrc \
     && source ~/.bashrc \
     && poetry lock  \
