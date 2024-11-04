@@ -4,9 +4,10 @@
 # Run at root of repo!
 set -e
 
-version="$1"
-argA="$2"
-argB="$3"  # -p
+argA="$1"
+argB="$2"
+
+version=$(cat ./assets/.BASE_VERSION)
 
 if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ]; then
   docker system prune -f -a
@@ -21,7 +22,7 @@ docker tag bio-check-base:"$version" bio-check-base:latest
 echo "New base image tagged:"
 docker images
 
-if [ "$argA" == "--push" ] || [ "$argB" == "--push" ]; then
+if [ "$argB" == "--push" ] || [ "$argA" == "--push" ]; then
   # push version to GHCR
   docker tag bio-check-base:"$version" ghcr.io/biosimulators/bio-check-base:"$version"
   docker push ghcr.io/biosimulators/bio-check-base:"$version"
