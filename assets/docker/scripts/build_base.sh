@@ -7,7 +7,7 @@ set -e
 argA="$1"
 argB="$2"
 
-version=$(cat ./assets/.BASE_VERSION)
+version=$(cat ./assets/docker/.BASE_VERSION)
 
 if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ]; then
   docker system prune -f -a
