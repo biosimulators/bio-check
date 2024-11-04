@@ -5,10 +5,10 @@ kind: Kustomization
 namespace: dev
 
 images:
-- name: ghcr.io/biosimulators/bio-check-api
-  newTag: 0.0.0
-- name: ghcr.io/biosimulators/bio-check-worker
-  newTag: 0.0.0
+- name: ghcr.io/biosimulators/bio-compose-server-api
+  newTag: 0.0.1
+- name: ghcr.io/biosimulators/bio-compose-server-worker
+  newTag: 0.0.1
 - name: mongo
   newTag: 8.0-rc
 

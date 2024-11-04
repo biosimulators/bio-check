@@ -17,7 +17,7 @@ jobs:
         run: |
           BASE_VERSION=$(cat ./assets/docker/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
-          BASE_IMG=ghcr.io/biosimulators/bio-check-base
+          BASE_IMG=ghcr.io/biosimulators/bio-compose-server-base
           echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
           echo "Base Version: $BASE_VERSION"
           echo "Base Tag: $BASE_IMG"
@@ -30,13 +30,13 @@ jobs:
 
       - name: Build base image
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}-test .
+          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
 
       - name: Deploy new base version to GHCR
         run: |
-          docker push ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}-test
+          docker push ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}
 
       - name: Deploy new latest base version
         run: |
-          docker tag ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }}-test ${{ env.BASE_IMG }}:latest
+          docker tag ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} ${{ env.BASE_IMG }}:latest
           docker push ${{ env.BASE_IMG }}:latest

@@ -15,7 +15,7 @@ services:
     build:
       context: ./api
       dockerfile: ./Dockerfile-api
-    image: bio-check-api:1.12.1  # ghcr.io/biosimulators/bio-check-api:1.12.0  # .9  ghcr.io/biosimulators/bio-check-compose_api:1.11.11  # .9
+    image: bio-compose-server-api:0.0.1  # .9  ghcr.io/biosimulators/bio-check-compose_api:1.11.11  # .9
     container_name: api
     environment:
       - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
@@ -33,7 +33,7 @@ services:
     build:
       context: ./worker
       dockerfile: ./Dockerfile-worker
-    image: bio-check-worker:1.12.1  # ghcr.io/biosimulators/bio-check-worker:1.12.0  # ghcr.io/biosimulators/bio-check-compose_worker:1.11.9  # .7
+    image: bio-compose-server-worker:0.0.1  # ghcr.io/biosimulators/bio-check-compose_worker:1.11.9  # .7
     container_name: worker
     environment:
       - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose

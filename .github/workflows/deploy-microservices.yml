@@ -4,10 +4,10 @@ name: Deploy Microservices
 #   workflow_dispatch:
 on:
   workflow_dispatch:
-  # workflow_run:
-  #   workflows: ["Deploy Base Image"]
-  #   types:
-  #     - completed
+  workflow_run:
+    workflows: ["Deploy Base Image"]
+    types:
+      - completed
 
 jobs:
   get-microservice-versions:

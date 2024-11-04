@@ -53,12 +53,7 @@ RUN conda init bash \
     && conda env update -n conda-env -f config/environment.base.yml \
     && echo "conda activate conda-env" >> ~/.bashrc \
     && source ~/.bashrc \
-    && poetry lock  \
-    && poetry install --only=base \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && conda clean --all --json -y
+    && poetry lock
 
 # && poetry install --without=api,worker,composition \
 # && poetry config virtualenvs.in-project true \

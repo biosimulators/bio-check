@@ -1,6 +1,7 @@
 # Worker microservice
 
-FROM ghcr.io/biosimulators/bio-check-base:latest
+# FROM ghcr.io/biosimulators/bio-check-base:latest
+FROM ghcr.io/biosimulators/bio-compose-server-base:latest
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
@@ -60,7 +61,7 @@ RUN source ~/.bashrc \
     libboost-serialization-dev \
     && conda install -c conda-forge -c pysces pysces -y \
 	&& conda env update -n conda-env -f config/environment.worker.yml \
-    && poetry install --only=worker --no-cache \
+    && poetry install --without=api,composition,dev --no-cache \
     && rm -rf config \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
