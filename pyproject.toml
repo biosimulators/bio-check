@@ -12,38 +12,38 @@ python = "^3.10"
 
 
 [tool.poetry.group.base.dependencies]
-requests-toolbelt = "^1.0.0"
-python-dotenv = "^1.0.1"
-google-cloud-storage = "^2.18.2"
-python-multipart = "^0.0.17"
-fastapi = "^0.115.4"
-toml = "^0.10.2"
-typing-extensions = "^4.12.2"
+requests-toolbelt = "*"
+python-dotenv = "*"
+google-cloud-storage = "*"
+python-multipart = "*"
+fastapi = "*"
+toml = "*"
+typing-extensions = "*"
 
 
 [tool.poetry.group.api.dependencies]
-pydantic-settings = "^2.6.0"
-pydantic = "^2.9.2"
-uvicorn = "^0.32.0"
-pyyaml = "^6.0.2"
+pydantic-settings = "*"
+pydantic = "*"
+uvicorn = "*"
+pyyaml = "*"
 
 
 [tool.poetry.group.worker.dependencies]
-smoldyn = "^2.73"
-biosimulators-amici = "^0.1.24"
-biosimulators-copasi = "^0.2.22"
-biosimulators-tellurium = "^0.1.44"
-simulariumio = "^1.11.0"
+smoldyn = "*"
+biosimulators-amici = "*"
+biosimulators-copasi = "*"
+biosimulators-tellurium = "*"
+simulariumio = "*"
 
 
 [tool.poetry.group.composition.dependencies]
-process-bigraph = "^0.0.21"
+process-bigraph = "*"
 seaborn = "*"
 jupyterlab = "*"
 
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
+pytest = "*"
 
 
 [tool.pytest.ini_options]
