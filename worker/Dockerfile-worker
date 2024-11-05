@@ -31,7 +31,7 @@ ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD000000001
 
 # TODO: perhaps run --no-install-recommends?
 RUN apt-get update  \
-    && apt-get install -y \
+    && apt install -y \
     meson \
     g++ \
     gfortran \
@@ -39,9 +39,12 @@ RUN apt-get update  \
     liblapack-dev \
     libgfortran5 \
     libhdf5-dev \
+    libhdf5-serial-dev \
+    libatlas-base-dev \
     cmake \
     make \
     git \
+    build-essential \
     swig \
     libc6-dev \
     libx11-dev \

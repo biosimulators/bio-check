@@ -22,7 +22,7 @@ COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 COPY pyproject.toml assets/docker/shared.py assets/test_fixtures /app/
-COPY assets/docker/config/environment.api.yml assets/docker/config/environment.worker.yml /app/config/
+COPY assets/docker/config/environment.base.yml assets/docker/config/environment.api.yml assets/docker/config/environment.worker.yml /app/config/
 
 # cd /app
 WORKDIR /app
@@ -31,6 +31,7 @@ RUN mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
+    && conda create -n server python=3.10 -y \
     && echo "conda activate server" >> ~/.bashrc
 
 

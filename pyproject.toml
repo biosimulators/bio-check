@@ -19,6 +19,7 @@ python-multipart = "^0.0.17"
 fastapi = "^0.115.4"
 toml = "^0.10.2"
 typing-extensions = "^4.12.2"
+pymongo = "*"
 
 
 [tool.poetry.group.api.dependencies]

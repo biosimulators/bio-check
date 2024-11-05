@@ -4,10 +4,6 @@ channels:
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
 dependencies:
-  - python=3.10.15
-  - pip
-  - setuptools
-  - wheel
   - _libgcc_mutex=0.1
   - _openmp_mutex=5.1
   - bzip2=1.0.8
@@ -35,6 +31,7 @@ dependencies:
       - cachetools==5.5.0
       - certifi==2024.8.30
       - charset-normalizer==3.4.0
+      - dnspython==2.7.0
       - exceptiongroup==1.2.2
       - fastapi==0.115.4
       - google-api-core==2.22.0
@@ -63,4 +60,3 @@ dependencies:
       - toml==0.10.2
       - typing-extensions==4.12.2
       - urllib3==2.2.3
-prefix: /opt/conda/envs/server
