@@ -66,10 +66,11 @@ def test_utc_generator():
         core=CORE
     )
 
-    sim.save(filename="test_utc_output_generator.json", outdir="./outputs")
-    sim.run(1)
+    sim.save(filename="test_utc_output_generator_before.json", outdir="./outputs")
+    sim.update({}, 1)
     results = sim.gather_results()
     print(f'Results:\n{results}')
+    sim.save(filename="test_utc_output_generator_after.json", outdir="./outputs")
     return results
 
 

@@ -226,7 +226,6 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
 
 
 def run_sbml_copasi(sbml_fp, start, dur, steps):
-    print(f'Running copasi with: {start}, {dur}, {steps}')
     try:
         t = np.linspace(start, dur, steps + 1)
         model = load_model(sbml_fp)
@@ -235,8 +234,8 @@ def run_sbml_copasi(sbml_fp, start, dur, steps):
             if spec == "EmptySet" or "EmptySet" in spec:
                 specs.remove(spec)
         tc = run_time_course(model=model, update_model=True, values=t)
-        print(f'Got TC:\n{{spec: tc[spec].values.tolist() for spec in specs}}')
-        return {spec: tc[spec].values.tolist() for spec in specs}
+        data = {spec: tc[spec].values.tolist() for spec in specs}
+        return data
     except:
         error_message = handle_sbml_exception()
         return {"error": error_message}

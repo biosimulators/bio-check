@@ -51,14 +51,9 @@ class UtcOutputGenerator(OutputGenerator):
         self.num_steps = self.config.get('num_steps', 100)
         self.species_mapping = get_sbml_species_mapping(self.input_file)
 
-    def generate(self, state=None):
-        state = state or {}
-        input_file = state.get('input_file', self.input_file)
-        start = state.get('start_time', self.start_time)
-        end = state.get('end_time', self.end_time)
-        num_steps = state.get('num_steps', self.num_steps)
-
-        return SBML_EXECUTORS[self.simulator](input_file, start, end, num_steps)
+    def generate(self, input_file, start, end, num_steps):
+        data = SBML_EXECUTORS[self.simulator](input_file, start, end, num_steps)
+        return data
 
     def inputs(self):
         return {
@@ -74,7 +69,13 @@ class UtcOutputGenerator(OutputGenerator):
         }
 
     def update(self, state):
-        return self.generate(state)
+        state = state or {}
+        input_file = state.get('input_file', self.input_file)
+        start = state.get('start_time', self.start_time)
+        end = state.get('end_time', self.end_time)
+        num_steps = state.get('num_steps', self.num_steps)
+        data = self.generate(input_file, start, end, num_steps)
+        return {'time_course_data': data}
 
 
 CORE.process_registry.register('output_generator', OutputGenerator)

@@ -24,34 +24,16 @@
                 "num_steps": "maybe[integer]"
             },
             "_outputs": {
-                "time_course_data": {
-                    "MKKK": "list[float]",
-                    "MKKK_P": "list[float]",
-                    "MKK": "list[float]",
-                    "MKK_P": "list[float]",
-                    "MKK_PP": "list[float]",
-                    "MAPK": "list[float]",
-                    "MAPK_P": "list[float]",
-                    "MAPK_PP": "list[float]"
-                }
+                "time_course_data": "tree[float]"
             }
         },
-        "time_course_data_store": {
-            "MKKK": [],
-            "MKKK_P": [],
-            "MKK": [],
-            "MKK_P": [],
-            "MKK_PP": [],
-            "MAPK": [],
-            "MAPK_P": [],
-            "MAPK_PP": []
-        },
+        "time_course_data_store": {},
         "emitter": {
             "_type": "step",
             "address": "local:ram-emitter",
             "config": {
                 "emit": {
-                    "time_course_data": "tree[list[float]]"
+                    "time_course_data": "tree[float]"
                 }
             },
             "inputs": {
@@ -60,11 +42,11 @@
                 ]
             },
             "_inputs": {
-                "time_course_data": "tree[list[float]]"
+                "time_course_data": "tree[float]"
             },
             "_outputs": {},
             "outputs": {}
         }
     },
-    "composition": "(global_time:float|copasi:step[(input_file:maybe[string]|start_time:maybe[integer]|end_time:maybe[integer]|num_steps:maybe[integer]),(time_course_data:(MKKK:list[float]|MKKK_P:list[float]|MKK:list[float]|MKK_P:list[float]|MKK_PP:list[float]|MAPK:list[float]|MAPK_P:list[float]|MAPK_PP:list[float]))]|time_course_data_store:tree[list[float]]|emitter:step[(time_course_data:tree[list[float]]),()])"
+    "composition": "(global_time:float|copasi:step[(input_file:maybe[string]|start_time:maybe[integer]|end_time:maybe[integer]|num_steps:maybe[integer]),(time_course_data:tree[float])]|time_course_data_store:tree[float]|emitter:step[(time_course_data:tree[float]),()])"
 }
