@@ -7,6 +7,7 @@ on:
     workflows: ["Deploy Base Image"]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   get-microservice-versions:
