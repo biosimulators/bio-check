@@ -4,6 +4,10 @@ channels:
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
 dependencies:
+  - python=3.10.15
+  - pip
+  - setuptools
+  - wheel
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=5.1=1_gnu
   - bzip2=1.0.8=h5eee18b_6
@@ -26,7 +30,6 @@ dependencies:
   - xz=5.4.6=h5eee18b_1
   - zlib=1.2.13=h5eee18b_1
   - pip:
-      - pip==24.3.1
       - annotated-types==0.7.0
       - anyio==4.6.2.post1
       - cachetools==5.5.0
