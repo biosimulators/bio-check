@@ -61,6 +61,8 @@ RUN source ~/.bashrc \
     libboost-serialization-dev \
     && conda install -c conda-forge -c pysces pysces -y \
 	&& conda env update -n conda-env -f config/environment.worker.yml \
+    && pip3 install amici || pip install amici \
+    && pip3 install biosimulators-amici || pip install biosimulators-amici \
     && poetry install --without=api,composition,dev --no-cache \
     && rm -rf config \
     && rm -rf /var/lib/apt/lists/* \
