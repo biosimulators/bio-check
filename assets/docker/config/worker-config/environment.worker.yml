@@ -23,5 +23,6 @@ dependencies:
   - python=3.10
   - pip
   - pip:
+      - biosimulators-amici
       - biosimulators-masspy
       - biosimulators-pysces
