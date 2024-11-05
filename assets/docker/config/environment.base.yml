@@ -41,6 +41,7 @@ dependencies:
       - google-resumable-media==2.7.2
       - googleapis-common-protos==1.65.0
       - idna==3.10
+      - pip==24.3.1
       - proto-plus==1.25.0
       - protobuf==5.28.3
       - pyasn1==0.6.1
