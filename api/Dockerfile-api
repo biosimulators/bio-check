@@ -9,8 +9,12 @@ COPY ./ ./
 
 EXPOSE 3001
 
-RUN source ~/.bashrc \
-    && poetry install --without=composition,dev,worker --no-cache
+RUN conda env create -n server -f config/environment.api.yml -y \
+    && rm -rf config \
+    && conda clean --all --json -y
 
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run uvicorn main:app --host 0.0.0.0 --port 3001 --reload"]
+# RUN source ~/.bashrc \
+#     && poetry install --without=composition,dev,worker --no-cache
+
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && uvicorn main:app --host 0.0.0.0 --port 3001 --reload"]
 

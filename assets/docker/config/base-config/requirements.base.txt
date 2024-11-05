@@ -1,4 +1,0 @@
-python-multipart
-python-dotenv
-pymongo[srv]
-google-cloud-storage

@@ -7,8 +7,6 @@ SHELL ["/usr/bin/env", "bash", "-c"]
 
 COPY ./ ./
 
-# WORKDIR /app/worker
-
 ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
     TEST_OMEX_FP="test_fixtures/Elowitz-Nature-2000-Repressilator.omex"
@@ -32,8 +30,7 @@ ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD000000001
 #     && apt-get clean
 
 # TODO: perhaps run --no-install-recommends?
-RUN source ~/.bashrc \
-    && apt-get update  \
+RUN apt-get update  \
     && apt-get install -y \
     meson \
     g++ \
@@ -61,15 +58,14 @@ RUN source ~/.bashrc \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
-    && conda install -c conda-forge -c pysces pysces -y \
-	&& conda env update -n conda-env -f config/environment.worker.yml \
-    && poetry install --without=api,composition,dev --no-cache \
+	&& conda env create -n server -f config/environment.worker.yml -y \
+    && rm -rf config \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && apt-get clean \
     && conda clean --all --json -y
 
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && poetry run python3 main.py"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && python3 main.py"]
 
 # --root-user-action=ignore
 #############################

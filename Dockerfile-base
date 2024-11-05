@@ -8,6 +8,9 @@ LABEL org.opencontainers.image.title="bio-check-base" \
     org.opencontainers.image.authors="Alexander Patrie <apatrie@uchc.edu>, BioSimulators Team <info@biosimulators.org>" \
     org.opencontainers.image.vendor="BioSimulators Team"
 
+# SHELL ["/bin/bash", "-c"]
+SHELL ["/usr/bin/env", "bash", "-c"]
+
 # shared env
 ENV DEBIAN_FRONTEND=noninteractive \
     MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check" \
@@ -16,10 +19,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # copy docker
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
-COPY assets/docker/config/base-config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
-COPY assets/docker/config/base-config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
+COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
+COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 COPY pyproject.toml assets/docker/shared.py assets/test_fixtures /app/
-COPY assets/docker/config/base-config/ assets/docker/config/worker-config/ /app/config/
+COPY assets/docker/config/environment.api.yml assets/docker/config/environment.worker.yml /app/config/
 
 # cd /app
 WORKDIR /app
@@ -27,13 +30,15 @@ WORKDIR /app
 RUN mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
-    && mkdir -p /root/Pysces/psc
-# pip install . --root-user-action=ignore
+    && mkdir -p /root/Pysces/psc \
+    && echo "conda activate server" >> ~/.bashrc
+
+
 # # create conda env from yml and ensure env activation
-RUN conda env create -f config/environment.base.yml -y \
-    && rm -f config/environment.base.yml \
-    && conda env export --no-builds > config/environment.lock.yml \
-    && poetry lock
+# RUN conda env create -f config/environment.base.yml -y \
+#     && rm -f config/environment.base.yml \
+#     && conda env export --no-builds > config/environment.lock.yml \
+#     && poetry lock
 
 # create lockfile conda analogy: conda env export --no-builds > environment.lock.yml
 # && conda create -n conda-env python=3.10 -y \
