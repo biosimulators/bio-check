@@ -9,7 +9,7 @@ COPY ./ ./
 
 EXPOSE 3001
 
-RUN conda env create -n server -f config/environment.api.yml -y \
+RUN conda env update -n server -f config/environment.api.yml \
     && rm -rf config \
     && conda clean --all --json -y
 

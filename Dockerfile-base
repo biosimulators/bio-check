@@ -21,7 +21,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
-COPY pyproject.toml assets/docker/shared.py assets/test_fixtures /app/
+COPY assets/docker/shared.py assets/test_fixtures /app/
 COPY assets/docker/config/environment.base.yml assets/docker/config/environment.api.yml assets/docker/config/environment.worker.yml /app/config/
 
 # cd /app

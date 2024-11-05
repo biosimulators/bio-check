@@ -7,18 +7,17 @@ version="$2"
 # gh_username="$3"
 
 if [ "$version" == "" ]; then
-  echo "You must pass a version as second arg."
-  exit 1
+  version=$(cat "$lib"/.VERSION)
 fi
 
 # push version to GHCR
-docker tag bio-compose-"$lib" ghcr.io/biosimulators/bio-compose-"$lib":"$version"
-docker push ghcr.io/biosimulators/bio-compose-"$lib":"$version"
+docker tag bio-compose-server-"$lib":"$version" ghcr.io/biosimulators/bio-compose-server-"$lib":"$version"
+docker push ghcr.io/biosimulators/bio-compose-server-"$lib":"$version"
 
 
 # push newest latest to GHCR
-docker tag ghcr.io/biosimulators/bio-compose-"$lib":"$version" ghcr.io/biosimulators/bio-compose-"$lib":latest
-docker push ghcr.io/biosimulators/bio-compose-"$lib":latest
+docker tag ghcr.io/biosimulators/bio-compose-server-"$lib":"$version" ghcr.io/biosimulators/bio-compose-server-"$lib":latest
+docker push ghcr.io/biosimulators/bio-compose-server-"$lib":latest
 
 # handle version
 if [ "$lib" == "base" ]; then

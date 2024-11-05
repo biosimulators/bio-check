@@ -30,7 +30,8 @@ ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD000000001
 #     && apt-get clean
 
 # TODO: perhaps run --no-install-recommends?
-RUN apt-get update  \
+RUN source ~/.bashrc \
+    && apt-get update  \
     && apt install -y \
     meson \
     g++ \
@@ -55,13 +56,13 @@ RUN apt-get update  \
     tar \
     libgl1-mesa-glx \
     libice6 \
-    libpython3.10 \
     libsm6 \
     gnupg \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
-	&& conda env create -n server -f config/environment.worker.yml -y \
+	&& conda env update -n server -f config/environment.worker.yml \
+    && pip3 install amici \
     && rm -rf config \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \

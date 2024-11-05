@@ -277,7 +277,6 @@ dependencies:
       - python-copasi==4.44.295
       - python-dateutil==2.9.0.post0
       - python-dotenv==1.0.1
-      - python-graphviz==0.20.3
       - python-json-logger==2.0.7
       - python-libcombine==0.2.20
       - python-libnuml==1.1.6
