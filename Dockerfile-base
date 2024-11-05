@@ -48,12 +48,12 @@ ENV PATH="/opt/conda/bin:/opt/conda/envs/conda-env/bin:$PATH"
 
 # # create conda env from yml and ensure env activation
 RUN conda init bash \
-    && conda create -n conda-env python=3.10 -y \
     && conda run python3 -m pip install --upgrade pip \
-    && conda env update -n conda-env -f config/environment.base.yml \
+    && conda env create -f config/environment.base.yml -y \
     && echo "conda activate conda-env" >> ~/.bashrc \
     && source ~/.bashrc \
     && poetry lock
 
+# && conda create -n conda-env python=3.10 -y \
 # && poetry install --without=api,worker,composition \
 # && poetry config virtualenvs.in-project true \

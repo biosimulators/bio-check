@@ -6,10 +6,11 @@ set -e
 
 argA="$1"
 argB="$2"
+argC="$3"
 
 version=$(cat ./assets/docker/.BASE_VERSION)
 
-if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ]; then
+if [ "$argA" == "--prune" ] || [ "$argB" == "--prune" ] || [ "$argC" == "--prune" ]; then
   docker system prune -f -a
 fi
 
@@ -22,7 +23,7 @@ docker tag bio-check-base:"$version" bio-check-base:latest
 echo "New base image tagged:"
 docker images
 
-if [ "$argB" == "--push" ] || [ "$argA" == "--push" ]; then
+if [ "$argB" == "--push" ] || [ "$argA" == "--push" ] || [ "$argC" == "--push" ]; then
   # push version to GHCR
   docker tag bio-check-base:"$version" ghcr.io/biosimulators/bio-check-base:"$version"
   docker push ghcr.io/biosimulators/bio-check-base:"$version"
@@ -31,3 +32,6 @@ if [ "$argB" == "--push" ] || [ "$argA" == "--push" ]; then
   docker tag ghcr.io/biosimulators/bio-check-base:"$version" ghcr.io/biosimulators/bio-check-base:latest
   docker push ghcr.io/biosimulators/bio-check-base:latest
 fi
+
+if [ "$argB" == "--run" ] || [ "$argA" == "--run" ] || [ "$argC" == "--run" ]; then
+  ./assets/docker/scripts/run_container.sh

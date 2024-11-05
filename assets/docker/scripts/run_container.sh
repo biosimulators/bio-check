@@ -4,7 +4,11 @@ img="$1"  # which lib container to run (base, api, compose_worker)
 version="$2"
 
 if [ "$version" == "" ]; then
-  version=latest
+  if [ "$img" == "base" ]; then
+    version=latest
+  else
+    version=$(cat "$img/.VERSION")
+  fi
 fi
 
 # docker run --platform linux/amd64 -it -p 8000:3001 ghcr.io/biosimulators/bio-check-"$lib"
