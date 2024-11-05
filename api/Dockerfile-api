@@ -9,8 +9,8 @@ COPY ./ ./
 
 EXPOSE 3001
 
-RUN conda env update -n server -f config/environment.api.yml \
-    && rm -rf config \
+RUN source ~/.bashrc \
+    && conda env update -n server -f environment.api.yml \
     && conda clean --all --json -y
 
 # RUN source ~/.bashrc \

@@ -1,0 +1,47 @@
+{
+    "state": {
+        "global_time": "0.0",
+        "copasi": {
+            "_type": "step",
+            "address": "local:utc_output_generator",
+            "config": {
+                "input_file": "/Users/alexanderpatrie/Desktop/repos/bio-check/assets/test_fixtures/sbml-core/BorisEJB.xml",
+                "simulator": "copasi",
+                "start_time": "0",
+                "end_time": "10",
+                "num_steps": "100"
+            },
+            "outputs": {
+                "time_course_data": [
+                    "time_course_data_store"
+                ]
+            },
+            "_inputs": {},
+            "_outputs": {
+                "time_course_data": "tree[float]"
+            },
+            "inputs": {}
+        },
+        "time_course_data_store": {},
+        "emitter": {
+            "_type": "step",
+            "address": "local:ram-emitter",
+            "config": {
+                "emit": {
+                    "time_course_data": "tree[float]"
+                }
+            },
+            "inputs": {
+                "time_course_data": [
+                    "time_course_data_store"
+                ]
+            },
+            "_inputs": {
+                "time_course_data": "tree[float]"
+            },
+            "_outputs": {},
+            "outputs": {}
+        }
+    },
+    "composition": "(global_time:float|copasi:step[(),(time_course_data:tree[float])]|time_course_data_store:tree[float]|emitter:step[(time_course_data:tree[float]),()])"
+}

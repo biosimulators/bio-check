@@ -6,6 +6,7 @@ FROM ghcr.io/biosimulators/bio-compose-server-base:latest
 SHELL ["/usr/bin/env", "bash", "-c"]
 
 COPY ./ ./
+# COPY ../assets/docker/config/environment.base.yml ../assets/docker/config/environment.worker.yml .
 
 ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
@@ -46,6 +47,7 @@ RUN source ~/.bashrc \
     make \
     git \
     build-essential \
+    python3-dev \
     swig \
     libc6-dev \
     libx11-dev \
@@ -61,14 +63,17 @@ RUN source ~/.bashrc \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
-	&& conda env update -n server -f config/environment.worker.yml \
-    && pip3 install amici \
-    && rm -rf config \
+    && conda env update -n server -f environment.worker.yml \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && apt-get clean \
     && conda clean --all --json -y
 
+# && conda install -c conda-forge -c pysces pysces \
+# && conda env update -n server -f config/environment.worker.yml \
+# && conda install "numpy<1.22.0" \
+# && conda run pip install amici biosimulators-amici --root-user-action=ignore \
+# && rm -rf config \
 ENTRYPOINT ["bash", "-c", "source ~/.bashrc && python3 main.py"]
 
 # --root-user-action=ignore

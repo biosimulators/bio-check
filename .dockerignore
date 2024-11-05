@@ -29,13 +29,11 @@ unused.txt
 # model-examples
 .gitignore
 .idea
-tests
 # bio_check/api
 # bio_check/worker
 !enter.sh
 !add_deps.sh
 bio_check/.env
-tests.py
 worker/shared.py
 .env_dev
 tests.ipynb

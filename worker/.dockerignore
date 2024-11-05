@@ -33,7 +33,6 @@ unused.txt
 model-examples
 .gitignore
 .idea
-tests.py
 !enter.sh
 bio_check/.env
 test.ipynb

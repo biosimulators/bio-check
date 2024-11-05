@@ -4,6 +4,10 @@ image="$1"  # which lib container to run (base, api, compose_worker)
 version="$2"
 use_biocompose="$3"
 
+if [ "$use_biocompose" == "" ]; then
+  use_biocompose=1
+fi
+
 if [ "$version" == "" ]; then
   if [ "$image" == "base" ]; then
     version=latest
@@ -13,7 +17,7 @@ if [ "$version" == "" ]; then
 fi
 
 if [ "$use_biocompose" == 1 ]; then
-  img="bio-compose-$image"
+  img="bio-compose-server-$image"
 else
   img="$image"
 fi

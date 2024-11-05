@@ -30,16 +30,20 @@ pyyaml = "^6.0.2"
 
 
 [tool.poetry.group.worker.dependencies]
-smoldyn = "^2.73"
 simulariumio = "^1.11.0"
 biosimulators-copasi = "^0.2.22"
 biosimulators-tellurium = "^0.1.44"
+biosimulators-amici = "^0.1.24"
+biosimulators-pysces = "^0.1.33"
 
+[tool.poetry.group.smoldyn.dependencies]
+smoldyn = "^2.73"
 
 [tool.poetry.group.composition.dependencies]
-process-bigraph = "^0.0.21"
 seaborn = "*"
 jupyterlab = "*"
+process-bigraph = "^0.0.22"
+bigraph-schema = "^0.0.45"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -49,6 +53,7 @@ pytest = "^8.3.3"
 [tool.pytest.ini_options]
 addopts = "--ignore=setup.py"
 python_files = "tests.py"
+testpaths = ["worker"]
 
 
 [build-system]
