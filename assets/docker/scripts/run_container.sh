@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
-img="$1"  # which lib container to run (base, api, compose_worker)
+image="$1"  # which lib container to run (base, api, compose_worker)
 version="$2"
+use_biocompose="$3"
 
 if [ "$version" == "" ]; then
-  if [ "$img" == "base" ]; then
+  if [ "$image" == "base" ]; then
     version=latest
   else
-    version=$(cat "$img/.VERSION")
+    version=$(cat "$image/.VERSION")
   fi
 fi
 
+if [ "$use_biocompose" == 1 ]; then
+  img="bio-compose-$image"
+else
+  img="$image"
+fi
 # docker run --platform linux/amd64 -it -p 8000:3001 ghcr.io/biosimulators/bio-check-"$lib"
 
 docker run --name "$img" --platform linux/amd64 --entrypoint /usr/bin/env -it "$img":"$version" bash

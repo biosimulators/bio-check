@@ -21,7 +21,7 @@ echo "Built base image."
 echo "Tagging new base image as latest..."
 docker tag bio-check-base:"$version" bio-check-base:latest
 echo "New base image tagged:"
-docker images
+docker images | grep bio-check-base:latest
 
 if [ "$argB" == "--push" ] || [ "$argA" == "--push" ] || [ "$argC" == "--push" ]; then
   # push version to GHCR
@@ -34,4 +34,5 @@ if [ "$argB" == "--push" ] || [ "$argA" == "--push" ] || [ "$argC" == "--push" ]
 fi
 
 if [ "$argB" == "--run" ] || [ "$argA" == "--run" ] || [ "$argC" == "--run" ]; then
-  ./assets/docker/scripts/run_container.sh
+  ./assets/docker/scripts/run_container.sh base 1
+fi
