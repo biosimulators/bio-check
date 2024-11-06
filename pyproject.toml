@@ -6,7 +6,7 @@ description = "Simulation Verification Service Microservices (api and worker) co
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/biosimulators/bio-check"
-# packages = [{include = "api"}, {include = "worker"}, {include = "tests"}]
+packages = [{include = "api"}, {include = "worker"}, {include = "tests"}]
 
 
 [tool.poetry.dependencies]
