@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from tempfile import mkdtemp
 import traceback
@@ -8,9 +9,14 @@ import libsbml
 from process_bigraph import Step, Composite
 
 from worker import APP_PROCESS_REGISTRY
+from worker.log_config import setup_logging
 from worker.shared_worker import handle_exception
 from worker.compatible import COMPATIBLE_UTC_SIMULATORS
 from worker.io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports, get_sbml_species_mapping
+
+# logging TODO: implement this.
+logger = logging.getLogger("biochecknet.worker.data_generator.log")
+setup_logging(logger)
 
 AMICI_ENABLED = True
 COPASI_ENABLED = True
@@ -21,28 +27,28 @@ SMOLDYN_ENABLED = True
 try:
     from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
 except ImportError as e:
-    print(e)
     AMICI_ENABLED = False
+    logger.warn(str(e))
 try:
     from basico import *
 except ImportError as e:
-    print(e)
     COPASI_ENABLED = False
+    logger.warn(str(e))
 try:
     import tellurium as te
 except ImportError as e:
-    print(e)
     TELLURIUM_ENABLED = False
+    logger.warn(str(e))
 try:
     from smoldyn import Simulation
 except ImportError as e:
-    print(e)
     SMOLDYN_ENABLED = False
+    logger.warn(str(e))
 try:
     import pysces
 except ImportError as e:
-    print(e)
     PYSCES_ENABLED = False
+    logger.warn(str(e))
 
 
 # class OutputGenerator(Step):

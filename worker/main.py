@@ -6,11 +6,14 @@ from dotenv import load_dotenv
 
 from worker.shared_worker import MongoDbConnector
 from worker.log_config import setup_logging
-from worker.supervisor import Supervisor
-# from supervisor import CompositionSupervisor
+from worker.job import Supervisor
 
 
 load_dotenv('../assets/dev/config/.env_dev')
+
+# logging TODO: implement this.
+logger = logging.getLogger("biochecknet.worker.main.log")
+setup_logging(logger)
 
 # sleep params
 DELAY_TIMER = 20
@@ -23,9 +26,6 @@ DB_NAME = "service_requests"
 
 # shared db_connector
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
-
-# setup_logging("biochecknet_worker_main.log")
-# logger = logging.getLogger(__name__)
 
 
 async def main(max_retries=MAX_RETRIES):
@@ -48,9 +48,3 @@ async def main(max_retries=MAX_RETRIES):
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# net=app-net
-# docker network create "$net"
-# docker run -d --rm --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib":latest
-# docker run -it --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib"

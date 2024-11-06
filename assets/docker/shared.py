@@ -3,6 +3,7 @@
 import logging
 import os
 import uuid
+import sys
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -313,6 +314,14 @@ async def load_arrows(timer):
         if n == n_ellipses - 1:
             disp += "|"
         print(disp)
+
+
+def start_logging(fname: str):
+    logging.basicConfig(
+        filename=fname,
+        level=logging.ERROR,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 
 
 # Content originally in API:

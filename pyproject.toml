@@ -36,6 +36,7 @@ jupyterlab = "*"
 process-bigraph = "^0.0.22"
 bigraph-schema = "^0.0.45"
 pytest = "^8.3.3"
+h5py = "^3.12.1"
 
 
 [tool.poetry.group.smoldyn.dependencies]

@@ -1,3 +1,4 @@
+import logging
 from tempfile import mkdtemp
 from typing import *
 from importlib import import_module
@@ -7,42 +8,16 @@ from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
 from worker.io_worker import get_sbml_species_mapping
-from worker.output_generators import SBML_EXECUTORS
+from worker.data_generator import SBML_EXECUTORS
+from worker.log_config import setup_logging
 from worker.shared_worker import handle_exception
 from worker.data_model import BiosimulationsRunOutputData
 from worker.io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports
 
-AMICI_ENABLED = True
-COPASI_ENABLED = True
-PYSCES_ENABLED = True
-TELLURIUM_ENABLED = True
-SMOLDYN_ENABLED = True
 
-try:
-    from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
-except ImportError as e:
-    print(e)
-    AMICI_ENABLED = False
-try:
-    from basico import *
-except ImportError as e:
-    print(e)
-    COPASI_ENABLED = False
-try:
-    import tellurium as te
-except ImportError as e:
-    print(e)
-    TELLURIUM_ENABLED = False
-try:
-    from smoldyn import Simulation
-except ImportError as e:
-    print(e)
-    SMOLDYN_ENABLED = False
-try:
-    import pysces
-except ImportError as e:
-    print(e)
-    PYSCES_ENABLED = False
+# logging TODO: implement this.
+logger = logging.getLogger("biochecknet.worker.verification.log")
+setup_logging(logger)
 
 
 def _generate_biosimulator_utc_outputs(omex_fp: str, output_root_dir: str, simulators: List[str] = None, alg_policy="same_framework") -> Dict:

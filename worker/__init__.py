@@ -17,7 +17,7 @@ def register_module(
 ) -> None:
     for process_name, class_name in items_to_register:
         try:
-            import_statement = f'worker.output_generator'
+            import_statement = f'worker.steps'
 
             module = __import__(
                  import_statement, fromlist=[class_name])

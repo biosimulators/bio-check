@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 
 from process_bigraph import Composite
 
-from worker.output_generators import CORE, generate_time_course_data
-from worker.workers import VerificationWorker
+from worker.data_generator import CORE, generate_time_course_data
+from worker.worker import VerificationWorker
 
 
 load_dotenv('../assets/dev/config/.env_dev')
@@ -30,7 +30,7 @@ def test_generate_time_course_data():
         end=1000,
         steps=5,
         simulators=['copasi', 'pysces', 'tellurium'],
-        out_dir="../worker/outputs"
+        out_dir="../worker/output"
     )
     pprint.pp(results)
 

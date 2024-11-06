@@ -38,6 +38,12 @@ RUN mkdir -p /Pysces \
     && rm -f environment.base.yml
 
 
+# to run with a local network:
+# net=app-net
+# docker network create "$net"
+# docker run -d --rm --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib":latest
+# docker run -it --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib"
+
 # # create conda env from yml and ensure env activation
 # RUN conda env create -f config/environment.base.yml -y \
 #     && rm -f config/environment.base.yml \
