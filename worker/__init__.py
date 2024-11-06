@@ -32,7 +32,7 @@ def register_module(
             APP_PROCESS_REGISTRY.process_registry.register(process_name, bigraph_class)
             print(f'Registered {process_name}') if verbose else None
         except Exception as e:
-            print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
+            print(f"Cannot register {class_name}. Error:\n**\n{e}\n**") if verbose else None
             continue
 
 
