@@ -1,0 +1,127 @@
+{
+    "state": {
+        "global_time": "1.0",
+        "copasi": {
+            "_type": "step",
+            "address": "local:time-course-output-generator",
+            "config": {
+                "start_time": "0",
+                "end_time": "1000",
+                "num_steps": "5"
+            },
+            "inputs": {
+                "parameters": [
+                    "parameters_store_copasi"
+                ]
+            },
+            "outputs": {
+                "output_data": [
+                    "output_data_store_copasi"
+                ]
+            },
+            "_inputs": {
+                "parameters": "tree[any]"
+            },
+            "_outputs": {
+                "output_data": "tree[any]"
+            }
+        },
+        "parameters_store_copasi": {},
+        "output_data_store_copasi": {
+            "MKKK": "[89.99999999999999, 19.2240903138681, 51.882253752328, 79.26940132150449, 94.64959603810298, 96.9163103099709]",
+            "MKKK_P": "[9.999999999999998, 80.77590968613197, 48.11774624767197, 20.730598678495486, 5.350403961896989, 3.08368969002904]",
+            "MKK": "[280.0, 66.91544475325867, 9.125774575583325, 27.734104527949587, 99.38612886965848, 204.90028607622128]",
+            "MKK_P": "[9.999999999999998, 70.09775565946691, 25.297902443739112, 38.63209853740496, 61.583862084178904, 64.98096420661518]",
+            "MKK_PP": "[9.999999999999998, 162.9867995872745, 265.5763229806776, 233.63379693464523, 139.03000904616098, 30.118749717161883]",
+            "MAPK": "[280.0, 43.939829147670785, 0.08157366094073068, 0.10414237931086172, 0.2835314333701311, 3.4362036324025818]",
+            "MAPK_P": "[9.999999999999998, 63.281545596331455, 1.1594717227905584, 1.3242151235591704, 2.3085241063916535, 10.196011036119856]",
+            "MAPK_PP": "[9.999999999999998, 192.77862525599764, 298.7589546162686, 298.5716424971301, 297.40794446023875, 286.3677853314796]"
+        },
+        "tellurium": {
+            "_type": "step",
+            "address": "local:time-course-output-generator",
+            "config": {
+                "start_time": "0",
+                "end_time": "1000",
+                "num_steps": "5"
+            },
+            "inputs": {
+                "parameters": [
+                    "parameters_store_tellurium"
+                ]
+            },
+            "outputs": {
+                "output_data": [
+                    "output_data_store_tellurium"
+                ]
+            },
+            "_inputs": {
+                "parameters": "tree[any]"
+            },
+            "_outputs": {
+                "output_data": "tree[any]"
+            }
+        },
+        "parameters_store_tellurium": {},
+        "output_data_store_tellurium": {
+            "MKKK": "[90.0, 19.22415030350388, 51.8822915148201, 79.26943006816805, 94.64958175305448, 96.91631085050105]",
+            "MKKK_P": "[10.0, 80.77584969649615, 48.11770848517993, 20.730569931832015, 5.350418246945609, 3.0836891494990044]",
+            "MKK": "[280.0, 66.91537844252723, 9.125872715395346, 27.7341636621436, 99.38611804338025, 204.90023614734858]",
+            "MKK_P": "[10.0, 70.0977672166296, 25.297889494676987, 38.63209263516815, 61.58390758668905, 64.98099147525303]",
+            "MKK_PP": "[10.0, 162.98685434084297, 265.57623778992723, 233.63374370268775, 139.02997436993016, 30.118772377397764]",
+            "MAPK": "[280.0, 43.94130764385841, 0.08157371601218164, 0.10414243627354418, 0.2835319822815763, 3.4362136321240455]",
+            "MAPK_P": "[10.0, 63.28041568467009, 1.1594721696740355, 1.32421548469741, 2.308525796426736, 10.196009843528405]",
+            "MAPK_PP": "[10.0, 192.7782766714751, 298.75895411431696, 298.5716420790325, 297.4079422212959, 286.3677765243517]"
+        },
+        "emitter": {
+            "_type": "step",
+            "address": "local:ram-emitter",
+            "config": {
+                "emit": {
+                    "output_data_store_tellurium": "any",
+                    "parameters_store_tellurium": "any",
+                    "output_data_store_copasi": "any",
+                    "parameters_store_copasi": "any",
+                    "copasi": "any",
+                    "tellurium": "any",
+                    "global_time": "any"
+                }
+            },
+            "inputs": {
+                "output_data_store_tellurium": [
+                    "output_data_store_tellurium"
+                ],
+                "parameters_store_tellurium": [
+                    "parameters_store_tellurium"
+                ],
+                "output_data_store_copasi": [
+                    "output_data_store_copasi"
+                ],
+                "parameters_store_copasi": [
+                    "parameters_store_copasi"
+                ],
+                "copasi": [
+                    "copasi"
+                ],
+                "tellurium": [
+                    "tellurium"
+                ],
+                "global_time": [
+                    "global_time"
+                ]
+            },
+            "_inputs": {
+                "output_data_store_tellurium": "any",
+                "parameters_store_tellurium": "any",
+                "output_data_store_copasi": "any",
+                "parameters_store_copasi": "any",
+                "copasi": "any",
+                "tellurium": "any",
+                "global_time": "any"
+            },
+            "_outputs": {},
+            "outputs": {}
+        }
+    },
+    "composition": "(global_time:float|copasi:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_copasi:tree[any]|output_data_store_copasi:tree[any]|tellurium:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_tellurium:tree[any]|output_data_store_tellurium:tree[any]|emitter:step[(output_data_store_tellurium:any|parameters_store_tellurium:any|output_data_store_copasi:any|parameters_store_copasi:any|copasi:any|tellurium:any|global_time:any),()])"
+}

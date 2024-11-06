@@ -30,7 +30,7 @@ def test_files_worker(test_queue_index=0):
 
 def test_generate_time_course_data():
     import pprint
-    results = generate_time_course_data(TEST_SBML_FP, 0, 1000, 5, ['copasi', 'tellurium'])
+    results = generate_time_course_data(TEST_SBML_FP, 0, 1000, 5, ['copasi', 'tellurium'], out_dir="./outputs")
     pprint.pp(results)
     return results
 

@@ -1,0 +1,109 @@
+{
+    "state": {
+        "global_time": "0.0",
+        "copasi": {
+            "_type": "step",
+            "address": "local:time-course-output-generator",
+            "config": {
+                "start_time": "0",
+                "end_time": "1000",
+                "num_steps": "5"
+            },
+            "inputs": {
+                "parameters": [
+                    "parameters_store_copasi"
+                ]
+            },
+            "outputs": {
+                "output_data": [
+                    "output_data_store_copasi"
+                ]
+            },
+            "_inputs": {
+                "parameters": "tree[any]"
+            },
+            "_outputs": {
+                "output_data": "tree[any]"
+            }
+        },
+        "parameters_store_copasi": {},
+        "output_data_store_copasi": {},
+        "tellurium": {
+            "_type": "step",
+            "address": "local:time-course-output-generator",
+            "config": {
+                "start_time": "0",
+                "end_time": "1000",
+                "num_steps": "5"
+            },
+            "inputs": {
+                "parameters": [
+                    "parameters_store_tellurium"
+                ]
+            },
+            "outputs": {
+                "output_data": [
+                    "output_data_store_tellurium"
+                ]
+            },
+            "_inputs": {
+                "parameters": "tree[any]"
+            },
+            "_outputs": {
+                "output_data": "tree[any]"
+            }
+        },
+        "parameters_store_tellurium": {},
+        "output_data_store_tellurium": {},
+        "emitter": {
+            "_type": "step",
+            "address": "local:ram-emitter",
+            "config": {
+                "emit": {
+                    "output_data_store_tellurium": "any",
+                    "parameters_store_tellurium": "any",
+                    "output_data_store_copasi": "any",
+                    "parameters_store_copasi": "any",
+                    "copasi": "any",
+                    "tellurium": "any",
+                    "global_time": "any"
+                }
+            },
+            "inputs": {
+                "output_data_store_tellurium": [
+                    "output_data_store_tellurium"
+                ],
+                "parameters_store_tellurium": [
+                    "parameters_store_tellurium"
+                ],
+                "output_data_store_copasi": [
+                    "output_data_store_copasi"
+                ],
+                "parameters_store_copasi": [
+                    "parameters_store_copasi"
+                ],
+                "copasi": [
+                    "copasi"
+                ],
+                "tellurium": [
+                    "tellurium"
+                ],
+                "global_time": [
+                    "global_time"
+                ]
+            },
+            "_inputs": {
+                "output_data_store_tellurium": "any",
+                "parameters_store_tellurium": "any",
+                "output_data_store_copasi": "any",
+                "parameters_store_copasi": "any",
+                "copasi": "any",
+                "tellurium": "any",
+                "global_time": "any"
+            },
+            "_outputs": {},
+            "outputs": {}
+        }
+    },
+    "composition": "(global_time:float|copasi:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_copasi:tree[any]|output_data_store_copasi:tree[any]|tellurium:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_tellurium:tree[any]|output_data_store_tellurium:tree[any]|emitter:step[(output_data_store_tellurium:any|parameters_store_tellurium:any|output_data_store_copasi:any|parameters_store_copasi:any|copasi:any|tellurium:any|global_time:any),()])"
+}
