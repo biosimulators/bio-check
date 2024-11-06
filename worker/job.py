@@ -10,9 +10,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
 
-from worker.shared_worker import BaseClass, MongoDbConnector, unique_id, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
+from worker.shared_worker import MongoDbConnector, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
 from worker.log_config import setup_logging
-from worker.io_worker import get_sbml_species_names, get_sbml_species_mapping, get_sbml_model_file_from_archive, read_report_outputs, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
+from worker.io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
 from worker.verification import (
     generate_biosimulator_utc_outputs,
     get_output_stack,

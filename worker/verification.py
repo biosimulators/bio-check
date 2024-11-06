@@ -1,9 +1,11 @@
 import logging
+import os
 from tempfile import mkdtemp
 from typing import *
 from importlib import import_module
 
 import libsbml
+import numpy as np
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
