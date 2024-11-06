@@ -18,7 +18,7 @@ from fastapi import UploadFile
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
-# from process_bigraph import ProcessTypes
+from process_bigraph import ProcessTypes
 
 
 # for dev only
@@ -29,6 +29,7 @@ dotenv.load_dotenv("/dev/.env_dev")
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
+APP_PROCESS_REGISTRY = ProcessTypes()
 
 
 # shared data-models

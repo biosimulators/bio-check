@@ -21,7 +21,7 @@ from worker.output_data import (
     run_smoldyn,
     handle_sbml_exception
 )
-from worker.output_generator import generate_time_course_data
+from worker.output_generators import generate_time_course_data
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
 

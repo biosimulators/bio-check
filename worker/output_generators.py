@@ -1,16 +1,13 @@
-import json
-from dataclasses import asdict, dataclass
-import os
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any, List
 
-import numpy as np
-from process_bigraph import Step, ProcessTypes, Composite
+from process_bigraph import Step, Composite
 
+from worker import APP_PROCESS_REGISTRY
 from worker.output_data import SBML_EXECUTORS, get_sbml_species_mapping
 
 
-CORE = ProcessTypes()
+# CORE = ProcessTypes()
 
 
 class OutputGenerator(Step):
@@ -19,12 +16,12 @@ class OutputGenerator(Step):
         'context': 'string',
     }
 
-    def __init__(self, config=None, core=CORE):
+    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
         super().__init__(config, core)
         self.input_file = self.config['input_file']
         self.context = self.config.get('context')
         if self.context is None:
-            raise ValueError("context(simulator) must be specified in this processes' config")
+            raise ValueError("context (i.e., simulator name) must be specified in this processes' config.")
 
     @abstractmethod
     def generate(self, parameters: Optional[Dict[str, Any]] = None):
@@ -60,10 +57,6 @@ class OutputGenerator(Step):
         return {'output_data': data}
 
 
-# register generic instance:
-CORE.process_registry.register('output-generator', OutputGenerator)
-
-
 class TimeCourseOutputGenerator(OutputGenerator):
     # NOTE: we include defaults here as opposed to constructor for the purpose of deliberate declaration within .json state representation.
     config_schema = {
@@ -83,7 +76,7 @@ class TimeCourseOutputGenerator(OutputGenerator):
         },
     }
 
-    def __init__(self, config=None, core=CORE):
+    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
         super().__init__(config, core)
         if not self.input_file.endswith('.xml'):
             raise ValueError('Input file must be a valid SBML (XML) file')
@@ -105,48 +98,9 @@ class TimeCourseOutputGenerator(OutputGenerator):
 
 
 # register utc instance:
-CORE.process_registry.register('time-course-output-generator', TimeCourseOutputGenerator)
-
-
-# these are data model-style representation of the functions below:
-@dataclass
-class NodeSpec:
-    address: str
-    config: Dict[str, Any]
-    inputs: Dict[str, Any]
-    outputs: Dict[str, Any]
-    _type: str
-    name: Optional[str] = None
-
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass
-class StepNodeSpec(NodeSpec):
-    _type: str = "step"
-
-
-@dataclass
-class ProcessNodeSpec(NodeSpec):
-    _type: str = "process"
-
-
-@dataclass
-class CompositionSpec:
-    """To be used as input to process_bigraph.Composition() like:
-
-        spec = CompositionSpec(nodes=nodes, emitter_mode='ports')
-        composite = Composition({'state': spec
-    """
-    nodes: List[NodeSpec]
-    emitter_mode: str = "all"
-
-    def get_spec(self):
-        return {
-            node_spec.name: node_spec
-            for node_spec in self.nodes
-        }
+# CORE.process_registry.register('time-course-output-generator', TimeCourseOutputGenerator)
+# register generic instance:
+# CORE.process_registry.register('output-generator', OutputGenerator)
 
 
 # functions related to generating time course output data (for verification and more) using the process-bigraph engine:
@@ -198,9 +152,10 @@ def generate_time_course_data(
         simulators: List[str] = None,
         parameters: Dict[str, Any] = None,
         expected_results_fp: str = None,
-        out_dir: str = None):
+        out_dir: str = None
+) -> Dict[str, Dict[str, List[float]]]:
     requested_sims = simulators or ["amici", "copasi", "pysces", "tellurium"]
-    spec = {
+    simulation_spec = {
         simulator: time_course_node_spec(
             input_file=input_fp,
             context=simulator,
@@ -209,12 +164,12 @@ def generate_time_course_data(
             num_steps=steps
         ) for simulator in requested_sims
     }
-    with open('time-course-spec.json', 'w') as f:
-        json.dump(spec, f)
-    simulation = Composite({'state': spec, 'emitter': {'mode': 'all'}}, core=CORE)
+    simulation = Composite({'state': simulation_spec, 'emitter': {'mode': 'all'}}, core=CORE)
+
+    input_filename = input_fp.split("/")[-1].split(".")[0]
     if out_dir:
         simulation.save(
-            filename='time-course-initialization.json',
+            filename=f'{input_filename}-initialization.json',
             outdir=out_dir
         )
 
@@ -223,9 +178,10 @@ def generate_time_course_data(
         simulation.update(parameters, 1)
     else:
         simulation.run(1)
+
     if out_dir:
         simulation.save(
-            filename='time-course-update.json',
+            filename=f'{input_filename}-update.json',
             outdir=out_dir
         )
 

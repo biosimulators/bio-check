@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from process_bigraph import Composite
 
-from worker.output_generator import CORE, generate_time_course_data
+from worker.output_generators import CORE, generate_time_course_data
 from worker.workers import VerificationWorker
 
 
