@@ -46,7 +46,7 @@ jobs:
 
       - name: Test build base image
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t bio-check-base:${{ env.BASE_VERSION }} .
+          docker build --no-cache -f ./Dockerfile-base -it ghcr.io/biosimulators/bio-compose-server-base:${{ env.BASE_VERSION }} .
 
   get-microservice-versions:
     runs-on: ubuntu-latest
