@@ -8,7 +8,7 @@ FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.5
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
-COPY ./ .
+COPY .. .
 
 ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \

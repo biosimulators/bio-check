@@ -10,20 +10,20 @@ import pandas as pd
 from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
 
-from worker.shared_worker import MongoDbConnector, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
-from worker.log_config import setup_logging
-from worker.io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
-from worker.verification import (
+from worker.service.shared_worker import MongoDbConnector, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
+from worker.service.log_config import setup_logging
+from worker.service.io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
+from worker.service.verification import (
     generate_biosimulator_utc_outputs,
     get_output_stack,
     sbml_output_stack,
     generate_sbml_utc_outputs,
 )
-from worker.data_generator import generate_time_course_data, run_smoldyn, handle_sbml_exception
+from worker.service.data_generator import generate_time_course_data, run_smoldyn, handle_sbml_exception
 
 
 # for dev only
-load_dotenv('../assets/dev/config/.env_dev')
+load_dotenv('../../assets/dev/config/.env_dev')
 
 
 # logging TODO: implement this.

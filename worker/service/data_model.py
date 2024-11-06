@@ -4,7 +4,7 @@ from typing import *
 
 import numpy as np
 
-from worker.shared_worker import BaseClass
+from worker.service.shared_worker import BaseClass
 
 
 @dataclass

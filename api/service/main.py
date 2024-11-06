@@ -1,4 +1,3 @@
-import asyncio
 import os
 import logging
 import uuid
@@ -8,39 +7,26 @@ import dotenv
 from tempfile import mkdtemp
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body, Request, Response
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, APIRouter, Body
 from fastapi.responses import FileResponse
-from pydantic import BeforeValidator, Field, BaseModel
+from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from api.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
-from api.data_model import (
-    ObservableData,
-    SimulatorRMSE,
+from api.service.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
+from api.service.data_model import (
     SmoldynJob,
     VerificationOutput,
-    SmoldynOutput,
     OmexVerificationRun,
     SbmlVerificationRun,
     SmoldynRun,
-    VerificationRun,
     DbClientResponse,
-    UtcComparisonResult,
-    PendingSmoldynJob,
     CompatibleSimulators,
     Simulator,
-    PendingUtcJob,
-    OutputData,
-    PendingSimulariumJob,
-    CompositionSpecification,
-    PendingSbmlVerificationJob,
-    PendingOmexVerificationJob,
-    PendingCompositionJob,
     AgentParameters
 )
-from api.shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix, BaseModel
-from api.io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
-from api.log_config import setup_logging
+from api.service.shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
+from api.service.io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
+from api.service.log_config import setup_logging
 
 
 # logging TODO: implement this.
@@ -50,7 +36,7 @@ setup_logging(logger)
 
 # -- load dev env -- #
 
-dotenv.load_dotenv("../assets/dev/config/.env_dev")  # NOTE: create an env config at this filepath if dev
+dotenv.load_dotenv("../../assets/dev/config/.env_dev")  # NOTE: create an env config at this filepath if dev
 
 
 # -- constraints -- #

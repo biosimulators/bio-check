@@ -3,20 +3,18 @@ import re
 import uuid
 from abc import abstractmethod
 from logging import warn
-from tempfile import mkdtemp
-from typing import Dict
 from uuid import uuid4
 from typing import *
 
 from process_bigraph import Step, Process
-from process_bigraph.composite import ProcessTypes, Emitter
+from process_bigraph.composite import Emitter
 from pymongo import ASCENDING, MongoClient
 from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
-from worker.io_worker import get_sbml_species_mapping
-from worker.verification import SBML_EXECUTORS
+from worker.service.io_worker import get_sbml_species_mapping
+from worker.service.verification import SBML_EXECUTORS
 
 try:
     import smoldyn as sm
@@ -28,7 +26,7 @@ except:
         'on installing Smoldyn.'
     )
 
-from worker.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+from worker.service.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
 from worker import APP_PROCESS_REGISTRY
 
 process_registry = APP_PROCESS_REGISTRY.process_registry

@@ -28,7 +28,6 @@ the dependency network required by each simulator. See the following documentati
 ### Dependency management scopes are handled as follows:
 
 #### _*Locally/Dev*_:
-- Python poetry via `pyproject.toml` - the most stable/reproducible method, yet the farthest from what is actually happening in the service containers as they use conda.
 - Anaconda via `environment.yml` - the closest to local development at root level which micics what actually happens in the containers (conda deps tend to break more frequently than poetry.)
 
 _*Remotely in microservice containers*_:

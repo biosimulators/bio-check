@@ -4,12 +4,12 @@ import logging
 
 from dotenv import load_dotenv
 
-from worker.shared_worker import MongoDbConnector
-from worker.log_config import setup_logging
-from worker.job import Supervisor
+from worker.service.shared_worker import MongoDbConnector
+from worker.service.log_config import setup_logging
+from worker.service.job import Supervisor
 
 
-load_dotenv('../assets/dev/config/.env_dev')
+load_dotenv('../../assets/dev/config/.env_dev')
 
 # logging TODO: implement this.
 logger = logging.getLogger("biochecknet.worker.main.log")

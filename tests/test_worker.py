@@ -2,9 +2,8 @@ import os
 import pprint
 
 from dotenv import load_dotenv
-from process_bigraph import Composite
 
-from worker.job import VerificationWorker, generate_time_course_data
+from worker.service.job import VerificationWorker, generate_time_course_data
 
 
 load_dotenv('../assets/dev/config/.env_dev')
