@@ -5,30 +5,12 @@ FROM ghcr.io/biosimulators/bio-compose-server-base:latest
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
-COPY ./ ./
+COPY ./ .
 # COPY ../assets/docker/config/environment.base.yml ../assets/docker/config/environment.worker.yml .
 
 ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
     TEST_OMEX_FP="test_fixtures/Elowitz-Nature-2000-Repressilator.omex"
-
-# os deps
-# RUN source ~/.bashrc \
-#     && apt-get update  \
-#     && apt-get install -y \
-#     meson \
-#     g++ \
-#     gfortran \
-#     libblas-dev \
-#     liblapack-dev \
-#     libgfortran5 \
-#     && conda install -c conda-forge -c pysces pysces -y \
-# 	&& conda env update -n conda-env -f config/environment.worker.yml \
-#     && poetry install --only=worker --no-cache \
-#     && rm -rf config \
-#     && rm -rf /var/lib/apt/lists/* \
-#     && apt-get autoremove -y \
-#     && apt-get clean
 
 # TODO: perhaps run --no-install-recommends?
 RUN source ~/.bashrc \
@@ -63,7 +45,8 @@ RUN source ~/.bashrc \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
-    && conda env update -n server -f environment.worker.yml \
+    && conda env update -n server -f config/environment.worker.yml \
+    && conda run pip install -e . \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && apt-get clean \
@@ -74,7 +57,7 @@ RUN source ~/.bashrc \
 # && conda install "numpy<1.22.0" \
 # && conda run pip install amici biosimulators-amici --root-user-action=ignore \
 # && rm -rf config \
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && python3 main.py"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run python3 main.py"]
 
 # --root-user-action=ignore
 #############################
