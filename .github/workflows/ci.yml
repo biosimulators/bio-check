@@ -5,6 +5,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-microservices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install deps and run tests
+        run: |
+          pip install --upgrade pip
+          pip install poetry 
+          poetry env use 3.10
+          poetry install --only=github --no-root
+          poetry run pip install -e .
+          poetry pytest
+          
+
   build-base-image:
     runs-on: ubuntu-latest
     steps:
