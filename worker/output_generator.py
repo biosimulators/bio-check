@@ -1,3 +1,5 @@
+import json
+import os
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any, List
 
@@ -160,7 +162,7 @@ def time_course_node_spec(input_file: str, context: str, start_time: int, end_ti
         'context': context
     }
     return step_node_spec(
-        address='time-course-output-generator',
+        address='local:time-course-output-generator',
         config=config,
         inputs={
             'parameters': [f'parameters_store_{context}']
@@ -178,7 +180,8 @@ def generate_time_course_data(
         steps: int,
         simulators: List[str] = None,
         parameters: Dict[str, Any] = None,
-        expected_results_fp: str = None):
+        expected_results_fp: str = None,
+        out_dir: str = None):
     requested_sims = simulators or ["amici", "copasi", "pysces", "tellurium"]
     spec = {
         simulator: time_course_node_spec(
@@ -189,14 +192,35 @@ def generate_time_course_data(
             num_steps=steps
         ) for simulator in requested_sims
     }
+    with open('time-course-spec.json', 'w') as f:
+        json.dump(spec, f)
     simulation = Composite({'state': spec, 'emitter': {'mode': 'all'}}, core=CORE)
+    if out_dir:
+        simulation.save(
+            filename='time-course-initialization.json',
+            outdir=out_dir
+        )
 
+    # TODO: is there a better way to do this? (interval of one? Is that symbolic more than anything?)
     if parameters:
         simulation.update(parameters, 1)
     else:
-        simulation.run(1)  # TODO: is there a better way to do this?
+        simulation.run(1)
+    if out_dir:
+        simulation.save(
+            filename='time-course-update.json',
+            outdir=out_dir
+        )
 
-    return simulation.gather_results()[('emitter',)], simulation
+    output_data = {}
+    raw_data = simulation.gather_results()[('emitter',)]
+    for data in raw_data:
+        for data_key, data_value in data.items():
+            if data_key.startswith('output_data_store_'):
+                simulator = data_key.split('_')[-1]
+                output_data[simulator] = data_value
+
+    return output_data
 
 
 # def generate_time_course_data():

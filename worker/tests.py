@@ -29,9 +29,10 @@ def test_files_worker(test_queue_index=0):
 
 
 def test_generate_time_course_data():
-    results, simulation = generate_time_course_data(TEST_SBML_FP, 0, 10, 100, ['copasi', 'tellurium'])
-    print(f'The results:\n{results}')
-
+    import pprint
+    results = generate_time_course_data(TEST_SBML_FP, 0, 1000, 5, ['copasi', 'tellurium'])
+    pprint.pp(results)
+    return results
 
 
 def test_time_course_generator():
@@ -69,7 +70,7 @@ def test_time_course_generator():
 
     sim = Composite({
             'state': doc,
-            'emitter': {'mode': 'all'}
+            'emitter': {'mode': 'bridge'}  # other options: bridge, ports, none, all
         },
         core=CORE
     )
@@ -83,9 +84,5 @@ def test_time_course_generator():
     return sim
 
 
-simulation = test_time_course_generator()
-
-
-
-
+results = test_generate_time_course_data()
 
