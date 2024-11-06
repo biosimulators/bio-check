@@ -7,7 +7,7 @@ from tempfile import mkdtemp
 
 from process_bigraph import Composite
 
-from output_generator import CORE
+from output_generator import CORE, generate_time_course_data
 
 
 load_dotenv('../assets/dev/config/.env_dev')
@@ -28,7 +28,13 @@ def test_files_worker(test_queue_index=0):
     pass
 
 
-def test_utc_generator():
+def test_generate_time_course_data():
+    results, simulation = generate_time_course_data(TEST_SBML_FP, 0, 10, 100, ['copasi', 'tellurium'])
+    print(f'The results:\n{results}')
+
+
+
+def test_time_course_generator():
     doc = {
         'copasi': {
             '_type': 'step',
@@ -77,7 +83,7 @@ def test_utc_generator():
     return sim
 
 
-simulation = test_utc_generator()
+simulation = test_time_course_generator()
 
 
 

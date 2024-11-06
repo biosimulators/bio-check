@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List
 
 import numpy as np
 from attr import dataclass
-from process_bigraph import Step, ProcessTypes
+from process_bigraph import Step, ProcessTypes, Composite
 
 from output_data import SBML_EXECUTORS, get_sbml_species_mapping
 
@@ -104,19 +104,26 @@ class TimeCourseOutputGenerator(OutputGenerator):
 CORE.process_registry.register('time-course-output-generator', TimeCourseOutputGenerator)
 
 
-@dataclass
-class NodeSpec:
-    name: str
+class NodeSpec(dict):
     _type: str
     address: str
     config: Dict[str, Any]
     inputs: Dict[str, Any]
     outputs: Dict[str, Any]
+    name: Optional[str] = None
+
+    def __init__(self, _type, address, config, inputs, outputs, name=None):
+        self._type = _type
+        self.address = address
+        self.config = config
+        self.inputs = inputs
+        self.outputs = outputs
+        self.name = name
 
 
-@dataclass
 class StepNodeSpec(NodeSpec):
-    _type: str = "step"
+    def __init__(self, address, config, inputs, outputs, name=None):
+        super().__init__("step", address, config, inputs, outputs)
 
 
 @dataclass
@@ -124,27 +131,27 @@ class ProcessNodeSpec(NodeSpec):
     _type: str = "process"
 
 
-def node_spec(name: str, _type: str, address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any]):
-    return {
-        name: {
-            '_type': _type,
-            'address': address,
-            'config': config,
-            'inputs': inputs,
-            'outputs': outputs
-        }
+def node_spec(_type: str, address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any], name: str = None):
+    spec = {
+        '_type': _type,
+        'address': address,
+        'config': config,
+        'inputs': inputs,
+        'outputs': outputs
     }
 
+    return {name: spec} if name else spec
 
-def step_node_spec(name: str, address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any]):
+
+def step_node_spec(address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any], name: str = None):
     return node_spec(name=name, _type="step", address=address, config=config, inputs=inputs, outputs=outputs)
 
 
-def process_node_spec(name: str, address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any]):
+def process_node_spec(address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any], name: str = None):
     return node_spec(name=name, _type="process", address=address, config=config, inputs=inputs, outputs=outputs)
 
 
-def time_course_node_spec(name: str, input_file: str, context: str, start_time: int, end_time: int, num_steps: int):
+def time_course_node_spec(input_file: str, context: str, start_time: int, end_time: int, num_steps: int):
     config = {
         'input_file': input_file,
         'start_time': start_time,
@@ -153,16 +160,44 @@ def time_course_node_spec(name: str, input_file: str, context: str, start_time: 
         'context': context
     }
     return step_node_spec(
-        name=name,
         address='time-course-output-generator',
         config=config,
-        inputs={'parameters': [f'parameters_store_{name}']},
-        outputs={'output_data': [f'output_data_store_{name}']}
+        inputs={
+            'parameters': [f'parameters_store_{context}']
+        },
+        outputs={
+            'output_data': [f'output_data_store_{context}']
+        }
     )
 
 
-def generate_time_course_data(input_fp: str, start: int, dur: int, steps: int, simulators: List[str] = None, expected_results_fp: str = None):
-    pass
+def generate_time_course_data(
+        input_fp: str,
+        start: int,
+        end: int,
+        steps: int,
+        simulators: List[str] = None,
+        parameters: Dict[str, Any] = None,
+        expected_results_fp: str = None):
+    requested_sims = simulators or ["amici", "copasi", "pysces", "tellurium"]
+    spec = {
+        simulator: time_course_node_spec(
+            input_file=input_fp,
+            context=simulator,
+            start_time=start,
+            end_time=end,
+            num_steps=steps
+        ) for simulator in requested_sims
+    }
+    simulation = Composite({'state': spec, 'emitter': {'mode': 'all'}}, core=CORE)
+
+    if parameters:
+        simulation.update(parameters, 1)
+    else:
+        simulation.run(1)  # TODO: is there a better way to do this?
+
+    return simulation.gather_results()[('emitter',)], simulation
+
 
 # def generate_time_course_data():
 #     doc = {
