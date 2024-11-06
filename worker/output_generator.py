@@ -1,10 +1,10 @@
 import json
+from dataclasses import asdict, dataclass
 import os
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any, List
 
 import numpy as np
-from attr import dataclass
 from process_bigraph import Step, ProcessTypes, Composite
 
 from output_data import SBML_EXECUTORS, get_sbml_species_mapping
@@ -60,6 +60,7 @@ class OutputGenerator(Step):
         return {'output_data': data}
 
 
+# register generic instance:
 CORE.process_registry.register('output-generator', OutputGenerator)
 
 
@@ -103,10 +104,13 @@ class TimeCourseOutputGenerator(OutputGenerator):
         return data
 
 
+# register utc instance:
 CORE.process_registry.register('time-course-output-generator', TimeCourseOutputGenerator)
 
 
-class NodeSpec(dict):
+# these are data model-style representation of the functions below:
+@dataclass
+class NodeSpec:
     _type: str
     address: str
     config: Dict[str, Any]
@@ -114,18 +118,13 @@ class NodeSpec(dict):
     outputs: Dict[str, Any]
     name: Optional[str] = None
 
-    def __init__(self, _type, address, config, inputs, outputs, name=None):
-        self._type = _type
-        self.address = address
-        self.config = config
-        self.inputs = inputs
-        self.outputs = outputs
-        self.name = name
+    def to_dict(self):
+        return asdict(self)
 
 
+@dataclass
 class StepNodeSpec(NodeSpec):
-    def __init__(self, address, config, inputs, outputs, name=None):
-        super().__init__("step", address, config, inputs, outputs)
+    _type: str = "step"
 
 
 @dataclass
@@ -133,6 +132,24 @@ class ProcessNodeSpec(NodeSpec):
     _type: str = "process"
 
 
+@dataclass
+class CompositionSpec:
+    """To be used as input to process_bigraph.Composition() like:
+
+        spec = CompositionSpec(nodes=nodes, emitter_mode='ports')
+        composite = Composition({'state': spec
+    """
+    nodes: List[NodeSpec]
+    emitter_mode: str = "all"
+
+    def get_spec(self):
+        return {
+            node_spec.name: node_spec
+            for node_spec in self.nodes
+        }
+
+
+# functions related to generating time course output data (for verification and more) using the process-bigraph engine:
 def node_spec(_type: str, address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any], name: str = None):
     spec = {
         '_type': _type,
