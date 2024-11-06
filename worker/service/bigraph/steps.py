@@ -13,9 +13,6 @@ from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
-from worker.service.io_worker import get_sbml_species_mapping
-from worker.service.verification import SBML_EXECUTORS
-
 try:
     import smoldyn as sm
     from smoldyn._smoldyn import MolecState
@@ -26,8 +23,10 @@ except:
         'on installing Smoldyn.'
     )
 
-from worker.service.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from worker import APP_PROCESS_REGISTRY
+from service.io_worker import get_sbml_species_mapping
+from service.verification import SBML_EXECUTORS
+from service.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+from service import APP_PROCESS_REGISTRY
 
 process_registry = APP_PROCESS_REGISTRY.process_registry
 

@@ -9,7 +9,7 @@ tarball_name=smoldyn-2.73-mac.tgz
 dist_dir=${tarball_name%.tgz}
 
 # uninstall existing version
-poetry run pip uninstall smoldyn || return
+conda run pip uninstall smoldyn || return
 
 # download the appropriate distribution from smoldyn
 wget $dist_url
@@ -23,7 +23,7 @@ rm $tarball_name
 # install smoldyn from the source
 cd $dist_dir || return
 
-if poetry run sudo -H ./install.sh; then
+if conda run sudo -H ./install.sh; then
   cd ..
   # remove the smoldyn dist
   rm -r $dist_dir

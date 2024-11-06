@@ -4,9 +4,10 @@ import logging
 
 from dotenv import load_dotenv
 
-from worker.service.shared_worker import MongoDbConnector
-from worker.service.log_config import setup_logging
-from worker.service.job import Supervisor
+from service import APP_PROCESS_REGISTRY
+from service.shared_worker import MongoDbConnector
+from service.log_config import setup_logging
+from service.job import Supervisor
 
 
 load_dotenv('../../assets/dev/config/.env_dev')
