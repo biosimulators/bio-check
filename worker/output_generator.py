@@ -221,38 +221,3 @@ def generate_time_course_data(
                 output_data[simulator] = data_value
 
     return output_data
-
-
-# def generate_time_course_data():
-#     doc = {
-#         'copasi': {
-#             '_type': 'step',
-#             'address': 'local:time-course-output-generator',
-#             'config': {
-#                 'input_file': TEST_SBML_FP,
-#                 'context': 'copasi',
-#                 'start_time': 0,
-#                 'end_time': 10,
-#                 'num_steps': 100
-#             },
-#             'inputs': {
-#                 'parameters': ['parameters_store']
-#             },
-#             'outputs': {
-#                 'output_data': ['output_data_store'],
-#             }
-#         }
-#     }
-#     sim = Composite({
-#             'state': doc,
-#             'emitter': {'mode': 'all'}
-#         },
-#         core=CORE
-#     )
-#     sim.save(filename="test_time_course_output_generator_before.json", outdir="./outputs")
-#     print(dir(sim))
-#     sim.run(1)
-#     results = sim.gather_results()
-#     print(f'Results:\n{results}')
-#     sim.save(filename="test_utc_output_generator_after.json", outdir="./outputs")
-#     return sim
