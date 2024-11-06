@@ -43,3 +43,4 @@ api/__pycache__
 worker/__pycache__
 test.ipynb
 worker/.composition
+worker/.worker_STABLE
