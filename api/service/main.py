@@ -12,8 +12,8 @@ from fastapi.responses import FileResponse
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from api.service.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
-from api.service.data_model import (
+from service.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
+from service.data_model import (
     SmoldynJob,
     VerificationOutput,
     OmexVerificationRun,
@@ -24,9 +24,9 @@ from api.service.data_model import (
     Simulator,
     AgentParameters
 )
-from api.service.shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
-from api.service.io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
-from api.service.log_config import setup_logging
+from service.shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
+from service.io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
+from service.log_config import setup_logging
 
 
 # logging TODO: implement this.

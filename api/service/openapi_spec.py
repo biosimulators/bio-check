@@ -4,7 +4,7 @@ import os
 import yaml
 from fastapi.openapi.utils import get_openapi
 
-from api.service.main import app
+from service.main import app
 
 
 def main():
