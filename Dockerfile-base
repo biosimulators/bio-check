@@ -1,14 +1,13 @@
 # FROM ubuntu:22.04
 FROM continuumio/miniconda3:latest
 
-LABEL org.opencontainers.image.title="bio-check-base" \
+LABEL org.opencontainers.image.title="bio-compose-server-base" \
     org.opencontainers.image.description="Base Docker image for BioCompose REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance." \
     org.opencontainers.image.url="https://biosimulators.org/" \
     org.opencontainers.image.source="https://github.com/biosimulators/bio-check" \
     org.opencontainers.image.authors="Alexander Patrie <apatrie@uchc.edu>, BioSimulators Team <info@biosimulators.org>" \
     org.opencontainers.image.vendor="BioSimulators Team"
 
-# SHELL ["/bin/bash", "-c"]
 SHELL ["/usr/bin/env", "bash", "-c"]
 
 # shared env
@@ -32,7 +31,10 @@ RUN mkdir -p /Pysces \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
     && conda env create -n server -f environment.base.yml -y \
-    && echo "conda activate server" >> ~/.bashrc
+    && echo "conda activate server" >> ~/.bashrc \
+    && source ~/.bashrc \
+    && conda env export --no-builds > config/environment.base.lock.yml \
+    && rm -f environment.base.yml
 
 
 # # create conda env from yml and ensure env activation

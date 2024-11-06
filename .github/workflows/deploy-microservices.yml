@@ -67,14 +67,11 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Check if Docker Compose is installed correctly
 
-      - name: Build API microservice image
-        run: docker-compose build api
-
-      - name: Build worker microservice image
-        run: docker-compose build worker
-
       - name: Authorize push script
         run: chmod +x ./docker/scripts/push_image.sh
+
+      - name: Build API microservice image
+        run: docker-compose build api
 
       - name: Deploy API microservice container to GHCR
         run: |
@@ -82,15 +79,12 @@ jobs:
           python3 api/openapi_spec.py
           sudo rm -r api/__pycache__
           ./assets/docker/scripts/push_image.sh api ${{ env.API_VERSION }}
-        # STABLE CONTENT:
-        # - run: |
-        #   rm compose_api/spec/openapi_3_1_0_generated.yaml
-        #   python3 compose_api/openapi_spec.py
-        #   sudo rm -r compose_api/__pycache__
-        #   ./docker/scripts/push_image.sh compose_api ${{ env.API_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
+
+      - name: Build worker microservice image
+        run: docker-compose build worker
 
       - name: Deploy worker microservice container to GHCR
         run: |

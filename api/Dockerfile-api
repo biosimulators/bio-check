@@ -11,8 +11,10 @@ EXPOSE 3001
 
 RUN source ~/.bashrc \
     && conda env update -n server -f config/environment.api.yml \
-    && conda run pip install -e . \
-    && conda clean --all --json -y
+    && conda run pip install -e . --root-user-action=ignore \
+    && conda env export --no-builds > config/environment.api.lock.yml \
+    && conda clean --all --json -y \
+    && rm -f config/environment.api.yml
 
 # RUN source ~/.bashrc \
 #     && poetry install --without=composition,dev,worker --no-cache
