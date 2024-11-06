@@ -12,7 +12,7 @@ from process_bigraph import Composite
 from worker.log_config import setup_logging
 from worker.shared_worker import unique_id, BUCKET_NAME, handle_exception
 from worker.io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
-from worker.output_data import (
+from worker.verification import (
     generate_biosimulator_utc_outputs,
     get_output_stack,
     sbml_output_stack,
@@ -21,7 +21,7 @@ from worker.output_data import (
     run_smoldyn,
     handle_sbml_exception
 )
-from worker.output_generators import generate_time_course_data
+from worker.data_generator import generate_time_course_data
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
 
