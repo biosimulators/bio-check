@@ -111,11 +111,11 @@ CORE.process_registry.register('time-course-output-generator', TimeCourseOutputG
 # these are data model-style representation of the functions below:
 @dataclass
 class NodeSpec:
-    _type: str
     address: str
     config: Dict[str, Any]
     inputs: Dict[str, Any]
     outputs: Dict[str, Any]
+    _type: str
     name: Optional[str] = None
 
     def to_dict(self):

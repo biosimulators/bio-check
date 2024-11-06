@@ -41,3 +41,11 @@ def test_sbml_comparison():
     worker = VerificationWorker({'job_id': 'verification-test'})
     result = worker._run_comparison_from_sbml(sbml_fp=TEST_SBML_FP, start=0, dur=1000, steps=5, simulators=['copasi', 'pysces', 'tellurium'])
     print(f'The worker result:\n{result}')
+    return result
+
+
+TEST_COMPARISON_RESULT = test_sbml_comparison()
+
+
+
+

@@ -4,26 +4,24 @@ import os
 import tempfile
 from typing import *
 from abc import ABC, abstractmethod
-from process_bigraph import Composite
 
 import numpy as np
 import pandas as pd
+from process_bigraph import Composite
 
-from io_worker import read_h5_reports
-from log_config import setup_logging
-from shared_worker import unique_id, BUCKET_NAME, handle_exception
-from io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, download_file, format_smoldyn_configuration, write_uploaded_file
-from output_data import (
+from worker.log_config import setup_logging
+from worker.shared_worker import unique_id, BUCKET_NAME, handle_exception
+from worker.io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
+from worker.output_data import (
     generate_biosimulator_utc_outputs,
     get_output_stack,
     sbml_output_stack,
     generate_sbml_utc_outputs,
     get_sbml_species_mapping,
     run_smoldyn,
-    handle_sbml_exception,
-    _get_output_stack
+    handle_sbml_exception
 )
-from output_generator import generate_time_course_data
+from worker.output_generator import generate_time_course_data
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
 
@@ -360,21 +358,6 @@ class VerificationWorker(Worker):
                 simulators=simulators
         )
         self.job_result = result
-        # try:
-        #     result = self._run_comparison_from_sbml(
-        #         sbml_fp=local_fp,
-        #         start=output_start,
-        #         dur=end,
-        #         steps=steps,
-        #         rTol=rtol,
-        #         aTol=atol,
-        #         ground_truth=local_report_fp,
-        #         simulators=simulators
-        #     )
-        #     self.job_result = result
-        # except Exception as e:
-        #     self.job_result = {"bio-composer-message": f"Job for {self.job_params['comparison_id']} could not be completed because:\n{str(e)}"}
-        #     raise e
 
     def _execute_omex_job(self):
         params = None
@@ -392,25 +375,25 @@ class VerificationWorker(Worker):
             local_report_fp = download_file(source_blob_path=source_report_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
             truth_vals = read_h5_reports(local_report_fp)
 
-        try:
-            simulators = self.job_params.get('simulators', [])
-            include_outs = self.job_params.get('include_outputs', False)
-            tol = self.job_params.get('rTol')
-            atol = self.job_params.get('aTol')
-            comparison_id = self.job_params.get('job_id')
+        simulators = self.job_params.get('simulators', [])
+        include_outs = self.job_params.get('include_outputs', False)
+        tol = self.job_params.get('rTol')
+        atol = self.job_params.get('aTol')
+        comparison_id = self.job_params.get('job_id')
 
-            result = self._run_comparison_from_omex(
-                path=local_fp,
-                simulators=simulators,
-                out_dir=out_dir,
-                include_outputs=include_outs,
-                truth_vals=truth_vals
-            )
+        result = self._run_comparison_from_omex(
+            path=local_fp,
+            simulators=simulators,
+            out_dir=out_dir,
+            include_outputs=include_outs,
+            truth_vals=truth_vals
+        )
 
-            self.job_result = result
-        except:
-            error = handle_sbml_exception()
-            self.job_result = {"error": error}
+        self.job_result = result
+        # except:
+        # error = handle_sbml_exception()
+        # logger.error(error)
+        # self.job_result = {"error": error}
 
     def _run_comparison_from_omex(
             self,
@@ -437,49 +420,13 @@ class VerificationWorker(Worker):
         # else:
         #     truth_vals = None
 
-        # run comparison
-        ground_truth_data = truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals
-        comparison = self._generate_omex_utc_comparison(
-            omex_fp=path,  # path,
-            out_dir=out_dir,  # TODO: replace this with an s3 endpoint.
-            simulators=simulators,
-            ground_truth=ground_truth_data,
-            rTol=rTol,
-            aTol=aTol
-        )
-
-        return comparison
-
-    def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
-        species_mapping = get_sbml_species_mapping(sbml_fp)
-        mapping_names = list(species_mapping.keys())
-        results = {}
-        output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
-        sims = simulators or list(output_data.keys())
-        for simulator in sims:
-            sim_data = output_data[simulator]
-            spec_names = list(sim_data.keys())
-            for i, species_name in enumerate(spec_names):
-                if not species_name == 'error':
-                    species_comparison = self._generate_sbml_utc_species_comparison(
-                        output_data=output_data,
-                        species_name=species_name,
-                        rTol=rTol,
-                        aTol=aTol,
-                        ground_truth=ground_truth
-                    )
-                    results[list(species_mapping.keys())[i]] = species_comparison
-
-        return results
-
-    def _generate_omex_utc_comparison(self, omex_fp, out_dir, simulators, ground_truth=None, rTol=None, aTol=None):
         results = {}
 
         # generate the data
-        output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
+        output_data = generate_biosimulator_utc_outputs(omex_fp=path, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
+        ground_truth_data = truth_vals.to_dict() if not isinstance(truth_vals, type(None)) else truth_vals
 
         # generate the species comparisons
-        # for i, species in enumerate(sbml_species_names):
         observable_names = []
         for simulator_name in output_data.keys():
             sim_data = output_data[simulator_name]
@@ -496,8 +443,8 @@ class VerificationWorker(Worker):
                 #     for data in ground_truth['data']:
                 #         if data['dataset_label'] == species:
                 #             ground_truth_data = data['data']
-
                 # generate species comparison
+
                 results[species] = self._generate_omex_utc_species_comparison(
                     output_data=output_data,
                     species_name=species,
@@ -506,6 +453,30 @@ class VerificationWorker(Worker):
                     rTol=rTol,
                     aTol=aTol
                 )
+
+        return results
+
+    def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
+        species_mapping = get_sbml_species_mapping(sbml_fp)
+        mapping_names = list(species_mapping.keys())
+        output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
+        sims = simulators or list(output_data.keys())
+
+        results = {}
+        for simulator in sims:
+            sim_data = output_data[simulator]
+            spec_names = list(sim_data.keys())
+
+            for i, species_name in enumerate(spec_names):
+                if not species_name == 'error':
+                    species_comparison = self._generate_sbml_utc_species_comparison(
+                        output_data=output_data,
+                        species_name=species_name,
+                        rTol=rTol,
+                        aTol=aTol,
+                        ground_truth=ground_truth
+                    )
+                    results[list(species_mapping.keys())[i]] = species_comparison
 
         return results
 
@@ -597,6 +568,7 @@ class VerificationWorker(Worker):
         #         results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         #         # if species_name in spec_name:
         #         #     results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
+
         return results
 
     def _generate_species_comparison_matrix(
@@ -670,81 +642,6 @@ class VerificationWorker(Worker):
         aTol = atol or max(1e-3, max1 * 1e-5, max2 * 1e-5)
         rTol = rtol or 1e-4
         return np.allclose(arr1, arr2, rtol=rTol, atol=aTol)
-
-
-# class CompositionWorker(Worker):
-#     def __init__(self, job):
-#         super().__init__(job=job)
-#
-#     async def _run(self):
-#         # extract params
-#         duration = self.job_params['duration']
-#         composite_doc = self.job_params['composite_doc']
-#
-#         # create emitter for results if not already:
-#         result_emitter_spec = {
-#             '_type': 'step',
-#             "address": "local:ram-emitter",
-#             "config": {
-#                 "emit": {
-#                     "time": "float",
-#                     "floating_species_concentrations": "tree[float]"
-#                 }
-#             },
-#             "inputs": {
-#                 "time": ["time_store"],
-#                 "floating_species_concentrations": ["floating_species_concentrations_store"],
-#             }
-#         }
-#
-#         composite_doc['results'] = composite_doc.get('results', result_emitter_spec)
-#
-#         # instantiate composition
-#         composition = Composite(config=composite_doc, core=PROCESS_TYPES)
-#
-#         # run composition and set results
-#         composition.run(duration)
-#         self.job_result = composition.gather_results()
-#
-#         return self.job_result
-#
-#     async def run(self, conn):
-#         from process_bigraph import Composite
-#         # from biosimulators_processes import CORE
-#         from uuid import uuid4
-#
-#         doc = self.job_params['composite_spec']
-#         process_name = list(doc.keys())[0]
-#         duration = self.job_params['duration']
-#         simulator = self.job_params['simulators'][0]
-#         job_id = self.job_params['job_id']
-#         new_job = {'job_id': job_id}
-#         out_dir = tempfile.mkdtemp()
-#         source_fp = self.job_params['path']
-#         local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
-#
-#         doc[process_name]['config']['model']['model_source'] = local_fp
-#
-#         # make composite
-#         composite = Composite(config={'state': doc}, core=PROCESS_TYPES)
-#
-#         for n in range(duration):
-#             # run composite
-#             composite.run(1)
-#             # get historical results
-#             results = composite.gather_results()
-#             data = results[('emitter',)]
-#             # find job and update data
-#             write_data = conn.db.in_progress_jobs.find_one(new_job)
-#             write_data['data'] = data
-#             # update db
-#             conn.db.in_progress_jobs.update_one(new_job, {'$set': write_data})
-#             from time import sleep
-#             print(f'{n}: sleeping for 10...')
-#             sleep(10)
-#
-#         self.job_result = conn.db.in_progress_jobs.find_one({'job_id': job_id}).get('results', {})
-#         return self.job_result
 
 
 class FilesWorker(Worker):

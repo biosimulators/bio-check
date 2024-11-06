@@ -1,28 +1,40 @@
 ![GitHub CI](https://github.com/biosimulators/bio-check/actions/workflows/ci.yaml/badge.svg)
 ![GitHub CD](https://github.com/biosimulators/bio-check/actions/workflows/cd.yaml/badge.svg)
 # BioCheck (bio-compose-server): A Biological Simulation Verification Service
-#### __This service utilizes separate containers for REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
+### __This service utilizes separate containers for REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
 ## **The REST API can be accessed via Swagger UI here: [https://biochecknet.biosimulations.org/docs](https://biochecknet.biosimulations.org/docs)
 
-## **FOR DEVELOPERS:**
+## **For Developers:**
 
-This application (`bio_check`) uses a microservices architecture which presents the following libraries:
+### This application (`bio_check`) uses a microservices architecture which presents the following libraries:
 
 - `api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
 - `storage`: This library handles MongoDB configs as well as bucket-like storages for uploaded files.
 - `worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and comparison execution.
 
-Dependency management scopes are handled as follows:
+### The simulators used by this application consist of multiple python language bindings of C/C++ libraries. Given this fact, is it helpful to be aware of
+the dependency network required by each simulator. See the following documentation for simulators used in this application:
 
-_*Locally/Dev*_:
+- [AMICI](https://amici.readthedocs.io/en/latest/python_installation.html)
+- [COPASI(basico)](https://basico.readthedocs.io/en/latest/quickstart/get-started.html#installation)
+- [PySCes](https://pyscesdocs.readthedocs.io/en/latest/userguide_doc.html#installing-and-configuring)
+- [Tellurium](https://tellurium.readthedocs.io/en/latest/installation.html)
+- [Simulator-specific implementations of the Biosimulators-Utils interface](https://docs.biosimulations.org/users/biosimulators-packages)
+- [Smoldyn](https://www.smoldyn.org/SmoldynManual.pdf)
+- *(Coming soon:)* [ReaDDy](https://readdy.github.io/installation.html)
+
+
+### Dependency management scopes are handled as follows:
+
+#### _*Locally/Dev*_:
 - Python poetry via `pyproject.toml` - the most stable/reproducible method, yet the farthest from what is actually happening in the service containers as they use conda.
 - Anaconda via `environment.yml` - the closest to local development at root level which micics what actually happens in the containers (conda deps tend to break more frequently than poetry.)
 
 _*Remotely in microservice containers*_:
 - Remote microservice container management is handled by `conda` via `environment.yml` files for the respective containers.
 
-The installation process is outlined as follows:
+### The installation process is outlined as follows:
 
 1. `git clone https://github.com/biosimulators/bio-check.git`
 2. `cd assets`
@@ -42,7 +54,7 @@ The installation process is outlined as follows:
         poetry env use 3.10 && poetry install
 
 
-### Notes:
+## Notes:
 - This application currently uses MongoDB as the database store in which jobs are read/written. Database access is given to both the `api` and `worker` libraries. Such database access is 
 executed/implemented with the use of a `Supervisor` singleton.
 

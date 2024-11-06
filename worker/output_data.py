@@ -8,10 +8,10 @@ import numpy as np
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
-from shared_worker import handle_exception
-from data_model import BiosimulationsRunOutputData
-from compatible import COMPATIBLE_UTC_SIMULATORS
-from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports
+from worker.shared_worker import handle_exception
+from worker.data_model import BiosimulationsRunOutputData
+from worker.compatible import COMPATIBLE_UTC_SIMULATORS
+from worker.io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports
 
 AMICI_ENABLED = True
 COPASI_ENABLED = True
@@ -465,19 +465,7 @@ def get_output_stack(spec_name: str, outputs):
     return sbml_output_stack(spec_name=spec_name, output=outputs)
 
 
-def _get_output_stack(outputs: dict, spec_id: str) -> np.ndarray:
-    output_stack = []
-    for sim_name in outputs.keys():
-        sim_data = outputs[sim_name]
-        if isinstance(sim_data, dict):
-            for spec_name in sim_data.keys():
-                if spec_name == spec_id:
-                    output_stack.append(sim_data[spec_name])
-
-    return np.stack(output_stack)
-
-
-def __get_output_stack(outputs: dict, spec_id: str):
+def _get_report_output_stack(outputs: dict, spec_id: str):
     output_stack = []
     for sim_name in outputs.keys():
         sim_data = outputs[sim_name]['data']
