@@ -17,12 +17,7 @@
                     "time_course_data_store"
                 ]
             },
-            "_inputs": {
-                "input_file": "maybe[string]",
-                "start_time": "maybe[integer]",
-                "end_time": "maybe[integer]",
-                "num_steps": "maybe[integer]"
-            },
+            "_inputs": {},
             "_outputs": {
                 "time_course_data": "tree[float]"
             }
@@ -48,5 +43,5 @@
             "outputs": {}
         }
     },
-    "composition": "(global_time:float|copasi:step[(input_file:maybe[string]|start_time:maybe[integer]|end_time:maybe[integer]|num_steps:maybe[integer]),(time_course_data:tree[float])]|time_course_data_store:tree[float]|emitter:step[(time_course_data:tree[float]),()])"
+    "composition": "(global_time:float|copasi:step[(),(time_course_data:tree[float])]|time_course_data_store:tree[float]|emitter:step[(time_course_data:tree[float]),()])"
 }

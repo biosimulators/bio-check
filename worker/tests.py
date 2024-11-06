@@ -32,17 +32,19 @@ def test_utc_generator():
     doc = {
         'copasi': {
             '_type': 'step',
-            'address': 'local:utc_output_generator',
+            'address': 'local:time-course-output-generator',
             'config': {
                 'input_file': TEST_SBML_FP,
-                'simulator': 'copasi',
+                'context': 'copasi',
                 'start_time': 0,
                 'end_time': 10,
                 'num_steps': 100
             },
-            'inputs': {},
+            'inputs': {
+                'parameters': ['parameters_store']
+            },
             'outputs': {
-                'time_course_data': ['time_course_data_store'],
+                'output_data': ['output_data_store'],
             }
         },
         'emitter': {
@@ -50,32 +52,32 @@ def test_utc_generator():
             'address': 'local:ram-emitter',
             'config': {
                 'emit': {
-                    'time_course_data': 'tree[float]'
+                    'output_data': 'tree[any]'
                 }
             },
             'inputs': {
-                'time_course_data': ['time_course_data_store']
+                'output_data': ['output_data_store']
             }
         }
     }
 
-    sim = Composite(
-        config={
+    sim = Composite({
             'state': doc,
+            'emitter': {'mode': 'all'}
         },
         core=CORE
     )
 
-    sim.save(filename="test_utc_output_generator_before.json", outdir="./outputs")
-    sim.update({}, 1)
+    sim.save(filename="test_time_course_output_generator_before.json", outdir="./outputs")
+    print(dir(sim))
+    sim.run(1)
     results = sim.gather_results()
     print(f'Results:\n{results}')
     sim.save(filename="test_utc_output_generator_after.json", outdir="./outputs")
-    return results
+    return sim
 
 
-if __name__ == '__main__':
-    test_utc_generator()
+simulation = test_utc_generator()
 
 
 
