@@ -1,11 +1,12 @@
 # This project configuration should relate only to the high level notebook api (as primary deps).
 [tool.poetry]
-name = "bio-compose-server"
-version = "1.12.0"
-description = "Simulation Verification Service Microservices (api and worker)"
+name = "bio-compose-server-dev"
+version = "0.1.0"
+description = "Simulation Verification Service Microservices (api and worker) configuration for local development."
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "api"}, {include = "worker"}]
+repository = "https://github.com/biosimulators/bio-check"
+packages = [{include = "api"}, {include = "worker"}, {include = "tests"}]
 
 
 [tool.poetry.dependencies]

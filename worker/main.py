@@ -4,9 +4,9 @@ import logging
 
 from dotenv import load_dotenv
 
-from shared import MongoDbConnector
-from log_config import setup_logging
-from supervisor import Supervisor
+from worker.shared_worker import MongoDbConnector
+from worker.log_config import setup_logging
+from worker.supervisor import Supervisor
 # from supervisor import CompositionSupervisor
 
 

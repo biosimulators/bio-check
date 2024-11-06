@@ -5,17 +5,17 @@ from typing import *
 from dotenv import load_dotenv
 from pymongo.collection import Collection as MongoCollection
 
-from shared import handle_exception
-from workers import SimulationRunWorker, VerificationWorker, FilesWorker, CompositionWorker
-from shared import BaseClass, MongoDbConnector, unique_id, JobStatus, DatabaseCollections
-from log_config import setup_logging
+from worker.shared_worker import handle_exception
+from worker.workers import SimulationRunWorker, VerificationWorker, FilesWorker
+from worker.shared_worker import BaseClass, MongoDbConnector, unique_id, JobStatus, DatabaseCollections
+from worker.log_config import setup_logging
 
 
 # for dev only
 load_dotenv('../assets/dev/config/.env_dev')
 
 
-# logging
+# logging TODO: implement this.
 LOGFILE = "biochecknet_composer_worker_supervisor.log"
 # logger = logging.getLogger(__name__)
 # setup_logging(logger)
@@ -30,7 +30,7 @@ class Supervisor:
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
 
     async def check_jobs(self) -> int:
-        """Returns non-zero if max retries reached, zero otherwise."""
+        """Returns non-zero if max retries reached, zero otherwise.
 
         # 1. For job (i) in job q, check if jobid exists for any job within db_connector.completed_jobs()
         # 1a. If so, pop the job from the pending queue
@@ -41,72 +41,10 @@ class Supervisor:
         # 5a: TODO: In parallel, keep a pool of n workers List[Worker]. Summon them asynchronously and append more instances as demand increases.
         # 6. Sleep for a larger period of time
         # 7. At the end of check_jobs, run self.job_queue = self.db_connector.pending_jobs() (refresh)
-
-        # async def check():
-        #     for i, pending_job in enumerate(self.job_queue):
-        #         # get job id
-        #         job_id = pending_job.get('job_id')
-        #         source = pending_job.get('path')
-        #         source_name = source.split('/')[-1]
-        #         # check if job id exists in dbconn.completed
-        #         job_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
-        #         job_failed = self.job_exists(job_id=job_id, collection_name="failed_jobs")
-        #         worker = None
-        #         # case: job is not complete, otherwise do nothing
-        #         if not job_completed and not job_failed:
-        #             # check: run simulations
-        #             if job_id.startswith('simulation-execution'):
-        #                 worker = SimulationRunWorker(job=pending_job)
-        #             # check: verifications
-        #             elif job_id.startswith('verification'):
-        #                 # otherwise: create new worker with job
-        #                 worker = VerificationWorker(job=pending_job)
-        #             # check: files
-        #             elif job_id.startswith('files'):
-        #                 worker = FilesWorker(job=pending_job)
-        #             # check: composition
-        #             elif job_id.startswith('composition-run'):
-        #                 worker = CompositionWorker(job=pending_job)
-        #             # change job status for client by inserting a new in progress job
-        #             job_in_progress = self.job_exists(job_id=job_id, collection_name="in_progress_jobs")
-        #             if not job_in_progress:
-        #                 in_progress_job = await self.db_connector.insert_job_async(
-        #                     collection_name=DatabaseCollections.IN_PROGRESS_JOBS.value,
-        #                     job_id=job_id,
-        #                     timestamp=self.db_connector.timestamp(),
-        #                     status=JobStatus.IN_PROGRESS.value,
-        #                     source=source_name
-        #                 )
-        #                 try:
-        #                     # when worker completes, dismiss worker (if in parallel)
-        #                     await worker.run()
-        #                     # create new completed job using the worker's job_result TODO: refactor output nesting
-        #                     result_data = worker.job_result
-        #                     await self.db_connector.insert_job_async(
-        #                         collection_name=DatabaseCollections.COMPLETED_JOBS.value,
-        #                         job_id=job_id,
-        #                         timestamp=self.db_connector.timestamp(),
-        #                         status=JobStatus.COMPLETED.value,
-        #                         results=result_data,
-        #                         source=source_name
-        #                     )
-        #                 except:
-        #                     # save new error to db
-        #                     error = handle_exception('Job Error')
-        #                     await self.db_connector.insert_job_async(
-        #                         collection_name="failed_jobs",
-        #                         job_id=job_id,
-        #                         timestamp=self.db_connector.timestamp(),
-        #                         status=JobStatus.FAILED.value,
-        #                         results=error,
-        #                         source=source_name
-        #                     )
-
+        """
         for _ in range(self.queue_timer):
             # perform check
             await self._check()
-
-            # rest
             await sleep(2)
 
             # refresh jobs
@@ -140,11 +78,12 @@ class Supervisor:
                     }
 
                     # special handling of composition jobs TODO: move this to the supervisor below
-                    # if job_id.startswith('composition-run'):
-                    #     in_progress_entry['composite_spec'] = pending_job.get('composite_spec')
-                    #     in_progress_entry['simulator'] = pending_job.get('simulators')
-                    #     in_progress_entry['duration'] = pending_job.get('duration')
+                    if job_id.startswith('composition-run'):
+                        in_progress_entry['composite_spec'] = pending_job.get('composite_spec')
+                        in_progress_entry['simulator'] = pending_job.get('simulators')
+                        in_progress_entry['duration'] = pending_job.get('duration')
 
+                    # insert new inprogress job with the same job_id
                     in_progress_job = await self.db_connector.insert_job_async(
                         collection_name="in_progress_jobs",
                         **in_progress_entry
@@ -156,7 +95,6 @@ class Supervisor:
                 # run job again
                 try:
                     # check: run simulations
-
                     if job_id.startswith('simulation-execution'):
                         worker = SimulationRunWorker(job=pending_job)
                     # check: verifications
@@ -206,7 +144,7 @@ class Supervisor:
         return job is not None
 
 
-class CompositionSupervisor:
+"""class CompositionSupervisor:
     def __init__(self, db_connector: MongoDbConnector):
         self.db_connector = db_connector
         self.queue_timer = 5
@@ -215,7 +153,6 @@ class CompositionSupervisor:
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
 
     def job_exists(self, job_id: str, collection_name: str) -> bool:
-        """Returns True if job with the given job_id exists, False otherwise."""
         unique_id_query = {'job_id': job_id}
         coll: MongoCollection = self.db_connector.db[collection_name]
         job = coll.find_one(unique_id_query) or None
@@ -271,5 +208,5 @@ class CompositionSupervisor:
                     )
                 except:
                     print('Error!')
-
+"""
 

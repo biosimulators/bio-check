@@ -13,9 +13,8 @@ from fastapi.responses import FileResponse
 from pydantic import BeforeValidator, Field, BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
-from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
-# from bio_check import MONGO_URI
-from data_model import (
+from api.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
+from api.data_model import (
     ObservableData,
     SimulatorRMSE,
     SmoldynJob,
@@ -39,9 +38,9 @@ from data_model import (
     PendingCompositionJob,
     AgentParameters
 )
-from shared import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix, BaseModel
-from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
-from log_config import setup_logging
+from api.shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix, BaseModel
+from api.io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
+from api.log_config import setup_logging
 
 
 # -- load dev env -- #

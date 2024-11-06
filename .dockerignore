@@ -34,7 +34,7 @@ unused.txt
 !enter.sh
 !add_deps.sh
 bio_check/.env
-worker/shared.py
+worker/shared_worker.py
 .env_dev
 tests.ipynb
 __pycache__

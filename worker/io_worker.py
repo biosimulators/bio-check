@@ -5,12 +5,12 @@ from typing import Union, List
 
 import h5py
 import libsbml
-from biosimulators_utils.combine.io import CombineArchiveReader
-
 from fastapi import UploadFile
 from google.cloud import storage
+from biosimulators_utils.combine.io import CombineArchiveReader
+from biosimulators_utils.combine.data_model import CombineArchive
 
-from data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
+from worker.data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
 
 
 def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:
@@ -133,7 +133,7 @@ def get_sbml_species_names(fp: str) -> list[str]:
     return [s.getName() for s in model.getListOfSpecies()]
 
 
-def unpack_omex(archive_fp: str, save_dir: str):
+def unpack_omex(archive_fp: str, save_dir: str) -> CombineArchive:
     return CombineArchiveReader().run(archive_fp, save_dir)
 
 

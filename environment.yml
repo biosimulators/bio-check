@@ -1,0 +1,35 @@
+name: bio-compose-server-dev
+channels:
+  - pysces
+  - defaults
+  - conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - python=3.10
+  - pip
+  - pysces
+  - pip:
+      - requests-toolbelt
+      - python-dotenv
+      - google-cloud-storage
+      - python-multipart
+      - fastapi
+      - toml
+      - typing-extensions
+      - pymongo
+      - pydantic-settings
+      - pydantic
+      - uvicorn
+      - pyyaml
+      - simulariumio
+      - biosimulators-copasi
+      - biosimulators-tellurium
+      - biosimulators-amici
+      - biosimulators-pysces
+      - seaborn
+      - jupyterlab
+      - process-bigraph
+      - bigraph-schema
+      - smoldyn
+      - pytest

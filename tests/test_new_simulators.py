@@ -11,7 +11,7 @@ CONFIG = Config(ALGORITHM_SUBSTITUTION_POLICY=AlgorithmSubstitutionPolicy.SAME_F
 
 
 def test_pysces(config=None):
-    return bp.exec_sedml_docs_in_combine_archive(FP, "./outputs", config=config)
+    return bp.exec_sedml_docs_in_combine_archive(FP, "../worker/outputs", config=config)
 
 
 def test_masspy(config=None):

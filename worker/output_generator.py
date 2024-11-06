@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any, List
 import numpy as np
 from process_bigraph import Step, ProcessTypes, Composite
 
-from output_data import SBML_EXECUTORS, get_sbml_species_mapping
+from worker.output_data import SBML_EXECUTORS, get_sbml_species_mapping
 
 
 CORE = ProcessTypes()

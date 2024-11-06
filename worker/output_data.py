@@ -8,7 +8,7 @@ import numpy as np
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
-from shared import handle_exception
+from shared_worker import handle_exception
 from data_model import BiosimulationsRunOutputData
 from compatible import COMPATIBLE_UTC_SIMULATORS
 from io_worker import read_report_outputs, normalize_smoldyn_output_path_in_root, make_dir, read_h5_reports
