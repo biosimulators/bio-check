@@ -45,7 +45,7 @@ pytest = "^8.3.3"
 [tool.pytest.ini_options]
 addopts = "--ignore=setup.py"
 python_files = "tests.py"
-testpaths = ["worker/tests.py"]
+testpaths = ["tests/test_api.py", "tests/test_new_simulators.py", "tests/test_worker.py"]
 
 
 [build-system]
