@@ -29,10 +29,9 @@ except:
     )
 
 from worker.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from worker import APP_PROCESS_REGISTRY as PROCESS_TYPES, APP_PROCESS_REGISTRY
+from worker import APP_PROCESS_REGISTRY
 
-CORE = PROCESS_TYPES
-process_registry = ProcessTypes().process_registry
+process_registry = APP_PROCESS_REGISTRY.process_registry
 
 
 HISTORY_INDEXES = [
@@ -49,7 +48,7 @@ CONFIGURATION_INDEXES = [
 SECRETS_PATH = 'secrets.json'
 
 
-# -- emitters --
+# -- emitters -- #
 
 class MongoDatabaseEmitter(Emitter):
     client_dict: Dict[int, MongoClient] = {}
@@ -118,7 +117,7 @@ class MongoDatabaseEmitter(Emitter):
         return {}
 
 
-# -- steps --
+# -- simulators -- #
 
 class SmoldynStep(Step):
     config_schema = {
@@ -136,7 +135,7 @@ class SmoldynStep(Step):
         # TODO: Add a more nuanced way to describe and configure dynamic difcs given species interaction patterns
     }
 
-    def __init__(self, config: Dict[str, Any] = None, core=CORE):
+    def __init__(self, config: Dict[str, Any] = None, core=APP_PROCESS_REGISTRY):
         """A new instance of `SmoldynProcess` based on the `config` that is passed. The schema for the config to be passed in
             this object's constructor is as follows:
 
@@ -398,7 +397,7 @@ class SimulariumSmoldynStep(Step):
         'agent_display_parameters': 'maybe[tree[string]]'  # as per biosim simularium
     }
 
-    def __init__(self, config=None, core=CORE):
+    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
         super().__init__(config=config, core=core)
 
         # io params
@@ -485,19 +484,6 @@ class SimulariumSmoldynStep(Step):
             return display_data
 
         return None
-
-
-# register processes
-
-REGISTERED_PROCESSES = [
-    ('smoldyn_step', SmoldynStep),
-    ('simularium_smoldyn_step', SimulariumSmoldynStep)
-]
-for process_name, process_class in REGISTERED_PROCESSES:
-    try:
-        CORE.process_registry.register(process_name, process_class)
-    except Exception as e:
-        print(f'{process_name} could not be registered because {str(e)}')
 
 
 # -- utils --
