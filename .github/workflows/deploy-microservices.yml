@@ -68,7 +68,7 @@ jobs:
           docker-compose --version  # Check if Docker Compose is installed correctly
 
       - name: Authorize push script
-        run: chmod +x ./docker/scripts/push_image.sh
+        run: chmod +x ./assets/docker/scripts/push_image.sh
 
       - name: Build API microservice image
         run: docker-compose build api
