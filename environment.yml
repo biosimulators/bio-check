@@ -7,8 +7,6 @@ channels:
   - https://repo.anaconda.com/pkgs/r
 dependencies:
   - python=3.10
-  - pip
-  - pysces
   - pip:
       - requests-toolbelt
       - python-dotenv
