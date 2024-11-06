@@ -1,7 +1,10 @@
 # Worker microservice
 
 # FROM ghcr.io/biosimulators/bio-check-base:latest
-FROM ghcr.io/biosimulators/bio-compose-server-base:latest
+# FROM ghcr.io/biosimulators/bio-compose-server-base:latest
+
+# TODO: change this back to latest once stable
+FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.5-test
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
