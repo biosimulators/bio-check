@@ -28,7 +28,7 @@ def test_generate_time_course_data():
         start=0,
         end=1000,
         steps=5,
-        simulators=['copasi', 'tellurium'],
+        simulators=['copasi', 'pysces', 'tellurium'],
         out_dir="./outputs"
     )
     pprint.pp(results)

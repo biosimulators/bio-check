@@ -28,6 +28,33 @@
         },
         "parameters_store_copasi": {},
         "output_data_store_copasi": {},
+        "pysces": {
+            "_type": "step",
+            "address": "local:time-course-output-generator",
+            "config": {
+                "start_time": "0",
+                "end_time": "1000",
+                "num_steps": "5"
+            },
+            "inputs": {
+                "parameters": [
+                    "parameters_store_pysces"
+                ]
+            },
+            "outputs": {
+                "output_data": [
+                    "output_data_store_pysces"
+                ]
+            },
+            "_inputs": {
+                "parameters": "tree[any]"
+            },
+            "_outputs": {
+                "output_data": "tree[any]"
+            }
+        },
+        "parameters_store_pysces": {},
+        "output_data_store_pysces": {},
         "tellurium": {
             "_type": "step",
             "address": "local:time-course-output-generator",
@@ -62,9 +89,12 @@
                 "emit": {
                     "output_data_store_tellurium": "any",
                     "parameters_store_tellurium": "any",
+                    "output_data_store_pysces": "any",
+                    "parameters_store_pysces": "any",
                     "output_data_store_copasi": "any",
                     "parameters_store_copasi": "any",
                     "copasi": "any",
+                    "pysces": "any",
                     "tellurium": "any",
                     "global_time": "any"
                 }
@@ -76,6 +106,12 @@
                 "parameters_store_tellurium": [
                     "parameters_store_tellurium"
                 ],
+                "output_data_store_pysces": [
+                    "output_data_store_pysces"
+                ],
+                "parameters_store_pysces": [
+                    "parameters_store_pysces"
+                ],
                 "output_data_store_copasi": [
                     "output_data_store_copasi"
                 ],
@@ -84,6 +120,9 @@
                 ],
                 "copasi": [
                     "copasi"
+                ],
+                "pysces": [
+                    "pysces"
                 ],
                 "tellurium": [
                     "tellurium"
@@ -95,9 +134,12 @@
             "_inputs": {
                 "output_data_store_tellurium": "any",
                 "parameters_store_tellurium": "any",
+                "output_data_store_pysces": "any",
+                "parameters_store_pysces": "any",
                 "output_data_store_copasi": "any",
                 "parameters_store_copasi": "any",
                 "copasi": "any",
+                "pysces": "any",
                 "tellurium": "any",
                 "global_time": "any"
             },
@@ -105,5 +147,5 @@
             "outputs": {}
         }
     },
-    "composition": "(global_time:float|copasi:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_copasi:tree[any]|output_data_store_copasi:tree[any]|tellurium:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_tellurium:tree[any]|output_data_store_tellurium:tree[any]|emitter:step[(output_data_store_tellurium:any|parameters_store_tellurium:any|output_data_store_copasi:any|parameters_store_copasi:any|copasi:any|tellurium:any|global_time:any),()])"
+    "composition": "(global_time:float|copasi:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_copasi:tree[any]|output_data_store_copasi:tree[any]|pysces:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_pysces:tree[any]|output_data_store_pysces:tree[any]|tellurium:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_tellurium:tree[any]|output_data_store_tellurium:tree[any]|emitter:step[(output_data_store_tellurium:any|parameters_store_tellurium:any|output_data_store_pysces:any|parameters_store_pysces:any|output_data_store_copasi:any|parameters_store_copasi:any|copasi:any|pysces:any|tellurium:any|global_time:any),()])"
 }

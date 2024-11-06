@@ -23,7 +23,7 @@ from output_data import (
     handle_sbml_exception,
     _get_output_stack
 )
-
+from output_generator import generate_time_course_data
 
 # -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
 
@@ -548,44 +548,10 @@ class VerificationWorker(Worker):
                 results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
         return results
 
-    def __generate_omex_utc_species_comparison(self, output_data, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
-        # output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
-        outputs = _get_output_stack(output_data, species_name)
-        methods = ['mse', 'proximity']
-        matrix_vals = list(map(
-            lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth, rtol=rTol, atol=aTol).to_dict(),
-            methods
-        ))
-        results = dict(zip(methods, matrix_vals))
-        results['output_data'] = {}
-        for simulator_name in output_data.keys():
-            sim_output = output_data[simulator_name]
-            for spec_name, spec_output in sim_output.items():
-                if spec_name == species_name:
-                    data = output_data[simulator_name][spec_name]
-                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
-
-        return results
-
-    def ___generate_omex_utc_species_comparison(self, omex_fp, out_dir, species_name, simulators, ground_truth=None, rTol=None, aTol=None):
-        output_data = generate_biosimulator_utc_outputs(omex_fp=omex_fp, output_root_dir=out_dir, simulators=simulators, alg_policy="same_framework")
-        outputs = _get_output_stack(output_data, species_name)
-        methods = ['mse', 'proximity']
-        matrix_vals = list(map(
-            lambda m: self._generate_species_comparison_matrix(outputs=outputs, simulators=simulators, method=m, ground_truth=ground_truth, rtol=rTol, atol=aTol).to_dict(),
-            methods
-        ))
-        results = dict(zip(methods, matrix_vals))
-        results['output_data'] = {}
-        for simulator_name in output_data.keys():
-            for output in output_data[simulator_name]['data']:
-                if output['dataset_label'] in species_name:
-                    data = output['data']
-                    results['output_data'][simulator_name] = data.tolist() if isinstance(data, np.ndarray) else data
-        return results
-
     def _generate_formatted_sbml_outputs(self, sbml_filepath, start, dur, steps, simulators, ground_truth=None):
-        return generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, simulators=simulators, truth=ground_truth)
+        # TODO: stable content is commented-out below. Currently placing alternate function in place of stable content.
+        # return generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, simulators=simulators, truth=ground_truth)
+        return generate_time_course_data(input_fp=sbml_filepath, start=start, end=dur, steps=steps, simulators=simulators, expected_results_fp=ground_truth)
 
     def _generate_sbml_utc_species_comparison(self, output_data, species_name, ground_truth=None, rTol=None, aTol=None):
         # outputs = sbml_output_stack(spec_name=species_name, output=output_data)

@@ -37,6 +37,42 @@
             "MAPK_P": "[9.999999999999998, 63.281545596331455, 1.1594717227905584, 1.3242151235591704, 2.3085241063916535, 10.196011036119856]",
             "MAPK_PP": "[9.999999999999998, 192.77862525599764, 298.7589546162686, 298.5716424971301, 297.40794446023875, 286.3677853314796]"
         },
+        "pysces": {
+            "_type": "step",
+            "address": "local:time-course-output-generator",
+            "config": {
+                "start_time": "0",
+                "end_time": "1000",
+                "num_steps": "5"
+            },
+            "inputs": {
+                "parameters": [
+                    "parameters_store_pysces"
+                ]
+            },
+            "outputs": {
+                "output_data": [
+                    "output_data_store_pysces"
+                ]
+            },
+            "_inputs": {
+                "parameters": "tree[any]"
+            },
+            "_outputs": {
+                "output_data": "tree[any]"
+            }
+        },
+        "parameters_store_pysces": {},
+        "output_data_store_pysces": {
+            "MKKK": "[90.0, 19.224099072368944, 51.882261858753594, 79.26940692375862, 94.64958920517256, 96.91630995040477]",
+            "MKKK_P": "[10.0, 80.77590092763106, 48.117738141246406, 20.730593076241377, 5.350410794827434, 3.0836900495952273]",
+            "MKK": "[280.0, 66.91545733066687, 9.125776770287203, 27.734112392259682, 99.38604138716083, 204.90018162151532]",
+            "MKK_P": "[10.0, 70.09775538422613, 25.297918024332507, 38.63204605402753, 61.583807956691885, 64.98096490283547]",
+            "MKK_PP": "[10.0, 162.986787285107, 265.5763052053803, 233.63384155371278, 139.03015065614727, 30.11885347564919]",
+            "MAPK": "[280.0, 43.93964783953043, 0.08157367105427972, 0.10414234641523147, 0.2835308271033445, 3.436191483985104]",
+            "MAPK_P": "[10.0, 63.28168059547757, 1.1594718751993054, 1.3242148795248005, 2.308521462487957, 10.195989914395382]",
+            "MAPK_PP": "[10.0, 192.778671564992, 298.7589544537464, 298.57164277405997, 297.4079477104087, 286.3678186016195]"
+        },
         "tellurium": {
             "_type": "step",
             "address": "local:time-course-output-generator",
@@ -80,9 +116,12 @@
                 "emit": {
                     "output_data_store_tellurium": "any",
                     "parameters_store_tellurium": "any",
+                    "output_data_store_pysces": "any",
+                    "parameters_store_pysces": "any",
                     "output_data_store_copasi": "any",
                     "parameters_store_copasi": "any",
                     "copasi": "any",
+                    "pysces": "any",
                     "tellurium": "any",
                     "global_time": "any"
                 }
@@ -94,6 +133,12 @@
                 "parameters_store_tellurium": [
                     "parameters_store_tellurium"
                 ],
+                "output_data_store_pysces": [
+                    "output_data_store_pysces"
+                ],
+                "parameters_store_pysces": [
+                    "parameters_store_pysces"
+                ],
                 "output_data_store_copasi": [
                     "output_data_store_copasi"
                 ],
@@ -102,6 +147,9 @@
                 ],
                 "copasi": [
                     "copasi"
+                ],
+                "pysces": [
+                    "pysces"
                 ],
                 "tellurium": [
                     "tellurium"
@@ -113,9 +161,12 @@
             "_inputs": {
                 "output_data_store_tellurium": "any",
                 "parameters_store_tellurium": "any",
+                "output_data_store_pysces": "any",
+                "parameters_store_pysces": "any",
                 "output_data_store_copasi": "any",
                 "parameters_store_copasi": "any",
                 "copasi": "any",
+                "pysces": "any",
                 "tellurium": "any",
                 "global_time": "any"
             },
@@ -123,5 +174,5 @@
             "outputs": {}
         }
     },
-    "composition": "(global_time:float|copasi:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_copasi:tree[any]|output_data_store_copasi:tree[any]|tellurium:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_tellurium:tree[any]|output_data_store_tellurium:tree[any]|emitter:step[(output_data_store_tellurium:any|parameters_store_tellurium:any|output_data_store_copasi:any|parameters_store_copasi:any|copasi:any|tellurium:any|global_time:any),()])"
+    "composition": "(global_time:float|copasi:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_copasi:tree[any]|output_data_store_copasi:tree[any]|pysces:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_pysces:tree[any]|output_data_store_pysces:tree[any]|tellurium:step[(parameters:tree[any]),(output_data:tree[any])]|parameters_store_tellurium:tree[any]|output_data_store_tellurium:tree[any]|emitter:step[(output_data_store_tellurium:any|parameters_store_tellurium:any|output_data_store_pysces:any|parameters_store_pysces:any|output_data_store_copasi:any|parameters_store_copasi:any|copasi:any|pysces:any|tellurium:any|global_time:any),()])"
 }
