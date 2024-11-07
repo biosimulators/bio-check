@@ -1,7 +1,6 @@
 name: bio-compose-server-dev
 channels:
   - pysces
-  - defaults
   - conda-forge
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
@@ -23,11 +22,9 @@ dependencies:
       - simulariumio
       - biosimulators-copasi
       - biosimulators-tellurium
-      - biosimulators-amici
       - biosimulators-pysces
       - seaborn
       - jupyterlab
       - process-bigraph
       - bigraph-schema
-      - smoldyn
       - pytest

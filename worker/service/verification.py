@@ -7,11 +7,11 @@ import numpy as np
 from kisao import AlgorithmSubstitutionPolicy
 from biosimulators_utils.config import Config
 
-from worker.service.io_worker import get_sbml_species_mapping
-from worker.service.data_generator import SBML_EXECUTORS
-from worker.service.log_config import setup_logging
-from worker.service.data_model import BiosimulationsRunOutputData
-from worker.service.io_worker import read_report_outputs, make_dir, read_h5_reports
+from service.io_worker import get_sbml_species_mapping
+from service.data_generator import SBML_EXECUTORS
+from service.log_config import setup_logging
+from service.data_model import BiosimulationsRunOutputData
+from service.io_worker import read_report_outputs, make_dir, read_h5_reports
 
 
 # logging TODO: implement this.

@@ -44,3 +44,4 @@ worker/__pycache__
 test.ipynb
 worker/.composition
 worker/service/.worker_STABLE
+*.egg-info

@@ -6,11 +6,11 @@ from typing import *
 import libsbml
 from process_bigraph import Composite
 
-from worker import APP_PROCESS_REGISTRY
-from worker.service.log_config import setup_logging
-from worker.service.shared_worker import handle_exception
-from worker.service.compatible import COMPATIBLE_UTC_SIMULATORS
-from worker.service.io_worker import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping
+from service import APP_PROCESS_REGISTRY
+from service.log_config import setup_logging
+from service.shared_worker import handle_exception
+from service.compatible import COMPATIBLE_UTC_SIMULATORS
+from service.io_worker import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping
 
 # logging TODO: implement this.
 logger = logging.getLogger("biochecknet.worker.data_generator.log")

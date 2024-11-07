@@ -10,7 +10,7 @@ from google.cloud import storage
 from biosimulators_utils.combine.io import CombineArchiveReader
 from biosimulators_utils.combine.data_model import CombineArchive
 
-from worker.service.data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
+from service.data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
 
 
 def get_sbml_species_mapping(sbml_fp: str) -> dict:
