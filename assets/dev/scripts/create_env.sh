@@ -8,23 +8,19 @@ function construct_env {
   arm_platform=$(uname -a | grep "Darwin")
   echo "Creating environment from ./environment.yml on $arm_platform..."
   source /Users/alexanderpatrie/miniconda3/etc/profile.d/conda.sh
-
-  # update base pip
   conda run pip3 install --upgrade pip
   conda run pip install --upgrade pip
-
-  # create and activate env
   conda env create -f ./environment.yml -y
-  conda activate bio-compose-server
-
-  # install pysces and poetry deps
-  conda install -n bio-compose-server -c conda-forge -c pysces pysces -y
-  poetry config virtualenvs.create false
-  sudo conda run -n bio-compose-server poetry env use 3.10
-  sudo conda run -n bio-compose-server poetry lock
-  sudo conda run -n bio-compose-server poetry install --only=dev
+  conda run -n bio-compose-server pip3 install --upgrade pip
+  conda run -n bio-compose-server pip install --upgrade pip
   ./assets/dev/scripts/install-smoldyn-mac-silicon.sh || poetry run pip3 install smoldyn
-  sudo conda run -n bio-compose-server poetry run pip3 install amici biosimulators-amici biosimulators-pysces
+  conda run -n bio-compose-server pip3 install amici biosimulators-amici  # biosimulators-pysces
+  # conda install -n bio-compose-server -c conda-forge -c pysces pysces -y
+  # poetry config virtualenvs.create false
+  # sudo conda run -n bio-compose-server poetry env use 3.10
+  # sudo conda run -n bio-compose-server poetry lock
+  # sudo conda run -n bio-compose-server poetry install --only=dev
+  .
   # poetry run pip install ./api ./worker
 
   echo "Environment created!"

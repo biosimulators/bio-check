@@ -8,27 +8,28 @@ dependencies:
   - python=3.10
   - poetry
   - pysces
-  # - pip:
-  #     - pip-autoremove
-  #     - requests-toolbelt
-  #     - python-dotenv
-  #     - google-cloud-storage
-  #     - python-multipart
-  #     - fastapi
-  #     - toml
-  #     - typing-extensions
-  #     - pymongo
-  #     - pydantic-settings
-  #     - pydantic
-  #     - uvicorn
-  #     - pyyaml
-  #     - simulariumio
-  #     - copasi-basico
-  #     - tellurium
-  #     - biosimulators-copasi
-  #     - biosimulators-tellurium
-  #     - seaborn
-  #     - jupyterlab
-  #     - process-bigraph
-  #     - bigraph-schema
-  #     - pytest
+  - pip:
+      - pip-autoremove
+      - requests-toolbelt
+      - python-dotenv
+      - google-cloud-storage
+      - python-multipart
+      - fastapi
+      - toml
+      - typing-extensions
+      - pymongo
+      - pydantic-settings
+      - pydantic
+      - uvicorn
+      - pyyaml
+      - simulariumio
+      - copasi-basico
+      - tellurium
+      - biosimulators-copasi
+      - biosimulators-tellurium
+      - biosimulators-pysces
+      - seaborn
+      - jupyterlab
+      - process-bigraph
+      - bigraph-schema
+      - pytest
