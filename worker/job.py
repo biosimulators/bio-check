@@ -1,34 +1,157 @@
 import logging
 import math
-import os
 import tempfile
-from typing import *
 from abc import ABC, abstractmethod
+from asyncio import sleep
+from typing import *
 
 import numpy as np
 import pandas as pd
-from process_bigraph import Composite
+from dotenv import load_dotenv
+from pymongo.collection import Collection as MongoCollection
 
-from worker.log_config import setup_logging
-from worker.shared_worker import unique_id, BUCKET_NAME, handle_exception
-from worker.io_worker import get_sbml_species_names, get_sbml_model_file_from_archive, read_report_outputs, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
-from worker.output_data import (
+from shared_worker import MongoDbConnector, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
+from log_config import setup_logging
+from io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
+from verification import (
     generate_biosimulator_utc_outputs,
     get_output_stack,
     sbml_output_stack,
     generate_sbml_utc_outputs,
-    get_sbml_species_mapping,
-    run_smoldyn,
-    handle_sbml_exception
 )
-from worker.output_generators import generate_time_course_data
-
-# -- WORKER: "Toolkit" => Has all of the tooling necessary to process jobs.
+from data_generator import generate_time_course_data, run_smoldyn, handle_sbml_exception
 
 
-# logging
-logger = logging.getLogger(__name__)
+# for dev only
+load_dotenv('../assets/dev/config/.env_dev')
+
+
+# logging TODO: implement this.
+logger = logging.getLogger("biochecknet.worker.job.log")
 setup_logging(logger)
+
+
+class Supervisor:
+    def __init__(self, db_connector: MongoDbConnector, queue_timer: int = 10, preferred_queue_index: int = 0):
+        self.db_connector = db_connector
+        self.queue_timer = queue_timer
+        self.preferred_queue_index = preferred_queue_index
+        self.job_queue = self.db_connector.pending_jobs()
+        self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
+
+    async def check_jobs(self) -> int:
+        """Returns non-zero if max retries reached, zero otherwise.
+
+        # 1. For job (i) in job q, check if jobid exists for any job within db_connector.completed_jobs()
+        # 1a. If so, pop the job from the pending queue
+        # 2. If job doesnt yet exist in completed, summon a worker.
+        # 3. Give the worker the pending job (i)
+        # 4. Create completed job in which the job id from # 1 is the job id (id?) and results is worker.job_result
+        # 5. Worker automatically is dismissed
+        # 5a: TODO: In parallel, keep a pool of n workers List[Worker]. Summon them asynchronously and append more instances as demand increases.
+        # 6. Sleep for a larger period of time
+        # 7. At the end of check_jobs, run self.job_queue = self.db_connector.pending_jobs() (refresh)
+        """
+        for _ in range(self.queue_timer):
+            # perform check
+            await self._check()
+            await sleep(2)
+
+            # refresh jobs
+            self.job_queue = self.db_connector.pending_jobs()
+
+        return 0
+
+    async def _check(self):
+        worker = None
+        for i, pending_job in enumerate(self.job_queue):
+            # get job params
+            job_id = pending_job.get('job_id')
+            source = pending_job.get('path')
+            source_name = source.split('/')[-1]
+
+            # check terminal collections for job
+            job_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
+            job_failed = self.job_exists(job_id=job_id, collection_name="failed_jobs")
+
+            # case: job is not complete, otherwise do nothing
+            if not job_completed and not job_failed:
+                # change job status for client by inserting a new in progress job
+                job_in_progress = self.job_exists(job_id=job_id, collection_name="in_progress_jobs")
+                if not job_in_progress:
+                    in_progress_entry = {
+                        'job_id': job_id,
+                        'timestamp': self.db_connector.timestamp(),
+                        'status': JobStatus.IN_PROGRESS.value,
+                        'requested_simulators': pending_job.get('simulators'),
+                        'source': source
+                    }
+
+                    # special handling of composition jobs TODO: move this to the supervisor below
+                    if job_id.startswith('composition-run'):
+                        in_progress_entry['composite_spec'] = pending_job.get('composite_spec')
+                        in_progress_entry['simulator'] = pending_job.get('simulators')
+                        in_progress_entry['duration'] = pending_job.get('duration')
+
+                    # insert new inprogress job with the same job_id
+                    in_progress_job = await self.db_connector.insert_job_async(
+                        collection_name="in_progress_jobs",
+                        **in_progress_entry
+                    )
+
+                    # remove job from pending
+                    self.db_connector.db.pending_jobs.delete_one({'job_id': job_id})
+
+                # run job again
+                try:
+                    # check: run simulations
+                    if job_id.startswith('simulation-execution'):
+                        worker = SimulationRunWorker(job=pending_job)
+                    # check: verifications
+                    elif job_id.startswith('verification'):
+                        worker = VerificationWorker(job=pending_job)
+                    # check: files
+                    elif job_id.startswith('files'):
+                        worker = FilesWorker(job=pending_job)
+
+                    # when worker completes, dismiss worker (if in parallel)
+                    await worker.run()
+
+                    # create new completed job using the worker's job_result
+                    result_data = worker.job_result
+                    await self.db_connector.insert_job_async(
+                        collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        status=JobStatus.COMPLETED.value,
+                        results=result_data,
+                        source=source_name,
+                        requested_simulators=pending_job.get('simulators')
+                    )
+
+                    # remove in progress job
+                    self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
+                except:
+                    # save new execution error to db
+                    error = handle_exception('Job Execution Error')
+                    await self.db_connector.insert_job_async(
+                        collection_name="failed_jobs",
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        status=JobStatus.FAILED.value,
+                        results=error,
+                        source=source_name
+                    )
+                    # remove in progress job TODO: refactor this
+                    self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
+
+    def job_exists(self, job_id: str, collection_name: str) -> bool:
+        """Returns True if job with the given job_id exists, False otherwise."""
+        unique_id_query = {'job_id': job_id}
+        coll: MongoCollection = self.db_connector.db[collection_name]
+        job = coll.find_one(unique_id_query) or None
+
+        return job is not None
 
 
 class Worker(ABC):
@@ -170,8 +293,8 @@ class VerificationWorker(Worker):
             # return the square root of the mean MSE (RMSE)
             return math.sqrt(mean_mse)
         # else:
-            # handle case where no MSE values are present (to avoid division by zero)
-            # return 0.0
+        # handle case where no MSE values are present (to avoid division by zero)
+        # return 0.0
 
     def _format_rmse_matrix(self, matrix) -> dict[str, dict[str, float]]:
         _m = matrix
@@ -251,7 +374,7 @@ class VerificationWorker(Worker):
         for i, sim_i in enumerate(simulators):
             for j, sim_j in enumerate(simulators):
                 if i != j:
-                    # fetch mse values 
+                    # fetch mse values
                     for observable, observable_data in spec_data.items():
                         if not isinstance(observable_data, str):
                             mse_data = observable_data['mse']
@@ -259,35 +382,34 @@ class VerificationWorker(Worker):
                             if sim_j in mse_data.keys():
                                 # append sim_j to cols because it is valid (in the mse matrix)
                                 cols.append(sim_j)
-                                
+
                                 # mse_data[sim_j] is a dict containing MSEs with other simulators
                                 for comparison_sim, mse_value in mse_data[sim_j].items():
                                     if comparison_sim == sim_i:
                                         mse_values.append(mse_value)
-                                        
-                    # # get unique list of valid sim keys and adjust matrix shape accordingly                   
+
+                    # # get unique list of valid sim keys and adjust matrix shape accordingly
                     # cols = list(set(cols))
                     # n_valid_simulators = len(cols)
                     # adjusted_matrix_shape = (n_valid_simulators, n_valid_simulators)
                     # rmse_matrix = np.resize(rmse_matrix, adjusted_matrix_shape)
-        
- 
+
                     # # assign mse_values to newly shaped matrix (should be same shape)
                     # if mse_values:
                     #     mean_mse = sum(mse_values) / len(mse_values)
                     #     rmse_matrix[i, j] = math.sqrt(mean_mse)
-   
+
                     # else:
-                        # TODO: make this more robust
-                        # rmse_matrix[i, j] = np.nan
+                    # TODO: make this more robust
+                    # rmse_matrix[i, j] = np.nan
                 # else:
-                    # rmse_matrix[i, j] = 0.0
-        # get unique list of valid sim keys and adjust matrix shape accordingly 
+                # rmse_matrix[i, j] = 0.0
+        # get unique list of valid sim keys and adjust matrix shape accordingly
         columns = list(set(cols))
         n_valid_simulators = len(columns)
         adjusted_matrix_shape = (n_valid_simulators, n_valid_simulators)
         rmse_matrix = np.resize(rmse_matrix, adjusted_matrix_shape)
-        
+
         # assign mse_values to newly shaped matrix (should be same shape)
         if mse_values:
             for i, sim_i in enumerate(columns):
@@ -348,14 +470,14 @@ class VerificationWorker(Worker):
         atol = self.job_params.get('aTol')
 
         result = self._run_comparison_from_sbml(
-                sbml_fp=local_fp,
-                start=output_start,
-                dur=end,
-                steps=steps,
-                rTol=rtol,
-                aTol=atol,
-                ground_truth=local_report_fp,
-                simulators=simulators
+            sbml_fp=local_fp,
+            start=output_start,
+            dur=end,
+            steps=steps,
+            rTol=rtol,
+            aTol=atol,
+            ground_truth=local_report_fp,
+            simulators=simulators
         )
         self.job_result = result
 
@@ -540,7 +662,7 @@ class VerificationWorker(Worker):
                 simulators.remove(simulator_name)
             else:
                 species_comparison_data[simulator_name] = row
-    
+
         vals = list(species_comparison_data.values())
         valid_sims = list(species_comparison_data.keys())
         methods = ['mse', 'proximity']
@@ -692,3 +814,71 @@ class FilesWorker(Worker):
     #         uploaded_file_location = await write_uploaded_file(job_id=job_id, bucket_name=BUCKET_NAME, uploaded_file=results_file, extension='.simularium')
     #     # set uploaded file as result
     #     self.job_result = {'results_file': uploaded_file_location}
+
+
+"""class CompositionSupervisor:
+    def __init__(self, db_connector: MongoDbConnector):
+        self.db_connector = db_connector
+        self.queue_timer = 5
+        self.preferred_queue_index = 0
+        self.job_queue = self.db_connector.pending_jobs()
+        self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
+
+    def job_exists(self, job_id: str, collection_name: str) -> bool:
+        unique_id_query = {'job_id': job_id}
+        coll: MongoCollection = self.db_connector.db[collection_name]
+        job = coll.find_one(unique_id_query) or None
+
+        return job is not None
+
+    async def check_jobs(self) -> int:
+        for _ in range(self.queue_timer):
+            # perform check
+            await self._check()
+
+            # rest
+            await sleep(2)
+
+            # refresh jobs
+            self.job_queue = self.db_connector.pending_jobs()
+
+        return 0
+
+    async def _check(self):
+        worker = None
+        for i, pending_job in enumerate(self.job_queue):
+            # get job params
+            job_id = pending_job.get('job_id')
+            source = pending_job.get('path')
+            source_name = source.split('/')[-1]
+            duration = pending_job.get('duration')
+            simulator = pending_job.get('simulator')
+
+            # check terminal collections for job
+            job_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
+            job_failed = self.job_exists(job_id=job_id, collection_name="failed_jobs")
+
+            # case: job is not complete, otherwise do nothing
+            if not job_completed and not job_failed:
+                # run job again
+                try:
+                    # check: composition
+                    if job_id.startswith('composition-run'):
+                        worker = CompositionWorker(job=pending_job)
+
+                    worker.run_composite_sse(duration)
+                    result_data = worker.job_result
+
+                    await self.db_connector.insert_job_async(
+                        collection_name=DatabaseCollections.COMPLETED_JOBS.value,
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        status=JobStatus.COMPLETED.value,
+                        source=source_name,
+                        simulator=simulator,
+                        results=result_data['data']
+                    )
+                except:
+                    print('Error!')
+"""
+

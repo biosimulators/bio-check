@@ -1,16 +1,22 @@
 import os
 import asyncio
 import logging
+from typing import List, Tuple
 
 from dotenv import load_dotenv
 
-from worker.shared_worker import MongoDbConnector
-from worker.log_config import setup_logging
-from worker.supervisor import Supervisor
-# from supervisor import CompositionSupervisor
+from shared_worker import MongoDbConnector
+from log_config import setup_logging
+from job import Supervisor
+from bigraph_steps import BIGRAPH_ADDRESS_REGISTRY
 
 
+# set up dev env if possible
 load_dotenv('../assets/dev/config/.env_dev')
+
+# logging
+logger = logging.getLogger("biochecknet.worker.main.log")
+setup_logging(logger)
 
 # sleep params
 DELAY_TIMER = 20
@@ -24,17 +30,24 @@ DB_NAME = "service_requests"
 # shared db_connector
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
-# setup_logging("biochecknet_worker_main.log")
-# logger = logging.getLogger(__name__)
+
+async def store_registered_addresses(supervisor: Supervisor):
+    # store list of process addresses that is available to the client via mongodb:
+    confirmation = await supervisor.db_connector.write(
+        collection_name="bigraph_registry",
+        registry_addresses=BIGRAPH_ADDRESS_REGISTRY,
+        timestamp=supervisor.db_connector.timestamp(),
+        return_document=True
+    )
+    return confirmation
 
 
 async def main(max_retries=MAX_RETRIES):
-    # set timeout counter
     n_retries = 0
-
-    # create supervisor
     supervisor = Supervisor(db_connector=db_connector)
-    # supervisor = CompositionSupervisor(db_connector=db_connector)
+    address_registration = await store_registered_addresses(supervisor)
+    if not address_registration:
+        logger.error("Failed to register addresses.")
 
     while True:
         # no job has come in a while
@@ -46,11 +59,5 @@ async def main(max_retries=MAX_RETRIES):
         n_retries += 1
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
-
-
-# net=app-net
-# docker network create "$net"
-# docker run -d --rm --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib":latest
-# docker run -it --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib"
+# if __name__ == "__main__":
+#     asyncio.run(main())

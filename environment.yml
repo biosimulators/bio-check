@@ -1,13 +1,15 @@
-name: bio-compose-server-dev
+name: server
 channels:
   - pysces
-  - defaults
   - conda-forge
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
 dependencies:
   - python=3.10
+  - poetry
+  - pysces
   - pip:
+      - pip-autoremove
       - requests-toolbelt
       - python-dotenv
       - google-cloud-storage
@@ -21,13 +23,13 @@ dependencies:
       - uvicorn
       - pyyaml
       - simulariumio
+      - copasi-basico
+      - tellurium
       - biosimulators-copasi
       - biosimulators-tellurium
-      - biosimulators-amici
       - biosimulators-pysces
       - seaborn
       - jupyterlab
       - process-bigraph
       - bigraph-schema
-      - smoldyn
       - pytest

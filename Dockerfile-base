@@ -14,13 +14,17 @@ SHELL ["/usr/bin/env", "bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive \
     MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check" \
     POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1
+    POETRY_NO_INTERACTION=1 \
+    TEST_SBML_FP="test-fixtures/sbml-core/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
+    TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
+    TEST_OMEX_FP="test-fixtures/sbml-core/Elowitz-Nature-2000-Repressilator.omex"
 
 # copy docker
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
-COPY assets/docker/shared.py assets/test_fixtures /app/
+COPY assets/docker/shared.py /app/shared.py
+COPY assets/test-fixtures /app/test-fixtures
 COPY assets/docker/config/environment.base.yml /app/environment.base.yml
 
 # cd /app
@@ -35,8 +39,15 @@ RUN mkdir -p /Pysces \
     && echo "conda activate server" >> ~/.bashrc \
     && source ~/.bashrc \
     && conda env export --no-builds -f config/environment.base.lock.yml \
-    && rm -f environment.base.yml
+    && rm -f environment.base.yml \
+    && conda clean --all -y
 
+
+# to run with a local network:
+# net=app-net
+# docker network create "$net"
+# docker run -d --rm --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib":latest
+# docker run -it --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib"
 
 # # create conda env from yml and ensure env activation
 # RUN conda env create -f config/environment.base.yml -y \

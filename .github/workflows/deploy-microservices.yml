@@ -1,7 +1,5 @@
 name: Deploy Microservices
 
-# on:
-#   workflow_dispatch:
 on:
   workflow_run:
     workflows: ["Deploy Base Image"]
@@ -20,7 +18,7 @@ jobs:
       - name: Extract API container version
         id: extract_api_version
         run: |
-          API_VERSION=$(python3 .github/parse_container_version.py api)
+          API_VERSION=$(python -B .github/parse_container_version.py api)
           echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
           echo "API Version: $API_VERSION"
 
@@ -28,7 +26,7 @@ jobs:
       - name: Extract worker container version
         id: extract_worker_version
         run: |
-          WORKER_VERSION=$(python3 .github/parse_container_version.py worker)
+          WORKER_VERSION=$(python -B .github/parse_container_version.py worker)
           echo "WORKER_VERSION=$WORKER_VERSION" >> $GITHUB_ENV
           echo "WORKER Version: $WORKER_VERSION"
 
@@ -59,7 +57,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r assets/pipeline/config/requirements.github.txt
+          pip install -r assets/pipeline/config/requirements.github.cd.txt
 
       - name: Install Docker Compose
         run: |
@@ -76,7 +74,7 @@ jobs:
       - name: Deploy API microservice container to GHCR
         run: |
           rm api/spec/openapi_3_1_0_generated.yaml
-          python3 api/openapi_spec.py
+          python -B api/openapi_spec.py
           sudo rm -r api/__pycache__
           ./assets/docker/scripts/push_image.sh api ${{ env.API_VERSION }}
         env:
@@ -88,7 +86,7 @@ jobs:
 
       - name: Deploy worker microservice container to GHCR
         run: |
-          sudo rm -r compose_api/__pycache__
+          sudo rm -r worker/__pycache__
           ./assets/docker/scripts/push_image.sh worker ${{ env.WORKER_VERSION }}
         # STABLE CONTENT:
         # run: |

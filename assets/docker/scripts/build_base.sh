@@ -20,17 +20,16 @@ docker build --platform linux/amd64 -f ./Dockerfile-base -t bio-compose-server-b
 echo "Built base image."
 
 echo "Tagging new base image as latest..."
-docker tag bio-compose-server-base:"$version" bio-compose-server-base:latest
+docker tag bio-compose-server-base:"$version" ghcr.io/biosimulators/bio-compose-server-base:"$version"
+docker tag ghcr.io/biosimulators/bio-compose-server-base:"$version" ghcr.io/biosimulators/bio-compose-server-base:latest
 echo "New base image tagged:"
 docker images | grep bio-compose-server-base:latest
 
 if [ "$argB" == "--push" ]; then
   # push version to GHCR
-  docker tag bio-compose-server-base:"$version" ghcr.io/biosimulators/bio-compose-server-base:"$version"
   docker push ghcr.io/biosimulators/bio-compose-server-base:"$version"
 
   # push newest latest to GHCR
-  docker tag ghcr.io/biosimulators/bio-compose-server-base:"$version" ghcr.io/biosimulators/bio-compose-server-base:latest
   docker push ghcr.io/biosimulators/bio-compose-server-base:latest
 else
   argB=""

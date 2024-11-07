@@ -10,7 +10,35 @@ from google.cloud import storage
 from biosimulators_utils.combine.io import CombineArchiveReader
 from biosimulators_utils.combine.data_model import CombineArchive
 
-from worker.data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
+from data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput
+
+
+def get_sbml_species_mapping(sbml_fp: str) -> dict:
+    """
+
+    Args:
+        - sbml_fp: `str`: path to the SBML model file.
+
+    Returns:
+        Dictionary mapping of {sbml_species_names(usually the actual observable name): sbml_species_ids(ids used in the solver)}
+    """
+    # read file
+    sbml_reader = libsbml.SBMLReader()
+    sbml_doc = sbml_reader.readSBML(sbml_fp)
+    sbml_model_object = sbml_doc.getModel()
+
+    # parse and handle names/ids
+    sbml_species_ids = []
+    for spec in sbml_model_object.getListOfSpecies():
+        spec_name = spec.name
+        if not spec_name:
+            spec.name = spec.getId()
+        if not spec.name == "":
+            sbml_species_ids.append(spec)
+    names = list(map(lambda s: s.name, sbml_species_ids))
+    species_ids = [spec.getId() for spec in sbml_species_ids]
+
+    return dict(zip(names, species_ids))
 
 
 def download_file(source_blob_path: str, out_dir: str, bucket_name: str) -> str:

@@ -1,11 +1,10 @@
 # -- api models -- #
-from enum import Enum
 from typing import List, Optional, Any, Dict, Union
 
 from pydantic import Field
 from fastapi.responses import FileResponse
 
-from api.shared_api import BaseModel, Job, JobStatus
+from shared_api import BaseModel, Job, JobStatus
 
 
 # PENDING JOBS:

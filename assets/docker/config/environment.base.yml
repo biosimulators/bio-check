@@ -41,3 +41,5 @@ dependencies:
       - toml==0.10.2
       - typing-extensions==4.12.2
       - urllib3==2.2.3
+      - setuptools
+      - wheel

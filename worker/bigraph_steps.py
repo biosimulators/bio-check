@@ -1,50 +1,53 @@
+import logging
 import os
 import re
 import uuid
+from abc import abstractmethod
 from logging import warn
-from tempfile import mkdtemp
-from typing import Dict
 from uuid import uuid4
 from typing import *
 
 from process_bigraph import Step, Process
-from process_bigraph.composite import ProcessTypes, Emitter
+from process_bigraph.composite import Emitter, ProcessTypes
 from pymongo import ASCENDING, MongoClient
 from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
+
+from io_worker import get_sbml_species_mapping
+from verification import SBML_EXECUTORS
+from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+from log_config import setup_logging
+
+logger = logging.getLogger("biochecknet.bigraph_steps.main.log")
+setup_logging(logger)
+
 try:
     import smoldyn as sm
     from smoldyn._smoldyn import MolecState
 except:
-    raise ImportError(
+    logger.warning(str(ImportError(
         '\nPLEASE NOTE: Smoldyn is not correctly installed on your system which prevents you from ' 
         'using the SmoldynProcess. Please refer to the README for further information '
         'on installing Smoldyn.'
-    )
-
-from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from shared import PROCESS_TYPES
-
-CORE = PROCESS_TYPES
-process_registry = ProcessTypes().process_registry
+    )))
 
 
+APP_PROCESS_REGISTRY = ProcessTypes()
 HISTORY_INDEXES = [
     'data.time',
     [('experiment_id', ASCENDING),
      ('data.time', ASCENDING),
      ('_id', ASCENDING)],
 ]
-
 CONFIGURATION_INDEXES = [
     'experiment_id',
 ]
-
 SECRETS_PATH = 'secrets.json'
+process_registry = APP_PROCESS_REGISTRY.process_registry
 
 
-# -- emitters --
+# -- emitters -- #
 
 class MongoDatabaseEmitter(Emitter):
     client_dict: Dict[int, MongoClient] = {}
@@ -113,7 +116,7 @@ class MongoDatabaseEmitter(Emitter):
         return {}
 
 
-# -- steps --
+# -- simulators -- #
 
 class SmoldynStep(Step):
     config_schema = {
@@ -131,7 +134,7 @@ class SmoldynStep(Step):
         # TODO: Add a more nuanced way to describe and configure dynamic difcs given species interaction patterns
     }
 
-    def __init__(self, config: Dict[str, Any] = None, core=CORE):
+    def __init__(self, config: Dict[str, Any] = None, core=APP_PROCESS_REGISTRY):
         """A new instance of `SmoldynProcess` based on the `config` that is passed. The schema for the config to be passed in
             this object's constructor is as follows:
 
@@ -393,7 +396,7 @@ class SimulariumSmoldynStep(Step):
         'agent_display_parameters': 'maybe[tree[string]]'  # as per biosim simularium
     }
 
-    def __init__(self, config=None, core=CORE):
+    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
         super().__init__(config=config, core=core)
 
         # io params
@@ -482,19 +485,6 @@ class SimulariumSmoldynStep(Step):
         return None
 
 
-# register processes
-
-REGISTERED_PROCESSES = [
-    ('smoldyn_step', SmoldynStep),
-    ('simularium_smoldyn_step', SimulariumSmoldynStep)
-]
-for process_name, process_class in REGISTERED_PROCESSES:
-    try:
-        CORE.process_registry.register(process_name, process_class)
-    except Exception as e:
-        print(f'{process_name} could not be registered because {str(e)}')
-
-
 # -- utils --
 
 def generate_simularium_file(
@@ -568,4 +558,121 @@ def make_fallback_serializer_function() -> Callable:
                     f'inefficient.')
         return serializer.serialize(obj)
     return default
+
+
+# -- Output data generators: -- #
+
+class OutputGenerator(Step):
+    config_schema = {
+        'input_file': 'string',
+        'context': 'string',
+    }
+
+    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
+        super().__init__(config, core)
+        self.input_file = self.config['input_file']
+        self.context = self.config.get('context')
+        if self.context is None:
+            raise ValueError("context (i.e., simulator name) must be specified in this processes' config.")
+
+    @abstractmethod
+    def generate(self, parameters: Optional[Dict[str, Any]] = None):
+        """Abstract method for generating output data upon which to base analysis from based on its origin.
+
+        This can be used for logic of any scope.
+        NOTE: args and kwargs are not defined in this function, but rather should be defined by the
+        inheriting class' constructor: i,e; start_time, etc.
+
+        Kwargs relate only to the given simulator api you are working with.
+        """
+        pass
+
+    def initial_state(self):
+        # base class method
+        return {
+            'output_data': {}
+        }
+
+    def inputs(self):
+        return {
+            'parameters': 'tree[any]'
+        }
+
+    def outputs(self):
+        return {
+            'output_data': 'tree[any]'
+        }
+
+    def update(self, state):
+        parameters = state.get('parameters') if isinstance(state, dict) else {}
+        data = self.generate(parameters)
+        return {'output_data': data}
+
+
+class TimeCourseOutputGenerator(OutputGenerator):
+    # NOTE: we include defaults here as opposed to constructor for the purpose of deliberate declaration within .json state representation.
+    config_schema = {
+        # 'input_file': 'string',
+        # 'context': 'string',
+        'start_time': {
+            '_type': 'integer',
+            '_default': 0
+        },
+        'end_time': {
+            '_type': 'integer',
+            '_default': 10
+        },
+        'num_steps': {
+            '_type': 'integer',
+            '_default': 100
+        },
+    }
+
+    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
+        super().__init__(config, core)
+        if not self.input_file.endswith('.xml'):
+            raise ValueError('Input file must be a valid SBML (XML) file')
+
+        self.start_time = self.config.get('start_time')
+        self.end_time = self.config.get('end_time')
+        self.num_steps = self.config.get('num_steps')
+        self.species_mapping = get_sbml_species_mapping(self.input_file)
+
+    def initial_state(self):
+        # TODO: implement this
+        pass
+
+    def generate(self, parameters: Optional[Dict[str, Any]] = None):
+        # TODO: add kwargs (initial state specs) here
+        executor = SBML_EXECUTORS[self.context]
+        data = executor(self.input_file, self.start_time, self.end_time, self.num_steps)
+
+        return data
+
+
+def register_implementation_addresses(
+        implementations: List[Tuple[str, Step | Process | Emitter]],
+        core_registry: ProcessTypes
+) -> List[str]:
+    for process_address, process_class in implementations:
+        try:
+            core_registry.process_registry.register(process_address, process_class)
+            return list(core_registry.process_registry.registry.keys())
+        except:
+            logger.warning(f'could not register {process_class} as {process_address}')
+
+
+BIGRAPH_IMPLEMENTATIONS = [
+    ('output-generator', OutputGenerator),
+    ('time-course-output-generator', TimeCourseOutputGenerator),
+    ('smoldyn_step', SmoldynStep),
+    ('simularium_smoldyn_step', SimulariumSmoldynStep),
+    ('mongo-emitter', MongoDatabaseEmitter)
+]
+
+BIGRAPH_ADDRESS_REGISTRY = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS, APP_PROCESS_REGISTRY)
+
+
+
+
 

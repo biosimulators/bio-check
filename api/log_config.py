@@ -10,13 +10,10 @@ def start_logging(fname: str):
     )
 
 
-def setup_logging():
+def setup_logging(logger: logging.Logger):
     # Create a root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-
-    # Create a uvicorn access logger
-    uvicorn_logger = logging.getLogger("uvicorn.access")
 
     # Create a console handler
     console_handler = logging.StreamHandler(stream=sys.stdout)
@@ -32,4 +29,4 @@ def setup_logging():
 
     # Add the console handler to the root logger and uvicorn logger
     root_logger.addHandler(console_handler)
-    uvicorn_logger.addHandler(console_handler)
+    logger.addHandler(console_handler)

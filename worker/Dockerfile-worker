@@ -4,15 +4,11 @@
 # FROM ghcr.io/biosimulators/bio-compose-server-base:latest
 
 # TODO: change this back to latest once stable
-FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.5-test
+FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.5
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
-COPY ./ .
-
-ENV TEST_SBML_FP="test_fixtures/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
-    TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
-    TEST_OMEX_FP="test_fixtures/Elowitz-Nature-2000-Repressilator.omex"
+COPY . .
 
 # TODO: perhaps run --no-install-recommends?
 RUN source ~/.bashrc \
@@ -47,11 +43,10 @@ RUN source ~/.bashrc \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
-    && conda env update -n server -f config/environment.worker.yml \
-    && conda run pip install -e . --root-user-action=ignore \
+    && conda env update -n server -f environment.worker.yml \
     && conda env export --no-builds > config/environment.worker.lock.yml \
     && conda clean --all --json -y \
-    && rm -f config/environment.worker.yml \
+    && rm -f environment.worker.yml \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && apt-get clean

@@ -7,7 +7,7 @@
 
 ## **For Developers:**
 
-### This application (`bio_check`) uses a microservices architecture which presents the following libraries:
+### This application ("BioCompose") uses a microservices architecture which presents the following libraries:
 
 - `api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
 - `storage`: This library handles MongoDB configs as well as bucket-like storages for uploaded files.
@@ -28,8 +28,7 @@ the dependency network required by each simulator. See the following documentati
 ### Dependency management scopes are handled as follows:
 
 #### _*Locally/Dev*_:
-- Python poetry via `pyproject.toml` - the most stable/reproducible method, yet the farthest from what is actually happening in the service containers as they use conda.
-- Anaconda via `environment.yml` - the closest to local development at root level which micics what actually happens in the containers (conda deps tend to break more frequently than poetry.)
+- Anaconda via `environment.yml` - the closest to local development at root level which mimics what actually happens in the containers (conda deps tend to break more frequently than poetry.)
 
 _*Remotely in microservice containers*_:
 - Remote microservice container management is handled by `conda` via `environment.yml` files for the respective containers.
@@ -46,12 +45,17 @@ _*Remotely in microservice containers*_:
         BUCKET_NAME=bio-check-requests-1  # name of the bucket used in this app
 5. `cd ..`
 6. Pull and run the latest version of Mongo from the Docker Hub. (`docker run -d -it mongo:latest` or similar.)
-7. Run one of the following commands based on your preference:
+7. Create a conda env from the environment file at the root of this repo:
          
-        conda env create -n bio-compose-server-dev -f environment.yml
-        
-        # OR
-        poetry env use 3.10 && poetry install
+        conda env create -f environment.yml -y && conda activate bio-composer-server-dev
+8. Install pysces with conda and amici with pip:
+   
+        conda install -c conda-forge -c pysces pysces
+        conda run pip3 install biosimulators-amici  # installs both biosimulators and amici
+9. If using Smoldyn, there is a arm-based mac installation script in `assets/dev/` called `install-smoldyn-mac-silicon.sh`. So run the following:
+
+        sudo chmod +x ./assets/dev/scripts/install-smoldyn-mac-silicon.sh  # or whichever method you are using to install
+        ./assets/dev/scripts/install-smoldyn-mac-silicon.sh  # conda is configured to install Smoldyn into its environment
 
 
 ## Notes:
