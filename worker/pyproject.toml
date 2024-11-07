@@ -7,8 +7,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 
-[tool.setuptools.packages.find]
-where = ["service"]
+[tool.setuptools]
+packages = { find = { include = ["service*"] } }
 
 
 [build-system]
