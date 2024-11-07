@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - "main"
-      - "major-bigraph-refactor"
 
 jobs:
   test-microservices:
@@ -22,10 +21,9 @@ jobs:
       - name: Install deps and run tests
         run: |
           pip install --upgrade pip
-          pip install poetry 
-          poetry env use 3.10
-          poetry install --only=github
-          poetry run pytest
+          pip install -r assets/pipeline/config/requirements.github.ci.txt 
+          cd worker
+          python -B test_worker.py 
 
   build-base-image:
     runs-on: ubuntu-latest
@@ -59,7 +57,7 @@ jobs:
       - name: Extract API container version
         id: extract_api_version
         run: |
-          API_VERSION=$(python3 .github/parse_container_version.py api)
+          API_VERSION=$(python -B .github/parse_container_version.py api)
           echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
           echo "API Version: $API_VERSION"
 
@@ -67,7 +65,7 @@ jobs:
       - name: Extract worker container version
         id: extract_worker_version
         run: |
-          WORKER_VERSION=$(python3 .github/parse_container_version.py worker)
+          WORKER_VERSION=$(python -B .github/parse_container_version.py worker)
           echo "WORKER_VERSION=$WORKER_VERSION" >> $GITHUB_ENV
           echo "WORKER Version: $WORKER_VERSION"
 

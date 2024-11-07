@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import uuid
@@ -13,37 +14,37 @@ from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
+from io_worker import get_sbml_species_mapping
+from verification import SBML_EXECUTORS
+from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+from log_config import setup_logging
+
+logger = logging.getLogger("biochecknet.bigraph_steps.main.log")
+setup_logging(logger)
+
 try:
     import smoldyn as sm
     from smoldyn._smoldyn import MolecState
 except:
-    raise ImportError(
+    logger.warning(str(ImportError(
         '\nPLEASE NOTE: Smoldyn is not correctly installed on your system which prevents you from ' 
         'using the SmoldynProcess. Please refer to the README for further information '
         'on installing Smoldyn.'
-    )
-
-from io_worker import get_sbml_species_mapping
-from verification import SBML_EXECUTORS
-from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+    )))
 
 
 APP_PROCESS_REGISTRY = ProcessTypes()
-process_registry = APP_PROCESS_REGISTRY.process_registry
-
-
 HISTORY_INDEXES = [
     'data.time',
     [('experiment_id', ASCENDING),
      ('data.time', ASCENDING),
      ('_id', ASCENDING)],
 ]
-
 CONFIGURATION_INDEXES = [
     'experiment_id',
 ]
-
 SECRETS_PATH = 'secrets.json'
+process_registry = APP_PROCESS_REGISTRY.process_registry
 
 
 # -- emitters -- #
@@ -649,7 +650,19 @@ class TimeCourseOutputGenerator(OutputGenerator):
         return data
 
 
-IMPLEMENTATIONS = [
+def register_implementation_addresses(
+        implementations: List[Tuple[str, Step | Process | Emitter]],
+        core_registry: ProcessTypes
+) -> List[str]:
+    for process_address, process_class in implementations:
+        try:
+            core_registry.process_registry.register(process_address, process_class)
+            return list(core_registry.process_registry.registry.keys())
+        except:
+            logger.warning(f'could not register {process_class} as {process_address}')
+
+
+BIGRAPH_IMPLEMENTATIONS = [
     ('output-generator', OutputGenerator),
     ('time-course-output-generator', TimeCourseOutputGenerator),
     ('smoldyn_step', SmoldynStep),
@@ -657,9 +670,9 @@ IMPLEMENTATIONS = [
     ('mongo-emitter', MongoDatabaseEmitter)
 ]
 
-for process_address, process_class in IMPLEMENTATIONS:
-    try:
-        APP_PROCESS_REGISTRY.process_registry.register(process_address, process_class)
-    except:
-        print(f'could not register {process_class} as {process_address}')
+BIGRAPH_ADDRESS_REGISTRY = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS, APP_PROCESS_REGISTRY)
+
+
+
+
 

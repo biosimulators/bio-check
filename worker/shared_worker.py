@@ -178,21 +178,21 @@ class MongoDbConnector(DatabaseConnector):
         result = coll.find_one(kwargs.copy())
         return result
 
-    async def write(self, collection_name: DatabaseCollections | str, **kwargs):
+    async def write(self, collection_name: DatabaseCollections | str, return_document=False, **kwargs):
         """
             Args:
                 collection_name: str: collection name in mongodb
                 **kwargs: mongo db `insert_one` query defining the document where the key is as in the key of the document.
         """
         coll_name = self._parse_enum_input(collection_name)
-
         for k in kwargs.keys():
             v = kwargs[k]
             kwargs[k] = self._parse_enum_input(v)
 
         coll = self.get_collection(coll_name)
         result = coll.insert_one(kwargs.copy())
-        return kwargs
+
+        return coll.find_one(kwargs.copy()) if return_document else kwargs
 
     def get_collection(self, collection_name: str) -> Collection:
         try:

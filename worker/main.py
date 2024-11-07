@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from shared_worker import MongoDbConnector
 from log_config import setup_logging
 from job import Supervisor
-from bigraph_steps import APP_PROCESS_REGISTRY
+from bigraph_steps import BIGRAPH_ADDRESS_REGISTRY
 
 
 # set up dev env if possible
@@ -31,18 +31,23 @@ DB_NAME = "service_requests"
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
 
-def store_registered_addresses():
-    # TODO: here, get the registered process addresses as a list and save it to mongo under process_registry
-    registered_addresses = db_connector.get_registered_addresses()
+async def store_registered_addresses(supervisor: Supervisor):
+    # store list of process addresses that is available to the client via mongodb:
+    confirmation = await supervisor.db_connector.write(
+        collection_name="bigraph_registry",
+        registry_addresses=BIGRAPH_ADDRESS_REGISTRY,
+        timestamp=supervisor.db_connector.timestamp(),
+        return_document=True
+    )
+    return confirmation
 
 
 async def main(max_retries=MAX_RETRIES):
-    # set timeout counter
     n_retries = 0
-
-    # create supervisor
     supervisor = Supervisor(db_connector=db_connector)
-    # supervisor = CompositionSupervisor(db_connector=db_connector)
+    address_registration = await store_registered_addresses(supervisor)
+    if not address_registration:
+        logger.error("Failed to register addresses.")
 
     while True:
         # no job has come in a while
@@ -54,5 +59,5 @@ async def main(max_retries=MAX_RETRIES):
         n_retries += 1
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())
