@@ -9,7 +9,7 @@ tarball_name=smoldyn-2.73-mac.tgz
 dist_dir=${tarball_name%.tgz}
 
 # uninstall existing version
-conda run pip uninstall smoldyn --root-user-action=ignore || return
+conda run pip-autoremove smoldyn -y || return
 
 # download the appropriate distribution from smoldyn
 wget $dist_url
@@ -23,9 +23,7 @@ rm $tarball_name
 # install smoldyn from the source
 cd $dist_dir || return
 
-sudo chmod +x ./install.sh
-
-if conda run ./install.sh; then
+if conda run sudo -H ./install.sh; then
   cd ..
   # remove the smoldyn dist
   rm -r $dist_dir

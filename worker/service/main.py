@@ -28,10 +28,10 @@ DB_NAME = "service_requests"
 # shared db_connector
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
-# TODO: here, get the registered process addresses as a list and save it to mongo under process_registry
 
 def store_registered_addresses():
-
+    # TODO: here, get the registered process addresses as a list and save it to mongo under process_registry
+    pass
 
 
 async def main(max_retries=MAX_RETRIES):

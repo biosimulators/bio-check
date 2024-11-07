@@ -1,4 +1,4 @@
-name: bio-compose-server-dev
+name: bio-compose-server
 channels:
   - pysces
   - conda-forge
@@ -7,6 +7,7 @@ channels:
 dependencies:
   - python=3.10
   - pip:
+      - pip-autoremove
       - requests-toolbelt
       - python-dotenv
       - google-cloud-storage
@@ -20,9 +21,10 @@ dependencies:
       - uvicorn
       - pyyaml
       - simulariumio
+      - copasi-basico
+      - tellurium
       - biosimulators-copasi
       - biosimulators-tellurium
-      - biosimulators-pysces
       - seaborn
       - jupyterlab
       - process-bigraph
