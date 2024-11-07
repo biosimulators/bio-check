@@ -1,7 +1,5 @@
 name: Deploy Microservices
 
-# on:
-#   workflow_dispatch:
 on:
   workflow_run:
     workflows: ["Deploy Base Image"]
