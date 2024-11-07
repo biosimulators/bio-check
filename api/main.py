@@ -36,7 +36,7 @@ setup_logging(logger)
 
 # -- load dev env -- #
 
-dotenv.load_dotenv("../../assets/dev/config/.env_dev")  # NOTE: create an env config at this filepath if dev
+dotenv.load_dotenv("../assets/dev/config/.env_dev")  # NOTE: create an env config at this filepath if dev
 
 
 # -- constraints -- #

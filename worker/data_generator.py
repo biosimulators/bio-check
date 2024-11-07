@@ -4,13 +4,12 @@ from pprint import pformat
 from typing import *
 
 import libsbml
-from process_bigraph import Composite
+from process_bigraph import Composite, ProcessTypes
 
-from service import APP_PROCESS_REGISTRY
-from service.log_config import setup_logging
-from service.shared_worker import handle_exception
-from service.compatible import COMPATIBLE_UTC_SIMULATORS
-from service.io_worker import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping
+from log_config import setup_logging
+from shared_worker import handle_exception
+from compatible import COMPATIBLE_UTC_SIMULATORS
+from io_worker import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping
 
 # logging TODO: implement this.
 logger = logging.getLogger("biochecknet.worker.data_generator.log")
@@ -189,6 +188,7 @@ def generate_time_course_data(
         start: int,
         end: int,
         steps: int,
+        core: ProcessTypes,
         simulators: List[str] = None,
         parameters: Dict[str, Any] = None,
         expected_results_fp: str = None,
@@ -204,7 +204,7 @@ def generate_time_course_data(
             num_steps=steps
         ) for simulator in requested_sims
     }
-    simulation = Composite({'state': simulation_spec, 'emitter': {'mode': 'all'}}, core=APP_PROCESS_REGISTRY)
+    simulation = Composite({'state': simulation_spec, 'emitter': {'mode': 'all'}}, core=core)
 
     input_filename = input_fp.split("/")[-1].split(".")[0]
     if out_dir:

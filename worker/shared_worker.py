@@ -18,7 +18,7 @@ from pymongo.database import Database
 # -- globally-shared content-- #
 
 
-load_dotenv('../../assets/dev/config/.env_dev')
+load_dotenv('../assets/dev/config/.env_dev')
 
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
@@ -29,8 +29,8 @@ PROCESS_TYPES = ProcessTypes()  # CORE
 # -- shared functions -- #
 
 def check_jobs(coll):
-    from worker.service.main import db_connector as conn
-    from worker.service.job import Supervisor
+    from worker.main import db_connector as conn
+    from worker.job import Supervisor
     supervisor = Supervisor(conn)
     db_connector = supervisor.db_connector
     not_complete = []

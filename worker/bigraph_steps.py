@@ -7,7 +7,7 @@ from uuid import uuid4
 from typing import *
 
 from process_bigraph import Step, Process
-from process_bigraph.composite import Emitter
+from process_bigraph.composite import Emitter, ProcessTypes
 from pymongo import ASCENDING, MongoClient
 from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
@@ -23,11 +23,12 @@ except:
         'on installing Smoldyn.'
     )
 
-from service.io_worker import get_sbml_species_mapping
-from service.verification import SBML_EXECUTORS
-from service.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from service import APP_PROCESS_REGISTRY
+from io_worker import get_sbml_species_mapping
+from verification import SBML_EXECUTORS
+from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
 
+
+APP_PROCESS_REGISTRY = ProcessTypes()
 process_registry = APP_PROCESS_REGISTRY.process_registry
 
 
@@ -646,3 +647,19 @@ class TimeCourseOutputGenerator(OutputGenerator):
         data = executor(self.input_file, self.start_time, self.end_time, self.num_steps)
 
         return data
+
+
+IMPLEMENTATIONS = [
+    ('output-generator', OutputGenerator),
+    ('time-course-output-generator', TimeCourseOutputGenerator),
+    ('smoldyn_step', SmoldynStep),
+    ('simularium_smoldyn_step', SimulariumSmoldynStep),
+    ('mongo-emitter', MongoDatabaseEmitter)
+]
+
+for process_address, process_class in IMPLEMENTATIONS:
+    try:
+        APP_PROCESS_REGISTRY.process_registry.register(process_address, process_class)
+    except:
+        print(f'could not register {process_class} as {process_address}')
+

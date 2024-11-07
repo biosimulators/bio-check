@@ -4,7 +4,7 @@ from typing import List, Optional, Any, Dict, Union
 from pydantic import Field
 from fastapi.responses import FileResponse
 
-from service.shared_api import BaseModel, Job, JobStatus
+from shared_api import BaseModel, Job, JobStatus
 
 
 # PENDING JOBS:

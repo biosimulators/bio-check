@@ -1,4 +1,4 @@
-name: bio-compose-server
+name: server
 channels:
   - pysces
   - conda-forge

@@ -44,7 +44,6 @@ RUN source ~/.bashrc \
     libboost-math-dev \
     libboost-serialization-dev \
     && conda env update -n server -f environment.worker.yml \
-    && conda run pip install -e . --root-user-action=ignore \
     && conda env export --no-builds > config/environment.worker.lock.yml \
     && conda clean --all --json -y \
     && rm -f environment.worker.yml \

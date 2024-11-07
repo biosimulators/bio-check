@@ -11,18 +11,11 @@ function construct_env {
   conda run pip3 install --upgrade pip
   conda run pip install --upgrade pip
   conda env create -f ./environment.yml -y
-  conda run -n bio-compose-server pip3 install --upgrade pip
-  conda run -n bio-compose-server pip install --upgrade pip
-  ./assets/dev/scripts/install-smoldyn-mac-silicon.sh || poetry run pip3 install smoldyn
-  conda run -n bio-compose-server pip3 install amici biosimulators-amici  # biosimulators-pysces
+  conda run -n server pip3 install --upgrade pip
+  conda run -n server pip install --upgrade pip
+  ./assets/dev/scripts/install-smoldyn-mac-silicon.sh
+  conda run -n server pip3 install amici biosimulators-amici
   # conda install -n bio-compose-server -c conda-forge -c pysces pysces -y
-  # poetry config virtualenvs.create false
-  # sudo conda run -n bio-compose-server poetry env use 3.10
-  # sudo conda run -n bio-compose-server poetry lock
-  # sudo conda run -n bio-compose-server poetry install --only=dev
-  .
-  # poetry run pip install ./api ./worker
-
   echo "Environment created!"
 }
 

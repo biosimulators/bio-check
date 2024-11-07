@@ -24,5 +24,5 @@ test.ipynb
 poetry.lock
 *_parsetab.py
 condaenv.n_dn60fa.requirements.txt
-worker/service/.worker_STABLE
+worker/.worker_STABLE
 build

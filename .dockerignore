@@ -34,7 +34,7 @@ unused.txt
 !enter.sh
 !add_deps.sh
 bio_check/.env
-worker/service/shared_worker.py
+worker/shared_worker.py
 .env_dev
 tests.ipynb
 __pycache__
@@ -43,5 +43,5 @@ api/__pycache__
 worker/__pycache__
 test.ipynb
 worker/.composition
-worker/service/.worker_STABLE
+worker/.worker_STABLE
 *.egg-info
