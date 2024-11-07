@@ -55,6 +55,15 @@ pydantic = "^2.9.2"
 uvicorn = "^0.32.0"
 pyyaml = "^6.0.2"
 pytest = "^8.3.3"
+simulariumio = "^1.11.0"
+copasi-basico = "^0.78"
+tellurium = "^2.2.10"
+biosimulators-copasi = "^0.2.22"
+biosimulators-tellurium = "^0.1.44"
+seaborn = "^0.13.2"
+jupyterlab = "^4.3.0"
+process-bigraph = "^0.0.22"
+bigraph-schema = "^0.0.45"
 
 
 [tool.poetry.group.worker.dependencies]
