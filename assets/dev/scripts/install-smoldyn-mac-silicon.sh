@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 
 # The following script serves as a utility for installing this repository with the Smoldyn requirement on a Silicon Mac
@@ -23,7 +23,9 @@ rm $tarball_name
 # install smoldyn from the source
 cd $dist_dir || return
 
-if conda run sudo -H ./install.sh; then
+sudo chmod +x ./install.sh
+
+if conda run ./install.sh; then
   cd ..
   # remove the smoldyn dist
   rm -r $dist_dir
