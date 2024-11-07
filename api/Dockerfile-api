@@ -8,18 +8,18 @@ FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.5
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
-COPY .. .
+COPY . .
 
 EXPOSE 3001
 
 RUN source ~/.bashrc \
-    && conda env update -n server -f config/environment.api.yml \
+    && conda env update -n server -f environment.api.yml \
     && conda run pip install -e . --root-user-action=ignore \
     && conda env export --no-builds > config/environment.api.lock.yml \
     && rm -f spec/openapi_3_1_0_generated.yaml \
     && conda run python3 openapi_spec.py \
     && conda clean --all --json -y \
-    && rm -f config/environment.api.yml
+    && rm -f environment.api.yml
 
 # RUN source ~/.bashrc \
 #     && poetry install --without=composition,dev,worker --no-cache

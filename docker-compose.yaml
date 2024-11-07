@@ -13,8 +13,8 @@ services:
 
   api:
     build:
-      context: ./api/service
-      dockerfile: api/service/Dockerfile-api
+      context: ./api
+      dockerfile: Dockerfile-api
     image: bio-compose-server-api:0.0.1  # .9  ghcr.io/biosimulators/bio-check-compose_api:1.11.11  # .9
     container_name: api
     environment:
@@ -31,8 +31,8 @@ services:
 
   worker:
     build:
-      context: ./worker/service
-      dockerfile: worker/service/Dockerfile-worker
+      context: ./worker
+      dockerfile: Dockerfile-worker
     image: bio-compose-server-worker:0.0.1  # ghcr.io/biosimulators/bio-check-compose_worker:1.11.9  # .7
     container_name: worker
     environment:
