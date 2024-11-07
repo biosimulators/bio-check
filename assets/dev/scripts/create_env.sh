@@ -26,6 +26,9 @@ function install_additional_deps {
   else
     conda run pip install smoldyn
   fi
+  pip cache purge
+  pip install -e ./api \
+    && pip install -e ./worker
 }
 
 function create_env {
