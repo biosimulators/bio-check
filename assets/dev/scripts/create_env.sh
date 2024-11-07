@@ -8,18 +8,20 @@ function construct_env {
   arm_platform=$(uname -a | grep "Darwin")
   echo "Creating environment from ./environment.yml on $arm_platform..."
   source /Users/alexanderpatrie/miniconda3/etc/profile.d/conda.sh
-  conda clean --all -y
-  conda run pip cache purge
-  conda run pip3 cache purge || echo ""
+
+  # update base pip
   conda run pip3 install --upgrade pip
   conda run pip install --upgrade pip
+
+  # create and activate env
   conda env create -f ./environment.yml -y
   conda activate bio-compose-server
+
+  # install pysces and poetry deps
   conda install -n bio-compose-server -c conda-forge -c pysces pysces -y
-  conda run -n bio-compose-server
   poetry config virtualenvs.create false
-  conda run -n bio-compose-server poetry env use 3.10
-  conda run -n bio-compose-server poetry lock
+  sudo conda run -n bio-compose-server poetry env use 3.10
+  sudo conda run -n bio-compose-server poetry lock
   sudo conda run -n bio-compose-server poetry install --only=dev
   ./assets/dev/scripts/install-smoldyn-mac-silicon.sh || poetry run pip3 install smoldyn
   sudo conda run -n bio-compose-server poetry run pip3 install amici biosimulators-amici biosimulators-pysces
