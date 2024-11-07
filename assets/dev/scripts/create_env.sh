@@ -20,8 +20,7 @@ function construct_env {
   conda run -n bio-compose-server poetry lock
   sudo conda run -n bio-compose-server poetry install --only=dev
   conda activate bio-compose-server
-  poetry run pip3 cache purge
-  sudo conda run -n bio-compose-server ./assets/dev/scripts/install-smoldyn-mac-silicon.sh || poetry run pip3 install smoldyn
+  ./assets/dev/scripts/install-smoldyn-mac-silicon.sh || poetry run pip3 install smoldyn
   poetry lock
   poetry install --only=dev
   conda run -n bio-compose-server sudo poetry run pip3 install amici biosimulators-amici biosimulators-pysces
