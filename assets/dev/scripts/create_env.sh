@@ -5,15 +5,28 @@
 
 
 function construct_env {
-  echo "Creating environment from ./environment.yml..."
+  arm_platform=$(uname -a | grep "Darwin")
+  echo "Creating environment from ./environment.yml on $arm_platform..."
   source /Users/alexanderpatrie/miniconda3/etc/profile.d/conda.sh
-  conda clean --all -y \
-    && conda run pip cache purge \
-    && conda run pip3 cache purge || echo "" \
-    && conda run pip3 install --upgrade pip \
-    && conda run pip install --upgrade pip \
-    && conda env create -f ./environment.yml -y \
-    && conda activate bio-compose-server
+  conda clean --all -y
+  conda run pip cache purge
+  conda run pip3 cache purge || echo ""
+  conda run pip3 install --upgrade pip
+  conda run pip install --upgrade pip
+  conda env create -f ./environment.yml -y
+  conda activate bio-compose-server
+  conda install -n bio-compose-server -c conda-forge -c pysces pysces -y
+  conda run -n bio-compose-server poetry env use 3.10
+  conda run -n bio-compose-server poetry lock
+  conda run -n bio-compose-server poetry install --only=dev
+  conda activate bio-compose-server
+  poetry run pip3 cache purge
+  conda run ./assets/dev/scripts/install-smoldyn-mac-silicon.sh || poetry run pip3 install smoldyn
+  poetry lock
+  poetry install --only=dev
+  poetry run pip3 install amici biosimulators-amici biosimulators-pysces
+  poetry run pip install ./api ./worker
+
   echo "Environment created!"
 }
 
@@ -27,8 +40,8 @@ function install_additional_deps {
     conda run pip install smoldyn
   fi
   pip cache purge
-  pip install -e ./api \
-    && pip install -e ./worker
+  pip install ./api \
+    && pip install ./worker
 }
 
 function create_env {
