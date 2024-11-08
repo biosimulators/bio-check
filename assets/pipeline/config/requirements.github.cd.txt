@@ -8,3 +8,4 @@ pip-autoremove
 requests-toolbelt
 google-cloud-storage
 python-multipart
+pymongo
