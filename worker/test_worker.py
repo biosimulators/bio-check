@@ -3,7 +3,7 @@ import pprint
 
 from dotenv import load_dotenv
 
-from worker.job import VerificationWorker, generate_time_course_data
+from job import VerificationWorker, generate_time_course_data
 
 
 load_dotenv('../assets/dev/config/.env_dev')

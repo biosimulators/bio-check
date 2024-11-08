@@ -4,21 +4,23 @@ kind: Kustomization
 
 namespace: biochecknet
 
-# CURRENT STABLE VERSIONS OF CONTAINERS: compose_api: 1.11.8, compose_worker: 1.11.6
+# CURRENT STABLE PRODUCTION VERSIONS OF CONTAINERS(pre-namespace change, pre-deps change):
+# api:
+# ghcr.io/biosimulators/bio-check-compose_api:1.11.9
+# worker:
+# - name: ghcr.io/biosimulators/bio-check-compose_worker:1.11.7
 
 images:
 - name: mongo
   newTag: 8.0-rc
 - name: ghcr.io/biosimulators/bio-check-api
-  newTag: 1.12.0
+  newTag: 0.0.1
+  # - name: ghcr.io/biosimulators/bio-check-compose_api
+  #   newTag: 1.11.9
 - name: ghcr.io/biosimulators/bio-check-compose_worker
-  newTag: 1.12.0
-
-# THIS IS THE STABLE(ish) CONTENT(pre conda addition)
-# - name: ghcr.io/biosimulators/bio-check-compose_api
-#   newTag: 1.11.9
-# - name: ghcr.io/biosimulators/bio-check-compose_worker
-#   newTag: 1.11.7
+  newTag: 0.0.1
+  # - name: ghcr.io/biosimulators/bio-check-compose_worker
+  #   newTag: 1.11.7
 
 replicas:
 - count: 1

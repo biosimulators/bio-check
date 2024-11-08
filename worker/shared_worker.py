@@ -29,8 +29,8 @@ PROCESS_TYPES = ProcessTypes()  # CORE
 # -- shared functions -- #
 
 def check_jobs(coll):
-    from worker.main import db_connector as conn
-    from worker.job import Supervisor
+    from main import db_connector as conn
+    from job import Supervisor
     supervisor = Supervisor(conn)
     db_connector = supervisor.db_connector
     not_complete = []
