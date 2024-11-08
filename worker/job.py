@@ -8,18 +8,21 @@ from typing import *
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
+from process_bigraph import ProcessTypes, pp
 from pymongo.collection import Collection as MongoCollection
 
 from shared_worker import MongoDbConnector, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
 from log_config import setup_logging
 from io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
-from verification import (
+from data_generator import (
+    generate_time_course_data,
+    run_smoldyn,
+    handle_sbml_exception,
     generate_biosimulator_utc_outputs,
-    get_output_stack,
-    sbml_output_stack,
     generate_sbml_utc_outputs,
+    get_output_stack,
+    sbml_output_stack
 )
-from data_generator import generate_time_course_data, run_smoldyn, handle_sbml_exception
 
 
 # for dev only
@@ -31,13 +34,49 @@ logger = logging.getLogger("biochecknet.worker.job.log")
 setup_logging(logger)
 
 
+def register_implementation_addresses(
+        implementations: List[Tuple[str, str]],
+        core_registry: ProcessTypes
+) -> Tuple[ProcessTypes, List[str]]:
+    print(f'The implementations:\n{implementations}')
+    for process_name, class_name in implementations:
+        print(f'\nThe current registry:\n{core_registry.process_registry.registry.keys()}')
+        print(f'\nThe process to register:\n{process_name}')
+        try:
+            import_statement = f'data_generator'
+            module = __import__(import_statement)
+            bigraph_class = getattr(module, class_name)
+            print(f'The bigraph class:\n{bigraph_class}')
+            # Register the process
+            core_registry.process_registry.register(process_name, bigraph_class)
+            print(f'{class_name} registered as {process_name}')
+        except Exception as e:
+            print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
+            continue
+
+    return core_registry, list(core_registry.process_registry.registry.keys())
+
+
+_CORE = ProcessTypes()
+BIGRAPH_IMPLEMENTATIONS = [
+    ('output-generator', 'OutputGenerator'),
+    ('time-course-output-generator', 'TimeCourseOutputGenerator'),
+    ('smoldyn_step', 'SmoldynStep'),
+    ('simularium_smoldyn_step', 'SimulariumSmoldynStep'),
+    ('mongo-emitter', 'MongoDatabaseEmitter')
+]
+
+APP_PROCESS_REGISTRY, REGISTERED_BIGRAPH_ADDRESSES = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS, _CORE)
+
+
 class Supervisor:
-    def __init__(self, db_connector: MongoDbConnector, queue_timer: int = 10, preferred_queue_index: int = 0):
+    def __init__(self, db_connector: MongoDbConnector, app_process_registry=None, queue_timer: int = 10, preferred_queue_index: int = 0):
         self.db_connector = db_connector
         self.queue_timer = queue_timer
         self.preferred_queue_index = preferred_queue_index
         self.job_queue = self.db_connector.pending_jobs()
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
+        self.app_process_registry = app_process_registry
 
     async def check_jobs(self) -> int:
         """Returns non-zero if max retries reached, zero otherwise.
@@ -153,14 +192,26 @@ class Supervisor:
 
         return job is not None
 
+    async def store_registered_addresses(self):
+        # store list of process addresses that is available to the client via mongodb:
+        confirmation = await self.db_connector.write(
+            collection_name="bigraph_registry",
+            registered_addresses=APP_PROCESS_REGISTRY,
+            timestamp=self.db_connector.timestamp(),
+            version="latest",
+            return_document=True
+        )
+        return confirmation
+
 
 class Worker(ABC):
     job_params: Dict
     job_id: str
     job_result: Dict | None
     job_failed: bool
+    supervisor: Supervisor
 
-    def __init__(self, job: Dict):
+    def __init__(self, job: Dict, supervisor: Supervisor = None):
         """
         Args:
             job: job parameters received from the supervisor (who gets it from the db) which is a document from the pending_jobs collection within mongo.
@@ -172,6 +223,7 @@ class Worker(ABC):
 
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         self.worker_id = unique_id()
+        self.supervisor = supervisor
 
     @abstractmethod
     async def run(self):
@@ -233,8 +285,8 @@ class SimulationRunWorker(Worker):
 
 
 class VerificationWorker(Worker):
-    def __init__(self, job: Dict):
-        super().__init__(job=job)
+    def __init__(self, job: Dict, supervisor: Supervisor = None):
+        super().__init__(job=job, supervisor=supervisor)
 
     async def run(self, selection_list: List[str] = None) -> Dict:
         # process simulation
@@ -644,7 +696,15 @@ class VerificationWorker(Worker):
     def _generate_formatted_sbml_outputs(self, sbml_filepath, start, dur, steps, simulators, ground_truth=None):
         # TODO: stable content is commented-out below. Currently placing alternate function in place of stable content.
         # return generate_sbml_utc_outputs(sbml_fp=sbml_filepath, start=start, dur=dur, steps=steps, simulators=simulators, truth=ground_truth)
-        return generate_time_course_data(input_fp=sbml_filepath, start=start, end=dur, steps=steps, simulators=simulators, expected_results_fp=ground_truth)
+        return generate_time_course_data(
+            input_fp=sbml_filepath,
+            start=start,
+            end=dur,
+            steps=steps,
+            core=APP_PROCESS_REGISTRY,
+            simulators=simulators,
+            expected_results_fp=ground_truth,
+        )
 
     def _generate_sbml_utc_species_comparison(self, output_data, species_name, ground_truth=None, rTol=None, aTol=None):
         # outputs = sbml_output_stack(spec_name=species_name, output=output_data)

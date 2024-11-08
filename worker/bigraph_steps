@@ -15,9 +15,10 @@ from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
 from io_worker import get_sbml_species_mapping
-from verification import SBML_EXECUTORS
+from data_generator import SBML_EXECUTORS
 from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
 from log_config import setup_logging
+
 
 logger = logging.getLogger("biochecknet.bigraph_steps.main.log")
 setup_logging(logger)
@@ -32,8 +33,6 @@ except:
         'on installing Smoldyn.'
     )))
 
-
-APP_PROCESS_REGISTRY = ProcessTypes()
 HISTORY_INDEXES = [
     'data.time',
     [('experiment_id', ASCENDING),
@@ -44,7 +43,6 @@ CONFIGURATION_INDEXES = [
     'experiment_id',
 ]
 SECRETS_PATH = 'secrets.json'
-process_registry = APP_PROCESS_REGISTRY.process_registry
 
 
 # -- emitters -- #
@@ -67,7 +65,7 @@ class MongoDatabaseEmitter(Emitter):
         for column in columns:
             table.create_index(column)
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config, core) -> None:
         """Config may have 'host' and 'database' items. The config passed is expected to be:
 
                 {'experiment_id':,
@@ -77,6 +75,7 @@ class MongoDatabaseEmitter(Emitter):
                 TODO: Automate this process for the user in builder
         """
         super().__init__(config)
+        self.core = core
         self.experiment_id = self.config.get('experiment_id', str(uuid.uuid4()))
         # In the worst case, `breakdown_data` can underestimate the size of
         # data by a factor of 4: len(str(0)) == 1 but 0 is a 4-byte int.
@@ -99,7 +98,7 @@ class MongoDatabaseEmitter(Emitter):
         self.create_indexes(self.history_collection, HISTORY_INDEXES)
         self.create_indexes(self.configuration, CONFIGURATION_INDEXES)
 
-        self.fallback_serializer = make_fallback_serializer_function()
+        self.fallback_serializer = make_fallback_serializer_function(self.core)
 
     def query(self, query):
         return self.history_collection.find_one(query)
@@ -134,7 +133,7 @@ class SmoldynStep(Step):
         # TODO: Add a more nuanced way to describe and configure dynamic difcs given species interaction patterns
     }
 
-    def __init__(self, config: Dict[str, Any] = None, core=APP_PROCESS_REGISTRY):
+    def __init__(self, config, core):
         """A new instance of `SmoldynProcess` based on the `config` that is passed. The schema for the config to be passed in
             this object's constructor is as follows:
 
@@ -396,7 +395,7 @@ class SimulariumSmoldynStep(Step):
         'agent_display_parameters': 'maybe[tree[string]]'  # as per biosim simularium
     }
 
-    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
+    def __init__(self, config, core):
         super().__init__(config=config, core=core)
 
         # io params
@@ -524,7 +523,7 @@ def generate_simularium_file(
     })
 
 
-def make_fallback_serializer_function() -> Callable:
+def make_fallback_serializer_function(process_registry) -> Callable:
     """Creates a fallback function that is called by orjson on data of
     types that are not natively supported. Define and register instances of
     :py:class:`vivarium.core.registry.Serializer()` with serialization
@@ -568,7 +567,7 @@ class OutputGenerator(Step):
         'context': 'string',
     }
 
-    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
+    def __init__(self, config, core):
         super().__init__(config, core)
         self.input_file = self.config['input_file']
         self.context = self.config.get('context')
@@ -628,7 +627,7 @@ class TimeCourseOutputGenerator(OutputGenerator):
         },
     }
 
-    def __init__(self, config=None, core=APP_PROCESS_REGISTRY):
+    def __init__(self, config, core):
         super().__init__(config, core)
         if not self.input_file.endswith('.xml'):
             raise ValueError('Input file must be a valid SBML (XML) file')
@@ -650,18 +649,6 @@ class TimeCourseOutputGenerator(OutputGenerator):
         return data
 
 
-def register_implementation_addresses(
-        implementations: List[Tuple[str, Step | Process | Emitter]],
-        core_registry: ProcessTypes
-) -> List[str]:
-    for process_address, process_class in implementations:
-        try:
-            core_registry.process_registry.register(process_address, process_class)
-            return list(core_registry.process_registry.registry.keys())
-        except:
-            logger.warning(f'could not register {process_class} as {process_address}')
-
-
 BIGRAPH_IMPLEMENTATIONS = [
     ('output-generator', OutputGenerator),
     ('time-course-output-generator', TimeCourseOutputGenerator),
@@ -670,9 +657,5 @@ BIGRAPH_IMPLEMENTATIONS = [
     ('mongo-emitter', MongoDatabaseEmitter)
 ]
 
-BIGRAPH_ADDRESS_REGISTRY = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS, APP_PROCESS_REGISTRY)
-
-
-
-
+# BIGRAPH_ADDRESS_REGISTRY = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS)
 

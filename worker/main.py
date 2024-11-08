@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from shared_worker import MongoDbConnector
 from log_config import setup_logging
 from job import Supervisor
-from bigraph_steps import BIGRAPH_ADDRESS_REGISTRY
 
 
 # set up dev env if possible
@@ -31,22 +30,10 @@ DB_NAME = "service_requests"
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
 
-async def store_registered_addresses(supervisor: Supervisor):
-    # store list of process addresses that is available to the client via mongodb:
-    confirmation = await supervisor.db_connector.write(
-        collection_name="bigraph_registry",
-        registered_addresses=BIGRAPH_ADDRESS_REGISTRY,
-        timestamp=supervisor.db_connector.timestamp(),
-        version="latest",
-        return_document=True
-    )
-    return confirmation
-
-
 async def main(max_retries=MAX_RETRIES):
     n_retries = 0
     supervisor = Supervisor(db_connector=db_connector)
-    address_registration = await store_registered_addresses(supervisor)
+    address_registration = await supervisor.store_registered_addresses()
     if not address_registration:
         logger.error("Failed to register addresses.")
 

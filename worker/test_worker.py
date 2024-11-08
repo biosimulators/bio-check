@@ -12,7 +12,7 @@ MONGO_URI = os.getenv('MONGO_URI')
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 BUCKET_NAME = os.getenv('BUCKET_NAME')
 DB_NAME = os.getenv('DB_NAME')
-TEST_SBML_FP = "/Users/alexanderpatrie/Desktop/repos/bio-check/assets/test_fixtures/sbml-core/BorisEJB.xml"
+TEST_SBML_FP = "/Users/alexanderpatrie/Desktop/repos/bio-check/assets/test-fixtures/sbml-core/BorisEJB.xml"
 
 
 def test_files_worker(test_queue_index=0):
