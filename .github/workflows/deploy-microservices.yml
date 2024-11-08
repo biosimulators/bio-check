@@ -69,29 +69,27 @@ jobs:
         run: chmod +x ./assets/docker/scripts/push_image.sh
 
       - name: Build API microservice image
-        run: docker-compose build api
-
-      - name: Deploy API microservice container to GHCR
         run: |
           rm api/spec/openapi_3_1_0_generated.yaml
           python -B api/openapi_spec.py
           sudo rm -r api/__pycache__
+          docker-compose build api
+
+      - name: Deploy API microservice container to GHCR
+        run: |
           ./assets/docker/scripts/push_image.sh api ${{ env.API_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
 
       - name: Build worker microservice image
-        run: docker-compose build worker
+        run: |
+          sudo rm -r worker/__pycache__
+          docker-compose build worker
 
       - name: Deploy worker microservice container to GHCR
         run: |
-          sudo rm -r worker/__pycache__
           ./assets/docker/scripts/push_image.sh worker ${{ env.WORKER_VERSION }}
-        # STABLE CONTENT:
-        # run: |
-        #   sudo rm -r compose_api/__pycache__
-        #   ./docker/scripts/push_image.sh compose_worker ${{ env.WORKER_VERSION }}
         env:
           REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
           REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
