@@ -506,6 +506,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /get-process-bigraph-addresses:
+    get:
+      tags:
+      - Composition
+      summary: Get process bigraph implementation addresses for composition specifications.
+      operationId: get-process-bigraph-addresses
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BigraphRegistryAddresses'
+  /get-composite-specification:
+    get:
+      tags:
+      - Composition
+      summary: Get the composite spec of a given simulation run indexed by job_id.
+      operationId: get-composite-specification
+      parameters:
+      - name: job_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     AgentParameter:
@@ -546,6 +584,21 @@ components:
       required:
       - agents
       title: AgentParameters
+    BigraphRegistryAddresses:
+      properties:
+        version:
+          type: string
+          title: Version
+        registered_addresses:
+          items:
+            type: string
+          type: array
+          title: Registered Addresses
+      type: object
+      required:
+      - version
+      - registered_addresses
+      title: BigraphRegistryAddresses
     Body_generate-simularium-file:
       properties:
         uploaded_file:
