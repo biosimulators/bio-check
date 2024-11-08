@@ -26,8 +26,8 @@ from simularium_utils import calculate_agent_radius, translate_data_object, writ
 from data_model import BiosimulationsRunOutputData
 
 # logging TODO: implement this.
-logger_data_generator = logging.getLogger("biochecknet.worker.data_generator.log")
-setup_logging(logger_data_generator)
+logger = logging.getLogger("biochecknet.worker.data_generator.log")
+setup_logging(logger)
 
 AMICI_ENABLED = True
 COPASI_ENABLED = True
@@ -39,28 +39,28 @@ try:
     from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
 except ImportError as e:
     AMICI_ENABLED = False
-    logger_data_generator.warn(str(e))
+    logger.warning(str(e))
 try:
     from basico import *
 except ImportError as e:
     COPASI_ENABLED = False
-    logger_data_generator.warn(str(e))
+    logger.warning(str(e))
 try:
     import tellurium as te
 except ImportError as e:
     TELLURIUM_ENABLED = False
-    logger_data_generator.warn(str(e))
+    logger.warning(str(e))
 try:
     from smoldyn import Simulation
     from smoldyn._smoldyn import MolecState
 except ImportError as e:
     SMOLDYN_ENABLED = False
-    logger_data_generator.warn(str(e))
+    logger.warning(str(e))
 try:
     import pysces
 except ImportError as e:
     PYSCES_ENABLED = False
-    logger_data_generator.warn(str(e))
+    logger.warning(str(e))
 
 HISTORY_INDEXES = [
     'data.time',
@@ -271,6 +271,7 @@ def run_sbml_pysces(sbml_fp: str, start, dur, steps):
 
         # run the simulation with specified time params and get the data
         try:
+            # NOTE: the below model load works only in pysces 1.2.2 which is not available on conda via mac. TODO: fix this.
             model = pysces.loadSBML(sbmlfile=sbml_fp, pscfile=psc_fp)
             model.sim_time = np.linspace(start, dur, steps + 1)
             model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default

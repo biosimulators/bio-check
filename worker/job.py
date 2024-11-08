@@ -38,20 +38,15 @@ def register_implementation_addresses(
         implementations: List[Tuple[str, str]],
         core_registry: ProcessTypes
 ) -> Tuple[ProcessTypes, List[str]]:
-    print(f'The implementations:\n{implementations}')
     for process_name, class_name in implementations:
-        print(f'\nThe current registry:\n{core_registry.process_registry.registry.keys()}')
-        print(f'\nThe process to register:\n{process_name}')
         try:
             import_statement = f'data_generator'
             module = __import__(import_statement)
             bigraph_class = getattr(module, class_name)
-            print(f'The bigraph class:\n{bigraph_class}')
             # Register the process
             core_registry.process_registry.register(process_name, bigraph_class)
-            print(f'{class_name} registered as {process_name}')
         except Exception as e:
-            print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
+            logger.warning(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
             continue
 
     return core_registry, list(core_registry.process_registry.registry.keys())
