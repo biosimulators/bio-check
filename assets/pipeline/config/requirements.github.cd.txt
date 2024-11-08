@@ -4,3 +4,7 @@ fastapi
 uvicorn
 pydantic
 pydantic-settings
+pip-autoremove
+requests-toolbelt
+google-cloud-storage
+python-multipart
