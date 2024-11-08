@@ -4,7 +4,7 @@
 # FROM ghcr.io/biosimulators/bio-compose-server-base:latest
 
 # TODO: change this back to latest once stable
-FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.5
+FROM ghcr.io/biosimulators/bio-compose-server-base:latest
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
@@ -45,12 +45,15 @@ RUN source ~/.bashrc \
     libboost-serialization-dev \
     && conda env update -n server -f environment.worker.yml \
     && conda env export --no-builds > config/environment.worker.lock.yml \
-    && conda clean --all --json -y \
+    && conda clean -t -l --json -y \
     && rm -f environment.worker.yml \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && apt-get clean
 
+# - biosimulators-copasi
+# - biosimulators-pysces
+# - biosimulators-tellurium
 ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run python3 main.py"]
 
 

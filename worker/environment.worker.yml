@@ -8,16 +8,14 @@ channels:
 dependencies:
   - pip
   - python=3.10
+  - pysces
+  - pymem3dg
   - pip:
-      - biosimulators-copasi==0.2.22
-      - biosimulators-pysces==0.1.33
-      - biosimulators-tellurium==0.1.44
-      - biosimulators-utils==0.2.3
-      - h5py==3.12.1
-      - process-bigraph
-      - simulariumio==1.11.0
-      - smoldyn==2.73
-      - tellurium==2.2.10
       - copasi-basico
+      - tellurium
       - amici
+      - h5py
+      - process-bigraph
+      - simulariumio
+      - smoldyn
 prefix: /opt/conda/envs/server
