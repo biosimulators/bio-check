@@ -214,6 +214,12 @@ class AgentParameters(BaseModel):
 #     composition_id: str = Field(default=None, examples=["ode-fba-species-a"], description="Unique composition ID.")
 #     nodes: List[CompositionNode]
 
+
+class BigraphRegistryAddresses(BaseModel):
+    version: str
+    registered_addresses: List[str]
+
+
 class CompositionSpecification(BaseModel):
     composition_id: str
     nodes: List[Any]

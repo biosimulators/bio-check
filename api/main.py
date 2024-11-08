@@ -22,7 +22,8 @@ from data_model import (
     DbClientResponse,
     CompatibleSimulators,
     Simulator,
-    AgentParameters
+    AgentParameters,
+    BigraphRegistryAddresses
 )
 from shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
@@ -713,6 +714,38 @@ async def get_compatible_for_verification(
         raise HTTPException(status_code=404, detail="Comparison not found")
 
 
+@app.get(
+    "/get-process-bigraph-addresses",
+    operation_id="get-process-bigraph-addresses",
+    response_model=BigraphRegistryAddresses,
+    tags=["Composition"],
+    summary="Get process bigraph implementation addresses for composition specifications.")
+async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
+    registry = await db_connector.read(collection_name="bigraph_registry", version="latest")
+    if registry is not None:
+        addresses = registry.get('registered_addresses')
+        version = registry.get('version')
+
+        return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
+    else:
+        raise HTTPException(status_code=500, detail="Addresses not found.")
+
+
+@app.get(
+    "/get-composite-specification",
+    operation_id="get-composite-specification",
+    tags=["Composition"],
+    summary="Get the composite spec of a given simulation run indexed by job_id.")
+async def get_composite_specification(job_id: str):
+    spec = await db_connector.read(collection_name="composite_specs", job_id=job_id)
+
+    # TODO: here return a more specific data schema
+    if spec is not None:
+        return spec
+    else:
+        raise HTTPException(status_code=500, detail=f"No specification found for job with id: {job_id}.")
+
+
 # EXISTING STABLE CONTENT. TODO: remove this
 # @app.post(
 #     "/verify-omex",  # "/biosimulators-utc-comparison",
@@ -868,17 +901,6 @@ async def get_compatible_for_verification(
 # Not-yet implemented content:
 
 # TODO: Uncomment to implement composition API and move this to a seperate API gateway.
-# @app.get(
-#     "/get-process-bigraph-addresses",
-#     operation_id="get-process-bigraph-addresses",
-#     tags=["Composition"],
-#     summary="Get process bigraph implementation addresses for composition specifications.")
-# def get_process_bigraph_addresses() -> List[str]:
-#     try:
-#         from biosimulators_processes import CORE
-#         return list(CORE.process_registry.registry.keys())
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 
 
 # @app.post(

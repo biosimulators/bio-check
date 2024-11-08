@@ -1,10 +1,11 @@
-name: Continuous Integration
+name: CI
 
 # TODO: add main here
 on:
-  push:
-    branches:
-      - "main"
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - "main"
 
 jobs:
   test-microservices:
@@ -39,7 +40,7 @@ jobs:
 
       - name: Create gcloud config artifact
         run: |
-          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/docker/configs/.biosimulations.json
+          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/docker/config/.biosimulations.json
         env:
           BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
 

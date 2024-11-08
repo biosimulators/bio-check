@@ -35,8 +35,9 @@ async def store_registered_addresses(supervisor: Supervisor):
     # store list of process addresses that is available to the client via mongodb:
     confirmation = await supervisor.db_connector.write(
         collection_name="bigraph_registry",
-        registry_addresses=BIGRAPH_ADDRESS_REGISTRY,
+        registered_addresses=BIGRAPH_ADDRESS_REGISTRY,
         timestamp=supervisor.db_connector.timestamp(),
+        version="latest",
         return_document=True
     )
     return confirmation
