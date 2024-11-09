@@ -10,7 +10,7 @@ SHELL ["/usr/bin/env", "bash", "-c"]
 
 COPY . .
 
-# TODO: perhaps run --no-install-recommends?
+# TODO: separate these into blocks by dep, then use that block in the dynamic_install
 RUN source ~/.bashrc \
     && apt-get update  \
     && apt install -y \
