@@ -51,10 +51,7 @@ RUN source ~/.bashrc \
     && apt-get autoremove -y \
     && apt-get clean
 
-# - biosimulators-copasi
-# - biosimulators-pysces
-# - biosimulators-tellurium
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run python3 main.py"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
 
 
 #############################

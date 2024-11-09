@@ -18,4 +18,8 @@ dependencies:
       - process-bigraph
       - simulariumio
       - smoldyn
+      - biosimulators-utils
+      - biosimulators-copasi
+      - biosimulators-tellurium
+      - biosimulators-pysces
 prefix: /opt/conda/envs/server
