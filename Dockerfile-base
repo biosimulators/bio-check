@@ -19,7 +19,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
     TEST_OMEX_FP="test-fixtures/sbml-core/Elowitz-Nature-2000-Repressilator.omex"
 
-# copy docker
+# copy docker assets
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini

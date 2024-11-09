@@ -11,7 +11,7 @@ while true; do
 
   # create dynamic environment
   conda create -n "$JOB_ID" python=3.10 -y
-
+  conda run -n "$JOB_ID" pip3 install process-bigraph uvicorn typing-extension pyyaml uvicorn pydantic pydantic-settings google-cloud-storage pymongo python-dotenv fastapi requests-toolbelt
   # install each specified simulator
   for sim in $SIMULATORS; do
     pkg="$sim"
@@ -25,6 +25,7 @@ while true; do
 
     conda run -n "$JOB_ID" pip3 install "$pkg"
   done
+  break
 
   # TODO:
   # 1. in base, upgrade base conda pip but do NOT create env

@@ -8,7 +8,6 @@ from enum import Enum
 from typing import *
 
 from dotenv import load_dotenv
-from process_bigraph import ProcessTypes
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -23,7 +22,6 @@ load_dotenv('../assets/dev/config/.env_dev')
 DB_TYPE = "mongo"  # ie: postgres, etc
 DB_NAME = "service_requests"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
-PROCESS_TYPES = ProcessTypes()  # CORE
 
 
 # -- shared functions -- #
