@@ -70,9 +70,9 @@ jobs:
 
       - name: Build API microservice image
         run: |
-          rm api/spec/openapi_3_1_0_generated.yaml
+          rm -f api/spec/openapi_3_1_0_generated.yaml 
           python -B api/openapi_spec.py
-          sudo rm -r api/__pycache__
+          sudo rm -rf api/__pycache__
           docker-compose build api
 
       - name: Deploy API microservice container to GHCR
@@ -84,7 +84,7 @@ jobs:
 
       - name: Build worker microservice image
         run: |
-          sudo rm -r worker/__pycache__
+          sudo rm -rf worker/__pycache__
           docker-compose build worker
 
       - name: Deploy worker microservice container to GHCR
