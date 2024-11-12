@@ -86,12 +86,15 @@ RUN source ~/.bashrc \
     libboost-math-dev \
     libboost-serialization-dev \
     nano \
-    && conda env update -n server environment.worker.yml \
-    && conda clean -t -l --json -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get autoremove -y \
-    && apt-get clean \
+    libstdc++6 \
+    && conda env update -n server -f environment.worker.yml \
     && chmod +x ./dynamic_install.sh
+# && conda clean -t -l --json -y \
+# && rm -rf /var/lib/apt/lists/* \
+# && apt-get autoremove -y \
+# && apt-get clean \
+
+ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
 

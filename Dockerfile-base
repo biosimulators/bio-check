@@ -26,7 +26,7 @@ COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 COPY assets/docker/shared.py /app/shared.py
-COPY assets/test-fixtures /app/test-fixtures
+COPY test_fixtures /test_fixtures
 COPY assets/docker/config/environment.base.yml /app/environment.base.yml
 
 # cd /app
