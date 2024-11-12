@@ -10,7 +10,49 @@ SHELL ["/usr/bin/env", "bash", "-c"]
 
 COPY . .
 
-# TODO: perhaps run --no-install-recommends?
+ENV MONGO_URI=mongodb://mongodb/service_requests
+
+# TODO: separate these into blocks by dep, then use that block in the dynamic_install
+# RUN source ~/.bashrc \
+#     && apt-get update  \
+#     && apt install -y \
+#     meson \
+#     g++ \
+#     gfortran \
+#     libblas-dev \
+#     liblapack-dev \
+#     libgfortran5 \
+#     libhdf5-dev \
+#     libhdf5-serial-dev \
+#     libatlas-base-dev \
+#     cmake \
+#     make \
+#     git \
+#     build-essential \
+#     python3-dev \
+#     swig \
+#     libc6-dev \
+#     libx11-dev \
+#     libc6 \
+#     libgl1-mesa-dev \
+#     pkg-config \
+#     curl \
+#     tar \
+#     libgl1-mesa-glx \
+#     libice6 \
+#     libsm6 \
+#     gnupg \
+#     libboost-chrono-dev \
+#     libboost-math-dev \
+#     libboost-serialization-dev \
+#     && conda env update -n server -f environment.worker.yml \
+#     && conda env export --no-builds > config/environment.worker.lock.yml \
+#     && conda clean -t -l --json -y \
+#     && rm -f environment.worker.yml \
+#     && rm -rf /var/lib/apt/lists/* \
+#     && apt-get autoremove -y \
+#     && apt-get clean
+
 RUN source ~/.bashrc \
     && apt-get update  \
     && apt install -y \
@@ -43,16 +85,15 @@ RUN source ~/.bashrc \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
-    && conda env update -n server -f environment.worker.yml \
-    && conda env export --no-builds > config/environment.worker.lock.yml \
+    && conda run -n server pip3 install simulariumio process-bigraph h5py biosimulators-utils[logging] python-libsbml \
     && conda clean -t -l --json -y \
-    && rm -f environment.worker.yml \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
-    && apt-get clean
+    && apt-get clean \
+    && chmod +x ./dynamic_install.sh
 
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
-
+# ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && ./dynamic_install.sh"]
 
 #############################
 # Fenics installation

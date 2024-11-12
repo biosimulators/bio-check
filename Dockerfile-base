@@ -1,5 +1,7 @@
-# FROM ubuntu:22.04
-FROM continuumio/miniconda3:main
+# FROM ubuntu:22.04  <-- heavy out of the box, substantially heavier after build
+# FROM continuumio/miniconda3:main  <-- issues with liscening/debian-only(not ubuntu)
+
+FROM condaforge/miniforge-pypy3:24.9.0-0
 
 LABEL org.opencontainers.image.title="bio-compose-server-base" \
     org.opencontainers.image.description="Base Docker image for BioCompose REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance." \
@@ -19,7 +21,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
     TEST_OMEX_FP="test-fixtures/sbml-core/Elowitz-Nature-2000-Repressilator.omex"
 
-# copy docker
+# copy docker assets
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
