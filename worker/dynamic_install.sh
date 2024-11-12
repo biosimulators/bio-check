@@ -3,10 +3,10 @@
 # num_simulators=$(poetry run python3 -c "print(len($simulators))")
 
 while true; do
-  INPUT_FORMAT=$(poetry run python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('path').split('/')[-1]")
-  SIMULATORS=$(poetry run python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('simulators'))")
+  INPUT_FORMAT=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('path').split('/')[-1])")
+  SIMULATORS=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('simulators'))")
   SIMULATORS=$(echo "$SIMULATORS" | tr -d "[]' ")
-  JOB_ID=$(poetry run python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('job_id'))")
+  JOB_ID=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('job_id'))")
   IFS=','
 
   # create dynamic environment
@@ -15,15 +15,13 @@ while true; do
   # install each specified simulator
   for sim in $SIMULATORS; do
     pkg="$sim"
-    if [ "$INPUT_FORMAT" == ".omex" ]; then
-      pkg=biosimulators-"$pkg"
-    fi
-
-    if [ "$sim" == "pysces" ]; then
+    # if [ "$INPUT_FORMAT" == ".omex" ]; then
+    #   pkg=biosimulators-"$pkg"
+    # fi
+    if [ "$sim" == pysces ]; then
       conda install -n "$JOB_ID" -c conda-forge -c pysces pysces
     fi
-
-    conda run -n "$JOB_ID" pip3 install "$pkg"
+    conda run -n "$JOB_ID" pip3 install $pkg
   done
   break
 

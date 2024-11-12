@@ -11,9 +11,6 @@ dependencies:
   - pysces
   - pymem3dg
   - pip:
-      - copasi-basico
-      - tellurium
-      - amici
       - h5py
       - process-bigraph
       - simulariumio
@@ -22,4 +19,7 @@ dependencies:
       - biosimulators-copasi
       - biosimulators-tellurium
       - biosimulators-pysces
+      - copasi-basico
+      - tellurium
+      - amici
 prefix: /opt/conda/envs/server

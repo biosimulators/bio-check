@@ -312,7 +312,7 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
         return {"error": error_message}
 
 
-def run_sbml_copasi(sbml_fp, start, dur, steps):
+def run_sbml_copasi(sbml_fp: str, start: int, dur: int, steps: int) -> dict[str, list[float]]:
     try:
         t = np.linspace(start, dur, steps + 1)
         model = load_model(sbml_fp)

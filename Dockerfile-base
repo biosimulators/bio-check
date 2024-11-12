@@ -1,5 +1,7 @@
-# FROM ubuntu:22.04
-FROM continuumio/miniconda3:main
+# FROM ubuntu:22.04  <-- heavy out of the box, substantially heavier after build
+# FROM continuumio/miniconda3:main  <-- issues with liscening/debian-only(not ubuntu)
+
+FROM condaforge/miniforge-pypy3:24.9.0-0
 
 LABEL org.opencontainers.image.title="bio-compose-server-base" \
     org.opencontainers.image.description="Base Docker image for BioCompose REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance." \
