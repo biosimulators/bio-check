@@ -519,12 +519,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BigraphRegistryAddresses'
-  /get-composite-specification:
+  /get-composition-state:
     get:
       tags:
       - Composition
       summary: Get the composite spec of a given simulation run indexed by job_id.
-      operationId: get-composite-specification
+      operationId: get-composition-state
       parameters:
       - name: job_id
         in: query

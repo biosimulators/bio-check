@@ -201,7 +201,7 @@ class Supervisor:
         # store list of process addresses that is available to the client via mongodb:
         confirmation = await self.db_connector.write(
             collection_name="bigraph_registry",
-            registered_addresses=APP_PROCESS_REGISTRY,
+            registered_addresses=REGISTERED_BIGRAPH_ADDRESSES,
             timestamp=self.db_connector.timestamp(),
             version="latest",
             return_document=True
@@ -209,6 +209,7 @@ class Supervisor:
         return confirmation
 
 
+# run singularity in docker 1 batch mode 1 web version
 class Worker(ABC):
     job_params: Dict
     job_id: str
