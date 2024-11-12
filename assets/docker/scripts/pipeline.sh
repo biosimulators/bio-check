@@ -5,10 +5,13 @@ function run_biocom_pipeline {
   deploy="@1"
 
   echo "Building base image..."
-  /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/build_base.sh
-
-  echo "Successfully built new base image. Currently installed docker images:"
-  docker images
+  if /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/build_base.sh; then
+    echo "Successfully built new base image. Currently installed docker images:"
+    docker images
+  else
+    echo "Exiting..."
+    exit 1
+  fi
 
   echo "Deploying base..."
   /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_base.sh
@@ -28,14 +31,21 @@ function run_biocom_pipeline {
   fi
 }
 
-function biocom_cd {
+function run_cd {
   deploy="@1"
+
+  if [ "$deploy" == "-d" ]; then
+    echo "Deployment mode on!"
+  else
+    echo "Deployment mode off!"
+  fi
 
   docker system prune -a -f
   run_biocom_pipeline "$deploy"
 }
 
 
+run_cd
 
 
 
