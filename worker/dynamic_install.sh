@@ -21,6 +21,7 @@ function install_simulators {
 }
 
 
+# store registered addresses
 while true; do
   INPUT_FORMAT=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('path').split('/')[-1])")
   SIMULATORS=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('simulators'))")
@@ -28,19 +29,22 @@ while true; do
   JOB_ID=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('job_id'))")
   IFS=','
 
+  # create the env
   create_env
+
+  # install env simulators as per request
   install_simulators
 
+  # run main once
+  conda run -n server python main.py
 
-  break
+  # remove env for job
+  conda env remove -n "$JOB_ID" -y
 
-  # TODO:
-  # 1. in base, upgrade base conda pip but do NOT create env
-  # 2. in api, install BASE requirements(mostly api anyway!)
-  # 3. in worker run script, get simulators and req input format and create env indexed by job_id from BASE requirements
-  # 4. For each requested simulator, dynamically install into existing base
-  # 5. Run main.py but instead of while loop, let it run just for the single job.
-  # 6. Db is already updated with results after number 5, so run conda env remove -n "$JOB_ID" -y
+  # sleep and run again
+  conda run -n server python -c "from time import sleep;print('sleeping...');sleep(5)"
+
+  # TODO: create a handler for no jobs within several minutes
 done
 
 

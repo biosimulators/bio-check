@@ -37,12 +37,13 @@ RUN mkdir -p /Pysces \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
     && mkdir config \
+    && conda update -n base -c conda-forge conda \
+    && conda run -n base pip3 install --upgrade pip \
+    && conda run -n base pip install --upgrade pip \
     && conda env create -n server -f environment.base.yml -y \
     && echo "conda activate server" >> ~/.bashrc \
     && source ~/.bashrc \
-    && conda run -n server pip3 install --upgrade pip \
-    && conda run -n server pip install --upgrade pip \
-    && conda env export --no-builds -f config/environment.base.lock.yml \
+    && conda env export -n server --no-builds -f config/environment.base.lock.yml \
     && rm -f environment.base.yml
 
 

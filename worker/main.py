@@ -28,24 +28,28 @@ DB_NAME = "service_requests"
 
 # shared db_connector
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+supervisor = Supervisor(db_connector=db_connector)
 
 
 async def main(max_retries=MAX_RETRIES):
     n_retries = 0
-    supervisor = Supervisor(db_connector=db_connector)
-    address_registration = await supervisor.store_registered_addresses()
-    if not address_registration:
-        logger.error("Failed to register addresses.")
+    await supervisor.run_job_check()
 
-    while True:
-        # no job has come in a while
-        if n_retries == MAX_RETRIES:
-            await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
+# async def main(max_retries=MAX_RETRIES):
+#     n_retries = 0
+#     supervisor = Supervisor(db_connector=db_connector)
+#     address_registration = await supervisor.store_registered_addresses()
+#     if not address_registration:
+#         logger.error("Failed to register addresses.")
+#     while True:
+#         # no job has come in a while
+#         if n_retries == MAX_RETRIES:
+#             await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
+#
+#         await supervisor.check_jobs()
+#         await asyncio.sleep(5)å
+#         n_retries += 1
 
-        await supervisor.check_jobs()
-        await asyncio.sleep(5)
-        n_retries += 1
 
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

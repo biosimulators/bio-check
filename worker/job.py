@@ -88,7 +88,7 @@ class Supervisor:
         """
         for _ in range(self.queue_timer):
             # perform check
-            await self._check()
+            await self.run_job_check()
             await sleep(2)
 
             # refresh jobs
@@ -96,7 +96,7 @@ class Supervisor:
 
         return 0
 
-    async def _check(self):
+    async def run_job_check(self):
         worker = None
         for i, pending_job in enumerate(self.job_queue):
             # get job params

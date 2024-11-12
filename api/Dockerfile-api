@@ -15,8 +15,6 @@ EXPOSE 3001
 RUN source ~/.bashrc \
     && conda env update -n server -f environment.api.yml \
     && conda env export --no-builds > config/environment.api.lock.yml \
-    && rm -f service/spec/openapi_3_1_0_generated.yaml \
-    && conda run python3 openapi_spec.py \
     && conda clean --all --json -y \
     && rm -f environment.api.yml
 
