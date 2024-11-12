@@ -42,13 +42,12 @@ RUN source ~/.bashrc \
     libice6 \
     libsm6 \
     gnupg \
-    libboost-chrono-dev \
-    libboost-math-dev \
-    libboost-serialization-dev \
     nano \
     libstdc++6 \
     && conda env update -n server -f environment.worker.yml \
     && chmod +x ./dynamic_install.sh
+
+# && apt install -y libboost-chrono-dev libboost-math-dev libboost-serialization-dev \
 # && conda clean -t -l --json -y \
 # && rm -rf /var/lib/apt/lists/* \
 # && apt-get autoremove -y \

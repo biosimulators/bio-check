@@ -9,7 +9,8 @@ dependencies:
   - pip
   - python=3.10
   - pysces
-  - pymem3dg
+  # - pymem3dg
+  # - readdy
   - pip:
       - h5py
       - process-bigraph
