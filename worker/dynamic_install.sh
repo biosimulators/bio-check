@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 
-# num_simulators=$(poetry run python3 -c "print(len($simulators))")
+function create_env {
+    # create dynamic environment
+    conda create -n "$JOB_ID" python=3.10 -y
+    conda run -n "$JOB_ID" pip3 install process-bigraph uvicorn typing-extension pyyaml uvicorn pydantic pydantic-settings google-cloud-storage pymongo python-dotenv fastapi requests-toolbelt
+}
+
+function install_simulators {
+  # install each specified simulator
+  for sim in $SIMULATORS; do
+    pkg="$sim"
+    if [ "$INPUT_FORMAT" == ".omex" ]; then
+      pkg=biosimulators-"$pkg"
+    fi
+    if [ "$sim" == pysces ]; then
+      conda install -n "$JOB_ID" -c conda-forge -c pysces pysces
+    fi
+    conda run -n "$JOB_ID" pip3 install "$pkg"
+  done
+}
+
 
 while true; do
   INPUT_FORMAT=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('path').split('/')[-1])")
@@ -9,20 +28,7 @@ while true; do
   JOB_ID=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('job_id'))")
   IFS=','
 
-  # create dynamic environment
-  conda create -n "$JOB_ID" python=3.10 -y
-  conda run -n "$JOB_ID" pip3 install process-bigraph uvicorn typing-extension pyyaml uvicorn pydantic pydantic-settings google-cloud-storage pymongo python-dotenv fastapi requests-toolbelt
-  # install each specified simulator
-  for sim in $SIMULATORS; do
-    pkg="$sim"
-    # if [ "$INPUT_FORMAT" == ".omex" ]; then
-    #   pkg=biosimulators-"$pkg"
-    # fi
-    if [ "$sim" == pysces ]; then
-      conda install -n "$JOB_ID" -c conda-forge -c pysces pysces
-    fi
-    conda run -n "$JOB_ID" pip3 install $pkg
-  done
+
   break
 
   # TODO:

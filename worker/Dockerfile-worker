@@ -93,7 +93,7 @@ RUN source ~/.bashrc \
     && chmod +x ./dynamic_install.sh
 
 # ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
-
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && ./dynamic_install.sh"]
 
 #############################
 # Fenics installation
