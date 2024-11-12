@@ -5,7 +5,7 @@ import uuid
 from pprint import pformat
 from typing import *
 from abc import abstractmethod
-from logging import warn
+from logging import warn, Logger
 from uuid import uuid4
 
 import libsbml
@@ -26,7 +26,7 @@ from simularium_utils import calculate_agent_radius, translate_data_object, writ
 from data_model import BiosimulationsRunOutputData
 
 # logging TODO: implement this.
-logger = logging.getLogger("biochecknet.worker.data_generator.log")
+logger: Logger = logging.getLogger("biochecknet.worker.data_generator.log")
 setup_logging(logger)
 
 AMICI_ENABLED = True
@@ -76,7 +76,18 @@ SECRETS_PATH = 'secrets.json'
 
 # -- functions related to generating time course output data (for verification and more) using the process-bigraph engine -- #
 
-def node_spec(_type: str, address: str, config: Dict[str, Any], inputs: Dict[str, Any], outputs: Dict[str, Any], name: str = None):
+class NodeSpec(dict):
+    def __init__(self, _type: str, address: str, config: Dict[str, Any], inputs: Dict[str, List[str]], outputs: Dict[str, List[str]], name: str = None):
+        super().__init__()
+        self._type = _type
+        self.address = address
+        self.config = config
+        self.inputs = inputs
+        self.outputs = outputs
+        self.name = name
+
+
+def node_spec(_type: str, address: str, config: Dict[str, Any], inputs: Dict[str, List[str]], outputs: Dict[str, List[str]], name: str = None) -> Dict[str, Any]:
     spec = {
         '_type': _type,
         'address': address,
@@ -257,37 +268,32 @@ def handle_sbml_exception() -> str:
     return error_message
 
 
-def run_sbml_pysces(sbml_fp: str, start, dur, steps):
-    if PYSCES_ENABLED:
-        # model compilation
-        sbml_filename = sbml_fp.split('/')[-1]
-        psc_filename = sbml_filename + '.psc'
-        psc_fp = os.path.join(pysces.model_dir, psc_filename)
-
-        # get output with mapping of internal species ids to external (shared) species names
-        sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
-        obs_names = list(sbml_species_mapping.keys())
-        obs_ids = list(sbml_species_mapping.values())
-
-        # run the simulation with specified time params and get the data
-        try:
-            # NOTE: the below model load works only in pysces 1.2.2 which is not available on conda via mac. TODO: fix this.
-            model = pysces.loadSBML(sbmlfile=sbml_fp, pscfile=psc_fp)
-            model.sim_time = np.linspace(start, dur, steps + 1)
-            model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
-            return {
-                name: model.data_sim.getSimData(obs_id)[:, 1].tolist()
-                for name, obs_id in sbml_species_mapping.items()
-            }
-        except:
-            error_message = handle_sbml_exception()
-            logger.error(error_message)
-            return {"error": error_message}
-    else:
-        return OSError('Pysces is not properly installed in your environment.')
+def run_sbml_pysces(sbml_fp: str, start: int, dur: int, steps: int) -> Dict[str, Union[List[float], str]]:
+    # model compilation
+    sbml_filename = sbml_fp.split('/')[-1]
+    psc_filename = sbml_filename + '.psc'
+    psc_fp = os.path.join(pysces.model_dir, psc_filename)
+    # get output with mapping of internal species ids to external (shared) species names
+    sbml_species_mapping = get_sbml_species_mapping(sbml_fp)
+    obs_names = list(sbml_species_mapping.keys())
+    obs_ids = list(sbml_species_mapping.values())
+    # run the simulation with specified time params and get the data
+    try:
+        # NOTE: the below model load works only in pysces 1.2.2 which is not available on conda via mac. TODO: fix this.
+        model = pysces.loadSBML(sbmlfile=sbml_fp, pscfile=psc_fp)
+        model.sim_time = np.linspace(start, dur, steps + 1)
+        model.Simulate(1)  # specify userinit=1 to directly use model.sim_time (t) rather than the default
+        return {
+            name: model.data_sim.getSimData(obs_id)[:, 1].tolist()
+            for name, obs_id in sbml_species_mapping.items()
+        }
+    except:
+        error_message = handle_sbml_exception()
+        logger.error(error_message)
+        return {"error": error_message}
 
 
-def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
+def run_sbml_tellurium(sbml_fp: str, start: int, dur: int, steps: int) -> Dict[str, Union[List[float], str]]:
     result = None
     try:
         simulator = te.loadSBMLModel(sbml_fp)
@@ -312,7 +318,7 @@ def run_sbml_tellurium(sbml_fp: str, start, dur, steps):
         return {"error": error_message}
 
 
-def run_sbml_copasi(sbml_fp: str, start: int, dur: int, steps: int) -> dict[str, list[float]]:
+def run_sbml_copasi(sbml_fp: str, start: int, dur: int, steps: int) -> Dict[str, Union[List[float], str]]:
     try:
         t = np.linspace(start, dur, steps + 1)
         model = load_model(sbml_fp)
@@ -329,7 +335,7 @@ def run_sbml_copasi(sbml_fp: str, start: int, dur: int, steps: int) -> dict[str,
         return {"error": error_message}
 
 
-def run_sbml_amici(sbml_fp: str, start, dur, steps):
+def run_sbml_amici(sbml_fp: str, start: int, dur: int, steps: int) -> Dict[str, Union[List[float], str]]:
     try:
         sbml_reader = libsbml.SBMLReader()
         sbml_doc = sbml_reader.readSBML(sbml_fp)
