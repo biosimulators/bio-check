@@ -34,6 +34,7 @@ COPASI_ENABLED = True
 PYSCES_ENABLED = True
 TELLURIUM_ENABLED = True
 SMOLDYN_ENABLED = True
+READDY_ENABLED = True
 
 try:
     from amici import SbmlImporter, import_model_module, Model, runAmiciSimulation
@@ -55,6 +56,11 @@ try:
     from smoldyn._smoldyn import MolecState
 except ImportError as e:
     SMOLDYN_ENABLED = False
+    logger.warning(str(e))
+try:
+    import readdy
+except ImportError as e:
+    READDY_ENABLED = False
     logger.warning(str(e))
 try:
     import pysces
@@ -189,6 +195,43 @@ def generate_time_course_data(
 
 
 # -- direct simulator API wrappers -- #
+
+def run_readdy(
+        box_size: List[float],
+        species_config: Dict[str, float],   # {SPECIES_NAME: DIFFUSION_CONSTANT}  ie: {'E': 10.}
+        reactions_config: Dict[str, float],  # {REACTION_SCHEME: REACTION RATE}  ie: {"fwd: E +(0.03) S -> ES": 86.551}
+        particles_config: Dict[str, Union[List[float], np.ndarray]],  # {PARTICLE_NAME: INITIAL_POSITIONS_ARRAY}  ie: {'E': np.random.random(size=(n_particles_e, 3)) * edge_length - .5*edge_length}
+        dt: float,
+        duration: float,
+        unit_system_config: Dict[str, str] = {"length_unit": "micrometer", "time_unit": "second"}
+) -> Dict[str, str]:
+    output = {}
+    if READDY_ENABLED:
+        system = readdy.ReactionDiffusionSystem(
+            box_size=box_size,
+            unit_system=unit_system_config
+        )
+        for species_name, species_difc in species_config.items():
+            system.add_species(species_name, species_difc)
+        for reaction_scheme, reaction_rate in reactions_config.items():
+            system.reactions.add(reaction_scheme, reaction_rate)
+        simulation = system.simulation(kernel="CPU")
+        simulation.output_file = "out.h5"
+        simulation.reaction_handler = "UncontrolledApproximation"
+
+        for particle_name, particle_positions in particles_config.items():
+            simulation.add_particles(particle_name, particle_positions)
+        simulation.observe.number_of_particles(stride=1, types=list(species_config.keys()))
+        n_steps = int(duration / dt)
+        simulation.run(n_steps=n_steps, timestep=dt)
+        output = {"results_file": simulation.output_file}
+    else:
+        error = handle_exception("Run Readdy")
+        logger.error(error)
+        output = {'error': error}
+
+    return output
+
 
 # TODO: should we return the actual data from memory, or that reflected in a smoldyn output txt file or both?
 def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Union[str, Dict[str, Union[float, List[float]]]]]:
