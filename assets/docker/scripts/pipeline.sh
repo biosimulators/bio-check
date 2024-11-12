@@ -3,11 +3,7 @@
 
 function run_biocom_pipeline {
   deploy="@1"
-  build_all="@2"
-  if [ "$build_all" == "" ]; then
-    build_all="--build-all"
-  fi
-  echo "Build all specification: $build_all"
+  no_build_all="@2"
 
   # build and deploy base
   echo "Building base image..."
@@ -22,7 +18,7 @@ function run_biocom_pipeline {
   /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_base.sh
   echo "Successfully deployed base image."
 
-  if [ "$build_all" == "--build-all" ]; then
+  if [ "$no_build_all" != "--no-build-all" ]; then
     # build and deploy microservices
     /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/build_microservices.sh
     set -e

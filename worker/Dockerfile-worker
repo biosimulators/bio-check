@@ -86,16 +86,14 @@ RUN source ~/.bashrc \
     libboost-math-dev \
     libboost-serialization-dev \
     nano \
-    && conda run -n server pip3 install simulariumio process-bigraph h5py biosimulators-utils[logging] python-libsbml \
+    && conda env update -n server environment.worker.yml \
     && conda clean -t -l --json -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && apt-get clean \
-    && chmod +x ./dynamic_install.sh \
-    && conda run -n server python3 store_registry.py
+    && chmod +x ./dynamic_install.sh
 
-# ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && ./dynamic_install.sh"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
 
 #############################
 # Fenics installation
