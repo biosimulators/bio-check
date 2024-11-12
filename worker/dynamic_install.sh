@@ -28,6 +28,9 @@ while true; do
   JOB_ID=$(conda run -n server python3 -c "from main import db_connector;print(db_connector.pending_jobs()[0].get('job_id'))")
   IFS=','
 
+  create_env
+  install_simulators
+
 
   break
 

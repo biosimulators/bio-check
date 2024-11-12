@@ -85,6 +85,7 @@ RUN source ~/.bashrc \
     libboost-chrono-dev \
     libboost-math-dev \
     libboost-serialization-dev \
+    nano \
     && conda run -n server pip3 install simulariumio process-bigraph h5py biosimulators-utils[logging] python-libsbml \
     && conda clean -t -l --json -y \
     && rm -rf /var/lib/apt/lists/* \
