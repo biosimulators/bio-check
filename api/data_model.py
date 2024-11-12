@@ -23,6 +23,20 @@ class SmoldynRun(ApiRun):
     simulators: List[str] = ["smoldyn"]
 
 
+class ReaddyRun(BaseModel):
+    job_id: str
+    timestamp: str
+    status: str
+    duration: float
+    dt: float
+    box_size: List[float]
+    species_config: Dict[str, Any]
+    particles_config: Dict[str, Any]
+    reactions_config: Dict[str, Any]
+    simulators: List[str] = ["readdy"]
+    unit_system_config: Optional[Dict[str, Any]] = {"length_unit": "micrometer", "time_unit": "second"}
+
+
 class UtcRun(ApiRun):
     start: int
     end: int

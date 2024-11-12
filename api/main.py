@@ -15,6 +15,7 @@ from starlette.middleware.cors import CORSMiddleware
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 from data_model import (
     SmoldynJob,
+    ReaddyRun,
     VerificationOutput,
     OmexVerificationRun,
     SbmlVerificationRun,
@@ -189,6 +190,60 @@ async def run_smoldyn(
 
         # return typed obj
         return smoldyn_run
+    except Exception as e:
+        logger.error(str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/run-readdy",
+    response_model=ReaddyRun,
+    name="Run a readdy simulation",
+    operation_id="run-readdy",
+    tags=["Simulation Execution"],
+    summary="Run a smoldyn simulation.")
+async def run_readdy(
+        box_size: List[float] = Query(default=None, description="Box Size of box"),
+        duration: int = Query(default=None, description="Simulation Duration"),
+        dt: float = Query(default=None, description="Interval of step with which simulation runs"),
+        species_config: Dict[str, Any] = Body(..., description="Species Configuration"),
+        reactions_config: Dict[str, Any] = Body(..., description="Reactions Configuration"),
+        particles_config: Dict[str, Any] = Body(..., description="Particles Configuration"),
+) -> ReaddyRun:
+    try:
+        # get job params
+        job_id = "simulation-execution-readdy" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+
+        # instantiate new return
+        readdy_run = ReaddyRun(
+            job_id=job_id,
+            timestamp=_time,
+            status=JobStatus.PENDING.value,
+            duration=duration,
+            dt=dt,
+            simulators=["readdy"],
+            species_config=species_config,
+            reactions_config=reactions_config,
+            particles_config=particles_config
+        )
+
+        # insert job
+        pending_job = await db_connector.insert_job_async(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            job_id=readdy_run.job_id,
+            timestamp=readdy_run.timestamp,
+            status=readdy_run.status,
+            duration=readdy_run.duration,
+            dt=readdy_run.dt,
+            simulators=readdy_run.simulators,
+            species_config=readdy_run.species_config,
+            reactions_config=readdy_run.reactions_config,
+            particles_config=readdy_run.particles_config
+        )
+
+        # return typed obj
+        return readdy_run
     except Exception as e:
         logger.error(str(e))
         raise HTTPException(status_code=500, detail=str(e))
