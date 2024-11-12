@@ -3,7 +3,13 @@
 
 function run_biocom_pipeline {
   deploy="@1"
+  build_all="@2"
+  if [ "$build_all" == "" ]; then
+    build_all="--build-all"
+  fi
+  echo "Build all specification: $build_all"
 
+  # build and deploy base
   echo "Building base image..."
   if /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/build_base.sh; then
     echo "Successfully built new base image. Currently installed docker images:"
@@ -12,27 +18,29 @@ function run_biocom_pipeline {
     echo "Exiting..."
     exit 1
   fi
-
   echo "Deploying base..."
   /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_base.sh
   echo "Successfully deployed base image."
 
-  /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/build_microservices.sh
+  if [ "$build_all" == "--build-all" ]; then
+    # build and deploy microservices
+    /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/build_microservices.sh
+    set -e
+    if [ "$deploy" == "-d" ]; then
+      echo "Deploying API microservice..."
+      /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh api
 
-  set -e
-  if [ "$deploy" == "-d" ]; then
-    echo "Deploying API microservice..."
-    /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh api
+      echo "Deploying Worker microservice..."
+      /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh worker
 
-    echo "Deploying Worker microservice..."
-    /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh worker
-
-    echo "Images successfully deployed."
+      echo "Images successfully deployed."
+    fi
   fi
 }
 
 function run_cd {
   deploy="@1"
+  build_all="@2"
 
   if [ "$deploy" == "-d" ]; then
     echo "Deployment mode on!"
@@ -41,7 +49,7 @@ function run_cd {
   fi
 
   docker system prune -a -f
-  run_biocom_pipeline "$deploy"
+  run_biocom_pipeline "$deploy" "$build_all"
 }
 
 
