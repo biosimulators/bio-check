@@ -732,12 +732,12 @@ async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
 
 
 @app.get(
-    "/get-composite-specification",
-    operation_id="get-composite-specification",
+    "/get-composition-state",
+    operation_id="get-composition-state",
     tags=["Composition"],
     summary="Get the composite spec of a given simulation run indexed by job_id.")
-async def get_composite_specification(job_id: str):
-    spec = await db_connector.read(collection_name="composite_specs", job_id=job_id)
+async def get_composition_state(job_id: str):
+    spec = await db_connector.read(collection_name="result_states", job_id=job_id)
 
     # TODO: here return a more specific data schema
     if spec is not None:

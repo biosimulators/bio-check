@@ -45,7 +45,8 @@ RUN source ~/.bashrc \
     nano \
     libstdc++6 \
     && conda env update -n server -f environment.worker.yml \
-    && chmod +x ./dynamic_install.sh
+    && chmod +x ./dynamic_install.sh \
+    && echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:\$LD_LIBRARY_PATH' >> ~/.bashrc
 
 # && apt install -y libboost-chrono-dev libboost-math-dev libboost-serialization-dev \
 # && conda clean -t -l --json -y \
@@ -54,7 +55,7 @@ RUN source ~/.bashrc \
 # && apt-get clean \
 # ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-ENTRYPOINT ["bash", "-c", "source ~/.bashrc && echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:\$LD_LIBRARY_PATH' >> ~/.bashrc && source ~/.bashrc && conda run -n server python3 main.py"]
+ENTRYPOINT ["bash", "-c", "source ~/.bashrc && conda run -n server python3 main.py"]
 
 #############################
 # Fenics installation

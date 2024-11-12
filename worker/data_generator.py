@@ -151,6 +151,9 @@ def generate_time_course_data(
     simulation = Composite({'state': simulation_spec, 'emitter': {'mode': 'all'}}, core=core)
 
     input_filename = input_fp.split("/")[-1].split(".")[0]
+    if not out_dir:
+        out_dir = mkdtemp()
+
     if out_dir:
         simulation.save(
             filename=f'{input_filename}-initialization.json',
@@ -177,7 +180,12 @@ def generate_time_course_data(
                 simulator = data_key.split('_')[-1]
                 output_data[simulator] = data_value
 
-    return output_data
+    # return output_data
+    import json
+    with open(f'{out_dir}/{input_filename}-update.json', 'r') as f:
+        state_spec = json.load(f)
+
+    return {'output_data': output_data, 'state': state_spec}
 
 
 # -- direct simulator API wrappers -- #

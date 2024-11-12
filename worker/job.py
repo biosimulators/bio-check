@@ -163,6 +163,16 @@ class Supervisor:
                         requested_simulators=pending_job.get('simulators')
                     )
 
+                    # store the state result
+                    state_result = worker.state_result
+                    await self.db_connector.insert_job_async(
+                        collection_name="result_states",
+                        job_id=job_id,
+                        timestamp=self.db_connector.timestamp(),
+                        source=source_name,
+                        state=state_result,
+                    )
+
                     # remove in progress job
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
                 except:
@@ -282,6 +292,7 @@ class SimulationRunWorker(Worker):
 class VerificationWorker(Worker):
     def __init__(self, job: Dict, supervisor: Supervisor = None):
         super().__init__(job=job, supervisor=supervisor)
+        self.state_result = {}
 
     async def run(self, selection_list: List[str] = None) -> Dict:
         # process simulation
@@ -628,7 +639,9 @@ class VerificationWorker(Worker):
     def _run_comparison_from_sbml(self, sbml_fp, start, dur, steps, rTol=None, aTol=None, simulators=None, ground_truth=None) -> Dict:
         species_mapping = get_sbml_species_mapping(sbml_fp)
         mapping_names = list(species_mapping.keys())
-        output_data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
+        data = self._generate_formatted_sbml_outputs(sbml_filepath=sbml_fp, start=start, dur=dur, steps=steps, simulators=simulators)
+        self.state_result = data.get('state')
+        output_data = data.get('output_data')
         sims = simulators or list(output_data.keys())
 
         results = {}
