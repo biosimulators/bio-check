@@ -198,9 +198,9 @@ def generate_time_course_data(
 
 def run_readdy(
         box_size: List[float],
-        species_config: Dict[str, float],   # {SPECIES_NAME: DIFFUSION_CONSTANT}  ie: {'E': 10.}
-        reactions_config: Dict[str, float],  # {REACTION_SCHEME: REACTION RATE}  ie: {"fwd: E +(0.03) S -> ES": 86.551}
-        particles_config: Dict[str, Union[List[float], np.ndarray]],  # {PARTICLE_NAME: INITIAL_POSITIONS_ARRAY}  ie: {'E': np.random.random(size=(n_particles_e, 3)) * edge_length - .5*edge_length}
+        species_config: List[Dict[str, float]],   # {SPECIES_NAME: DIFFUSION_CONSTANT}  ie: {'E': 10.}
+        reactions_config: List[Dict[str, float]],  # {REACTION_SCHEME: REACTION RATE}  ie: {"fwd: E +(0.03) S -> ES": 86.551}
+        particles_config: List[Dict[str, Union[List[float], np.ndarray]]],  # {PARTICLE_NAME: INITIAL_POSITIONS_ARRAY}  ie: {'E': np.random.random(size=(n_particles_e, 3)) * edge_length - .5*edge_length}
         dt: float,
         duration: float,
         unit_system_config: Dict[str, str] = None
@@ -215,12 +215,16 @@ def run_readdy(
         )
 
         # add species via spec
-        for species_name, species_difc in species_config.items():
-            system.add_species(species_name, species_difc)
+        species_names = []
+        for config in species_config:
+            for species_name, species_difc in config.items():
+                species_names.append(species_name)
+                system.add_species(species_name, species_difc)
 
         # add reactions via spec
-        for reaction_scheme, reaction_rate in reactions_config.items():
-            system.reactions.add(reaction_scheme, reaction_rate)
+        for config in reactions_config:
+            for reaction_scheme, reaction_rate in config.items():
+                system.reactions.add(reaction_scheme, reaction_rate)
 
         # configure simulation outputs
         simulation = system.simulation(kernel="CPU")
@@ -228,9 +232,13 @@ def run_readdy(
         simulation.reaction_handler = "UncontrolledApproximation"
 
         # set initial particle state
-        for particle_name, particle_positions in particles_config.items():
-            simulation.add_particles(particle_name, particle_positions)
-        simulation.observe.number_of_particles(stride=1, types=list(species_config.keys()))
+        for config in particles_config:
+            for particle_name, particle_positions in config.items():
+                simulation.add_particles(particle_name, particle_positions)
+        simulation.observe.number_of_particles(
+            stride=1,
+            types=list(set(species_names))
+        )
 
         # run simulation for given time parameters
         n_steps = int(duration / dt)

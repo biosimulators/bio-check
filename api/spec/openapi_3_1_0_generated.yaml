@@ -2,13 +2,6 @@ openapi: 3.1.0
 info:
   title: bio-compose
   version: 0.0.1-test
-servers:
-- url: https://biochecknet.biosimulations.org
-  description: Production server
-- url: http://localhost:3001
-  description: Main Development server
-- url: http://localhost:8000
-  description: Alternate Development server
 paths:
   /:
     get:

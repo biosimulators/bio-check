@@ -80,18 +80,18 @@ APP_ORIGINS = [
     'https://biochecknet.biosimulations.org'
 ]
 APP_SERVERS = [
-    {
-        "url": "https://biochecknet.biosimulations.org",
-        "description": "Production server"
-    },
-    {
-        "url": "http://localhost:3001",
-        "description": "Main Development server"
-    },
-    {
-        "url": "http://localhost:8000",
-        "description": "Alternate Development server"
-    }
+    # {
+    #     "url": "https://biochecknet.biosimulations.org",
+    #     "description": "Production server"
+    # },
+    # {
+    #     "url": "http://localhost:3001",
+    #     "description": "Main Development server"
+    # },
+    # {
+    #     "url": "http://localhost:8000",
+    #     "description": "Alternate Development server"
+    # }
 ]
 
 # -- app components -- #
