@@ -50,11 +50,9 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 APP_TITLE = "bio-compose"
 version_path = ".VERSION"
 if os.path.exists(version_path):
-    print('Exists!')
     with open(version_path, 'r') as f:
         APP_VERSION = f.read().strip()
 else:
-    print('No Exists!')
     APP_VERSION = "0.0.1"
 
 # APP_SERVERS = [
