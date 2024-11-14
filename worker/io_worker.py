@@ -3,7 +3,7 @@ import re
 from tempfile import mkdtemp
 from typing import Union, List
 
-import aiofiles
+# import aiofiles
 import h5py
 import libsbml
 from fastapi import UploadFile
