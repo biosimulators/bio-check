@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 1.12.0
+  version: 0.0.1-test
 paths:
   /:
     get:
@@ -49,6 +49,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SmoldynRun'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /run-readdy:
+    post:
+      tags:
+      - Simulation Execution
+      summary: Run a smoldyn simulation.
+      operationId: run-readdy
+      parameters:
+      - name: box_size
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: number
+          description: Box Size of box
+          default:
+          - 1.0
+          - 1.0
+          - 1.0
+          title: Box Size
+        description: Box Size of box
+      - name: duration
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Simulation Duration
+          title: Duration
+        description: Simulation Duration
+      - name: dt
+        in: query
+        required: true
+        schema:
+          type: number
+          description: Interval of step with which simulation runs
+          title: Dt
+        description: Interval of step with which simulation runs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_run-readdy'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaddyRun'
         '422':
           description: Validation Error
           content:
@@ -625,6 +681,35 @@ components:
       required:
       - uploaded_file
       title: Body_get-compatible-for-verification
+    Body_run-readdy:
+      properties:
+        species_config:
+          items:
+            $ref: '#/components/schemas/ReaddySpeciesConfig'
+          type: array
+          title: Species Config
+          description: Species Configuration, specifying species name mapped to diffusion
+            constant
+        reactions_config:
+          items:
+            $ref: '#/components/schemas/ReaddyReactionConfig'
+          type: array
+          title: Reactions Config
+          description: Reactions Configuration, specifying reaction scheme mapped
+            to reaction constant.
+        particles_config:
+          items:
+            $ref: '#/components/schemas/ReaddyParticleConfig'
+          type: array
+          title: Particles Config
+          description: Particles Configuration, specifying initial particle positions
+            for each particle.
+      type: object
+      required:
+      - species_config
+      - reactions_config
+      - particles_config
+      title: Body_run-readdy
     Body_run-smoldyn:
       properties:
         uploaded_file:
@@ -775,6 +860,127 @@ components:
       - path
       - simulators
       title: OmexVerificationRun
+    ReaddyParticleConfig:
+      properties:
+        name:
+          type: string
+          title: Name
+        initial_positions:
+          items:
+            type: number
+          type: array
+          title: Initial Positions
+      type: object
+      required:
+      - name
+      - initial_positions
+      title: ReaddyParticleConfig
+    ReaddyReactionConfig:
+      properties:
+        scheme:
+          type: string
+          title: Scheme
+        rate:
+          type: number
+          title: Rate
+      type: object
+      required:
+      - scheme
+      - rate
+      title: ReaddyReactionConfig
+    ReaddyRun:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        timestamp:
+          type: string
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+        duration:
+          type: number
+          title: Duration
+        dt:
+          type: number
+          title: Dt
+        box_size:
+          items:
+            type: number
+          type: array
+          title: Box Size
+        species_config:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - items:
+              $ref: '#/components/schemas/ReaddySpeciesConfig'
+            type: array
+          title: Species Config
+        particles_config:
+          anyOf:
+          - additionalProperties:
+              items:
+                type: number
+              type: array
+            type: object
+          - items:
+              $ref: '#/components/schemas/ReaddyParticleConfig'
+            type: array
+          title: Particles Config
+        reactions_config:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - items:
+              $ref: '#/components/schemas/ReaddyReactionConfig'
+            type: array
+          title: Reactions Config
+        simulators:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Simulators
+          default:
+          - readdy
+        unit_system_config:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Unit System Config
+          default:
+            length_unit: micrometer
+            time_unit: second
+      type: object
+      required:
+      - job_id
+      - timestamp
+      - status
+      - duration
+      - dt
+      - box_size
+      - species_config
+      - particles_config
+      - reactions_config
+      title: ReaddyRun
+    ReaddySpeciesConfig:
+      properties:
+        name:
+          type: string
+          title: Name
+        diffusion_constant:
+          type: number
+          title: Diffusion Constant
+      type: object
+      required:
+      - name
+      - diffusion_constant
+      title: ReaddySpeciesConfig
     SbmlVerificationRun:
       properties:
         job_id:

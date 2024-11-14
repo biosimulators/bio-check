@@ -211,7 +211,7 @@ async def run_readdy(
         box_size: List[float] = Query(default=[1.0, 1.0, 1.0], description="Box Size of box"),
         duration: int = Query(default=..., description="Simulation Duration"),
         dt: float = Query(default=..., description="Interval of step with which simulation runs"),
-        species_config: List[ReaddySpeciesConfig] = Body(..., example={'A': 0.3}, description="Species Configuration, specifying species name mapped to diffusion constant"),
+        species_config: List[ReaddySpeciesConfig] = Body(..., description="Species Configuration, specifying species name mapped to diffusion constant"),
         reactions_config: List[ReaddyReactionConfig] = Body(..., description="Reactions Configuration, specifying reaction scheme mapped to reaction constant."),
         particles_config: List[ReaddyParticleConfig] = Body(..., description="Particles Configuration, specifying initial particle positions for each particle."),
 ) -> ReaddyRun:
