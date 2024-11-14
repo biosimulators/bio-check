@@ -138,22 +138,21 @@ async def save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) ->
     is_binary = filename.endswith('.h5')
 
     # case: is a FastAPI upload
-    if isinstance(uploaded_file, UploadFile):
-        mode = 'wb' if is_binary else 'w'
-        async with aiofiles.open(file_path, mode) as file:
-            contents = await uploaded_file.read()
-            await file.write(contents)
-
+    # if isinstance(uploaded_file, UploadFile):
+    #     mode = 'wb' if is_binary else 'w'
+    #     async with aiofiles.open(file_path, mode) as file:
+    #         contents = await uploaded_file.read()
+    #         await file.write(contents)
     # case: is a string (file path)
-    else:
-        mode = 'rb' if is_binary else 'r'
-        with open(filename, mode) as fp:
-            contents = fp.read()
+    # else:
+    mode = 'rb' if is_binary else 'r'
+    with open(filename, mode) as fp:
+        contents = fp.read()
 
-        # Write to destination
-        mode = 'wb' if is_binary else 'w'
-        with open(file_path, mode) as f:
-            f.write(contents)
+    # Write to destination
+    mode = 'wb' if is_binary else 'w'
+    with open(file_path, mode) as f:
+        f.write(contents)
 
     return file_path
 
