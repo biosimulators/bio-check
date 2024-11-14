@@ -537,8 +537,8 @@ async def verify_sbml(
     summary='Get the results of an existing simulation run as either a downloadable file or job progression status.')
 async def get_output_file(job_id: str):
     # state-case: job is completed
-    if "smoldyn" not in job_id or "readdy" not in job_id:
-        raise HTTPException(status_code=404, detail="This must be an output file job query with either Smoldyn or Readdy.")
+    if not job_id.startswith("simulation-execution"):
+        raise HTTPException(status_code=404, detail="This must be an output file job query starting with 'simulation-execution'.")
 
     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
     if job is not None:
