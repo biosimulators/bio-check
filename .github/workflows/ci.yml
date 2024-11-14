@@ -3,7 +3,7 @@ name: CI
 # TODO: add main here
 on:
   workflow_dispatch:
-  push:
+  release:
     branches:
       - "main"
 
