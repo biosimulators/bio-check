@@ -885,7 +885,9 @@ components:
           title: Name
         initial_positions:
           items:
-            type: number
+            items:
+              type: number
+            type: array
           type: array
           title: Initial Positions
       type: object
@@ -941,7 +943,9 @@ components:
           anyOf:
           - additionalProperties:
               items:
-                type: number
+                items:
+                  type: number
+                type: array
               type: array
             type: object
           - items:
