@@ -535,7 +535,7 @@ async def verify_sbml(
     operation_id='get-output-file',
     tags=["Results"],
     summary='Get the results of an existing simulation run as either a downloadable file or job progression status.')
-async def get_output_file(job_id: str) -> Union[FileResponse, IncompleteJob]:
+async def get_output_file(job_id: str):
     # state-case: job is completed
     if "smoldyn" not in job_id or "readdy" not in job_id:
         raise HTTPException(status_code=404, detail="This must be an output file job query.")
