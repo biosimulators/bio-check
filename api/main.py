@@ -48,7 +48,10 @@ dotenv.load_dotenv("../assets/dev/config/.env_dev")  # NOTE: create an env confi
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 APP_TITLE = "bio-compose"
-version_path = ".VERSION"
+version_path = os.path.join(
+    os.path.dirname(__file__),
+    ".VERSION"
+)
 if os.path.exists(version_path):
     with open(version_path, 'r') as f:
         APP_VERSION = f.read().strip()
@@ -437,9 +440,9 @@ async def verify_omex(
     summary="Compare UTC outputs from a deterministic SBML model.")
 async def verify_sbml(
         uploaded_file: UploadFile = File(..., description="A deterministic SBML model."),
-        start: int = Query(..., description="Start time of the simulation (output start time)"),
-        end: int = Query(..., description="End time of simulation (end)"),
-        steps: int = Query(..., description="Number of simulation steps to run"),
+        start: int = Query(0, description="Start time of the simulation (output start time)"),
+        end: int = Query(10, description="End time of simulation (end)"),
+        steps: int = Query(1000, description="Number of simulation steps to run"),
         simulators: List[str] = Query(default=["amici", "copasi", "pysces", "tellurium"], description="List of simulators to compare"),
         include_outputs: bool = Query(default=True, description="Whether to include the output data on which the comparison is based."),
         comparison_id: Optional[str] = Query(default=None, description="Descriptive prefix to be added to this submission's job ID."),
