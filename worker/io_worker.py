@@ -3,6 +3,7 @@ import re
 from tempfile import mkdtemp
 from typing import Union, List
 
+import aiofiles
 import h5py
 import libsbml
 from fastapi import UploadFile
@@ -127,6 +128,37 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
 
 
 async def save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) -> str:
+    """Write `fastapi.UploadFile` instance passed by api gateway user to `save_dest`."""
+    if isinstance(uploaded_file, UploadFile):
+        filename = uploaded_file.filename
+    else:
+        filename = uploaded_file
+
+    file_path = os.path.join(save_dest, filename)
+    is_binary = filename.endswith('.h5')
+
+    # case: is a FastAPI upload
+    if isinstance(uploaded_file, UploadFile):
+        mode = 'wb' if is_binary else 'w'
+        async with aiofiles.open(file_path, mode) as file:
+            contents = await uploaded_file.read()
+            await file.write(contents)
+
+    # case: is a string (file path)
+    else:
+        mode = 'rb' if is_binary else 'r'
+        with open(filename, mode) as fp:
+            contents = fp.read()
+
+        # Write to destination
+        mode = 'wb' if is_binary else 'w'
+        with open(file_path, mode) as f:
+            f.write(contents)
+
+    return file_path
+
+
+async def _save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) -> str:
     """Write `fastapi.UploadFile` instance passed by api gateway user to `save_dest`."""
     if isinstance(uploaded_file, UploadFile):
         filename = uploaded_file.filename
