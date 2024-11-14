@@ -27,7 +27,8 @@ from data_model import (
     CompatibleSimulators,
     Simulator,
     AgentParameters,
-    BigraphRegistryAddresses
+    BigraphRegistryAddresses,
+    IncompleteJob
 )
 from shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
 from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
@@ -527,6 +528,65 @@ async def verify_sbml(
     except Exception as e:
         logger.error(str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get(
+    "/get-output-file/{job_id}",
+    operation_id='get-output-file',
+    tags=["Results"],
+    summary='Get the results of an existing simulation run as either a downloadable file or job progression status.')
+async def get_output_file(job_id: str) -> Union[FileResponse, IncompleteJob]:
+    # state-case: job is completed
+    if "smoldyn" not in job_id or "readdy" not in job_id:
+        raise HTTPException(status_code=404, detail="This must be an output file job query.")
+
+    job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
+    if job is not None:
+        # rm mongo index
+        job.pop('_id', None)
+
+        # parse filepath in bucket and create file response
+        job_data = job
+        if isinstance(job_data, dict):
+            remote_fp = job_data.get("results").get("results_file")
+            if remote_fp is not None:
+                temp_dest = mkdtemp()
+                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+
+                # return downloadable file blob
+                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])  # TODO: return special smoldyn file instance
+
+    # state-case: job has failed
+    if job is None:
+        job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
+
+    # state-case: job is not in completed:
+    if job is None:
+        job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
+
+    # state-case: job is not in progress:
+    if job is None:
+        job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
+
+    # case: job is either failed, in prog, or pending
+    if job is not None:
+        # rm mongo index
+        job.pop('_id', None)
+
+        # specify source safely
+        src = job.get('source', job.get('path'))
+        if src is not None:
+            source = src.split('/')[-1]
+        else:
+            source = None
+
+        # return json job status
+        return IncompleteJob(
+            job_id=job_id,
+            timestamp=job.get('timestamp'),
+            status=job.get('status'),
+            source=source
+        )
 
 
 @app.get(
