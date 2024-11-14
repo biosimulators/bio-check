@@ -237,6 +237,8 @@ def run_readdy(
         for config in particles_config:
             particle_name = config["name"]
             particle_positions = config["initial_positions"]
+            if not isinstance(particle_positions, np.ndarray):
+                particle_positions = np.array(particle_positions)
             simulation.add_particles(particle_name, particle_positions)
         simulation.observe.number_of_particles(
             stride=1,
