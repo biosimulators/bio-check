@@ -103,7 +103,7 @@ class Supervisor:
             # get job params
             job_id = pending_job.get('job_id')
             source = pending_job.get('path')
-            source_name = source.split('/')[-1]
+            source_name = source.split('/')[-1] if source is not None else "No-Source-File"
 
             # check terminal collections for job
             job_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")

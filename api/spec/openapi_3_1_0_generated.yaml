@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 0.0.1-test
+  version: 0.0.1
 paths:
   /:
     get:
@@ -59,7 +59,7 @@ paths:
     post:
       tags:
       - Simulation Execution
-      summary: Run a smoldyn simulation.
+      summary: Run a readdy simulation.
       operationId: run-readdy
       parameters:
       - name: box_size
@@ -92,6 +92,15 @@ paths:
           description: Interval of step with which simulation runs
           title: Dt
         description: Interval of step with which simulation runs
+      - name: reaction_handler
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Reaction handler as per Readdy simulation documentation.
+          default: UncontrolledApproximation
+          title: Reaction Handler
+        description: Reaction handler as per Readdy simulation documentation.
       requestBody:
         required: true
         content:
@@ -704,6 +713,15 @@ components:
           title: Particles Config
           description: Particles Configuration, specifying initial particle positions
             for each particle.
+        unit_system_config:
+          additionalProperties:
+            type: string
+          type: object
+          title: Unit System Config
+          description: Unit system configuration
+          default:
+            length_unit: micrometer
+            time_unit: second
       type: object
       required:
       - species_config
@@ -950,12 +968,20 @@ components:
           - readdy
         unit_system_config:
           anyOf:
-          - type: object
+          - additionalProperties:
+              type: string
+            type: object
           - type: 'null'
           title: Unit System Config
           default:
             length_unit: micrometer
             time_unit: second
+        reaction_handler:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reaction Handler
+          default: UncontrolledApproximation
       type: object
       required:
       - job_id

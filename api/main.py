@@ -204,7 +204,7 @@ async def run_smoldyn(
     name="Run a readdy simulation",
     operation_id="run-readdy",
     tags=["Simulation Execution"],
-    summary="Run a smoldyn simulation.")
+    summary="Run a readdy simulation.")
 async def run_readdy(
         box_size: List[float] = Query(default=[1.0, 1.0, 1.0], description="Box Size of box"),
         duration: int = Query(default=..., description="Simulation Duration"),
@@ -212,6 +212,8 @@ async def run_readdy(
         species_config: List[ReaddySpeciesConfig] = Body(..., description="Species Configuration, specifying species name mapped to diffusion constant"),
         reactions_config: List[ReaddyReactionConfig] = Body(..., description="Reactions Configuration, specifying reaction scheme mapped to reaction constant."),
         particles_config: List[ReaddyParticleConfig] = Body(..., description="Particles Configuration, specifying initial particle positions for each particle."),
+        unit_system_config: Dict[str, str] = Body({"length_unit": "micrometer", "time_unit": "second"}, description="Unit system configuration"),
+        reaction_handler: str = Query(default="UncontrolledApproximation", description="Reaction handler as per Readdy simulation documentation."),
 ) -> ReaddyRun:
     try:
         # get job params
@@ -229,7 +231,9 @@ async def run_readdy(
             simulators=["readdy"],
             species_config=species_config,
             reactions_config=reactions_config,
-            particles_config=particles_config
+            particles_config=particles_config,
+            unit_system_config=unit_system_config,
+            reaction_handler=reaction_handler,
         )
 
         # insert job
@@ -244,7 +248,9 @@ async def run_readdy(
             simulators=readdy_run.simulators,
             species_config=[config.model_dump() for config in readdy_run.species_config],
             reactions_config=[config.model_dump() for config in readdy_run.reactions_config],
-            particles_config=[config.model_dump() for config in readdy_run.particles_config]
+            particles_config=[config.model_dump() for config in readdy_run.particles_config],
+            unit_system_config=readdy_run.unit_system_config,
+            reaction_handler=readdy_run.reaction_handler
         )
 
         # return typed obj

@@ -23,20 +23,64 @@ class SmoldynRun(ApiRun):
     simulators: List[str] = ["smoldyn"]
 
 
-# Readdy run config
+# ReaddyRun config:
 # {
-#   "species_config": {
-#     "A": 0.1,
-#     "B": 0.2,
-#     "C": 0.1
-#   },
-#   "reactions_config": {
-#     "A + B -> C": 0.002
-#   },
-#   "particles_config": {
-#     "A": [1.0, 10.0, 2.0]
+#   "species_config": [
+#     {
+#       "name": "E",
+#       "diffusion_constant": 10.0
+#     },
+#     {
+#       "name": "S",
+#       "diffusion_constant": 10.0
+#     },
+#     {
+#       "name": "ES",
+#       "diffusion_constant": 10.0
+#     },
+#     {
+#       "name": "P",
+#       "diffusion_constant": 10.0
+#     }
+#   ],
+#   "reactions_config": [
+#     {
+#       "scheme": "fwd: E +(0.03) S -> ES",
+#       "rate": 86.78638438
+#     },
+#     {
+#       "scheme": "back: ES -> E +(0.03) S",
+#       "rate": 1.0
+#     },
+#     {
+#       "scheme": "prod: ES -> E +(0.03) P",
+#       "rate": 1.0
+#     }
+#   ],
+#   "particles_config": [
+#     {
+#       "name": "E",
+#       "initial_positions": [
+#          [-0.11010841,  0.01048227, -0.07514985],
+#          [0.02715631, -0.03829782,  0.14395517],
+#          [0.05522253, -0.11880506,  0.02222362]
+#       ]
+#     },
+#     {
+#       "name": "S",
+#       "initial_positions": [
+#          [-0.21010841,  0.21048227, -0.07514985],
+#          [0.02715631, -0.03829782,  0.14395517],
+#          [0.05522253, -0.11880506,  0.02222362]
+#       ]
+#     }
+#   ],
+#   "unit_system_config": {
+#     "length_unit": "micrometer",
+#     "time_unit": "second"
 #   }
 # }
+
 
 class ReaddySpeciesConfig(BaseModel):
     name: str
@@ -50,7 +94,7 @@ class ReaddyReactionConfig(BaseModel):
 
 class ReaddyParticleConfig(BaseModel):
     name: str
-    initial_positions: List[float]
+    initial_positions: List[List[float]]
 
 
 class ReaddyRun(BaseModel):
@@ -61,10 +105,11 @@ class ReaddyRun(BaseModel):
     dt: float
     box_size: List[float]
     species_config: Union[Dict[str, float], List[ReaddySpeciesConfig]]
-    particles_config: Union[Dict[str, List[float]], List[ReaddyParticleConfig]]
+    particles_config: Union[Dict[str, List[List[float]]], List[ReaddyParticleConfig]]
     reactions_config: Union[Dict[str, float], List[ReaddyReactionConfig]]
     simulators: Optional[List[str]] = ["readdy"]
-    unit_system_config: Optional[Dict[str, Any]] = {"length_unit": "micrometer", "time_unit": "second"}
+    unit_system_config: Optional[Dict[str, str]] = {"length_unit": "micrometer", "time_unit": "second"}
+    reaction_handler: Optional[str] = "UncontrolledApproximation"
 
 
 class UtcRun(ApiRun):
