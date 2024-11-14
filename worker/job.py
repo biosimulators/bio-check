@@ -247,16 +247,21 @@ class SimulationRunWorker(Worker):
 
     async def run(self):
         # check which endpoint methodology to implement
-        out_dir = tempfile.mkdtemp()
-        source_fp = self.job_params['path']
-        local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
+        source_fp = self.job_params.get('path')
+        if source_fp is not None:
+            # case: job requires some sort of input file and is thus either a smoldyn, utc, or verification run
+            out_dir = tempfile.mkdtemp()
+            local_fp = download_file(source_blob_path=source_fp, out_dir=out_dir, bucket_name=BUCKET_NAME)
 
-        # case: is a smoldyn job
-        if local_fp.endswith('.txt'):
-            await self.run_smoldyn(local_fp)
-        # case: is utc job
-        elif local_fp.endswith('.xml'):
-            await self.run_utc(local_fp)
+            # case: is a smoldyn job
+            if local_fp.endswith('.txt'):
+                await self.run_smoldyn(local_fp)
+            # case: is utc job
+            elif local_fp.endswith('.xml'):
+                await self.run_utc(local_fp)
+        elif "readdy" in self.job_id:
+            # case: job is configured manually by user request
+            await self.run_readdy()
 
         return self.job_result
 
