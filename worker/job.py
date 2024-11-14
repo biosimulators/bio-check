@@ -1,5 +1,6 @@
 import logging
 import math
+import os
 import tempfile
 from abc import ABC, abstractmethod
 from asyncio import sleep
@@ -313,6 +314,7 @@ class SimulationRunWorker(Worker):
         if results_file is not None:
             uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.h5')
             self.job_result = {'results_file': uploaded_file_location}
+            os.remove(results_file)
         else:
             self.job_result = result
 
