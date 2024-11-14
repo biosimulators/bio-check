@@ -17,7 +17,7 @@ from data_model import (
     ReaddySpeciesConfig,
     ReaddyReactionConfig,
     ReaddyParticleConfig,
-    SmoldynJob,
+    FileJob,
     ReaddyRun,
     VerificationOutput,
     OmexVerificationRun,
@@ -209,8 +209,8 @@ async def run_smoldyn(
     summary="Run a readdy simulation.")
 async def run_readdy(
         box_size: List[float] = Query(default=[0.3, 0.3, 0.3], description="Box Size of box"),
-        duration: int = Query(default=..., description="Simulation Duration"),
-        dt: float = Query(default=..., description="Interval of step with which simulation runs"),
+        duration: int = Query(default=10, description="Simulation Duration"),
+        dt: float = Query(default=0.0008, description="Interval of step with which simulation runs"),
         species_config: List[ReaddySpeciesConfig] = Body(
             ...,
             description="Species Configuration, specifying species name mapped to diffusion constant",
@@ -534,7 +534,8 @@ async def verify_sbml(
     "/get-output-file/{job_id}",
     operation_id='get-output-file',
     tags=["Results"],
-    summary='Get the results of an existing simulation run as either a downloadable file or job progression status.')
+    summary='Get the results of an existing simulation run from Smoldyn or Readdy as either a downloadable file or job progression status.'
+)
 async def get_output_file(job_id: str):
     # state-case: job is completed
     if not job_id.startswith("simulation-execution"):
@@ -582,65 +583,6 @@ async def get_output_file(job_id: str):
 
         # return json job status
         return IncompleteJob(
-            job_id=job_id,
-            timestamp=job.get('timestamp'),
-            status=job.get('status'),
-            source=source
-        )
-
-
-@app.get(
-    "/get-smoldyn-output/{job_id}",
-    operation_id='get-smoldyn-output',
-    tags=["Results"],
-    summary='Get the results of an existing Smoldyn simulation run as either a downloadable file or job progression status.')
-async def get_smoldyn_output(job_id: str):
-    # state-case: job is completed
-    if "smoldyn" not in job_id:
-        raise HTTPException(status_code=404, detail="This must be a Smoldyn job query.")
-
-    job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
-    if job is not None:
-        # rm mongo index
-        job.pop('_id', None)
-
-        # parse filepath in bucket and create file response
-        job_data = job
-        if isinstance(job_data, dict):
-            remote_fp = job_data.get("results").get("results_file")
-            if remote_fp is not None:
-                temp_dest = mkdtemp()
-                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
-
-                # return downloadable file blob
-                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])  # TODO: return special smoldyn file instance
-
-    # state-case: job has failed
-    if job is None:
-        job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
-
-    # state-case: job is not in completed:
-    if job is None:
-        job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
-
-    # state-case: job is not in progress:
-    if job is None:
-        job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
-
-    # case: job is either failed, in prog, or pending
-    if job is not None:
-        # rm mongo index
-        job.pop('_id', None)
-
-        # specify source safely
-        src = job.get('source', job.get('path'))
-        if src is not None:
-            source = src.split('/')[-1]
-        else:
-            source = None
-
-        # return json job status
-        return SmoldynJob(
             job_id=job_id,
             timestamp=job.get('timestamp'),
             status=job.get('status'),

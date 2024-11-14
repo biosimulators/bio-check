@@ -78,18 +78,20 @@ paths:
         description: Box Size of box
       - name: duration
         in: query
-        required: true
+        required: false
         schema:
           type: integer
           description: Simulation Duration
+          default: 10
           title: Duration
         description: Simulation Duration
       - name: dt
         in: query
-        required: true
+        required: false
         schema:
           type: number
           description: Interval of step with which simulation runs
+          default: 0.0008
           title: Dt
         description: Interval of step with which simulation runs
       - name: reaction_handler
@@ -397,35 +399,9 @@ paths:
     get:
       tags:
       - Results
-      summary: Get the results of an existing simulation run as either a downloadable
-        file or job progression status.
+      summary: Get the results of an existing simulation run from Smoldyn or Readdy
+        as either a downloadable file or job progression status.
       operationId: get-output-file
-      parameters:
-      - name: job_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Job Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /get-smoldyn-output/{job_id}:
-    get:
-      tags:
-      - Results
-      summary: Get the results of an existing Smoldyn simulation run as either a downloadable
-        file or job progression status.
-      operationId: get-smoldyn-output
       parameters:
       - name: job_id
         in: path

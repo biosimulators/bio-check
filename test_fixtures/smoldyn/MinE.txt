@@ -106,8 +106,8 @@ else
 endif
 compartment_mol NUMBER_MINE MinE cell
 
-#output_files modelout.txt
-#cmd i 0 TIME_STOP 1 executiontime modelout.txt
-#cmd i 0 TIME_STOP 1 listmols modelout.txt
+output_files modelout.txt
+cmd i 0 TIME_STOP 1 executiontime modelout.txt
+cmd i 0 TIME_STOP 1 listmols modelout.txt
 
 end_file

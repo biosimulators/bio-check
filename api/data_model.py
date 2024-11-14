@@ -149,6 +149,10 @@ class SmoldynJob(IncompleteJob):
     pass
 
 
+class FileJob(BaseModel, FileResponse):
+    pass
+
+
 # COMPLETED JOBS:
 
 # TODO: parse results and make object specs
