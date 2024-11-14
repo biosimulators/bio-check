@@ -45,9 +45,6 @@ dotenv.load_dotenv("../assets/dev/config/.env_dev")  # NOTE: create an env confi
 
 # -- constraints -- #
 
-MONGO_URI = os.getenv("MONGO_URI")
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-APP_TITLE = "bio-compose"
 version_path = os.path.join(
     os.path.dirname(__file__),
     ".VERSION"
@@ -58,21 +55,9 @@ if os.path.exists(version_path):
 else:
     APP_VERSION = "0.0.1"
 
-# APP_SERVERS = [
-#     {
-#         "url": "https://biochecknet.biosimulations.org",
-#         "description": "Production server"
-#     },
-#     {
-#         "url": "http://localhost:3001",
-#         "description": "Main Development server"
-#     },
-#     {
-#         "url": "http://localhost:8000",
-#         "description": "Alternate Development server"
-#     }
-# ]
-
+MONGO_URI = os.getenv("MONGO_URI")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+APP_TITLE = "bio-compose"
 APP_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:4200',
@@ -94,12 +79,25 @@ APP_ORIGINS = [
     'https://bio.libretexts.org',
     'https://biochecknet.biosimulations.org'
 ]
-
+APP_SERVERS = [
+    {
+        "url": "https://biochecknet.biosimulations.org",
+        "description": "Production server"
+    },
+    {
+        "url": "http://localhost:3001",
+        "description": "Main Development server"
+    },
+    {
+        "url": "http://localhost:8000",
+        "description": "Alternate Development server"
+    }
+]
 
 # -- app components -- #
 
 router = APIRouter()
-app = FastAPI(title=APP_TITLE, version=APP_VERSION)  # , servers=APP_SERVERS)
+app = FastAPI(title=APP_TITLE, version=APP_VERSION, servers=APP_SERVERS)
 
 # add origins
 app.add_middleware(
