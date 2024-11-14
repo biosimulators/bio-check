@@ -49,12 +49,10 @@ class SmoldynRun(ApiRun):
 #       "rate": 86.78638438
 #     },
 #     {
-#       "scheme": "back: ES -> E +(0.03) S",
-#       "rate": 1.0
+#       "scheme": "back: ES -> E +(0.03) S", "rate": 1.0
 #     },
 #     {
-#       "scheme": "prod: ES -> E +(0.03) P",
-#       "rate": 1.0
+#       "scheme": "prod: ES -> E +(0.03) P", "rate": 1.0
 #     }
 #   ],
 #   "particles_config": [

@@ -206,14 +206,58 @@ async def run_smoldyn(
     tags=["Simulation Execution"],
     summary="Run a readdy simulation.")
 async def run_readdy(
-        box_size: List[float] = Query(default=[1.0, 1.0, 1.0], description="Box Size of box"),
+        box_size: List[float] = Query(default=[0.3, 0.3, 0.3], description="Box Size of box"),
         duration: int = Query(default=..., description="Simulation Duration"),
         dt: float = Query(default=..., description="Interval of step with which simulation runs"),
-        species_config: List[ReaddySpeciesConfig] = Body(..., description="Species Configuration, specifying species name mapped to diffusion constant"),
-        reactions_config: List[ReaddyReactionConfig] = Body(..., description="Reactions Configuration, specifying reaction scheme mapped to reaction constant."),
-        particles_config: List[ReaddyParticleConfig] = Body(..., description="Particles Configuration, specifying initial particle positions for each particle."),
+        species_config: List[ReaddySpeciesConfig] = Body(
+            ...,
+            description="Species Configuration, specifying species name mapped to diffusion constant",
+            examples=[
+                [
+                    {"name": "E",  "diffusion_constant": 10.0},
+                    {"name": "S",  "diffusion_constant": 10.0},
+                    {"name": "ES", "diffusion_constant": 10.0},
+                    {"name": "P", "diffusion_constant": 10.0}
+                ]
+            ]
+        ),
+        reactions_config: List[ReaddyReactionConfig] = Body(
+            ...,
+            description="Reactions Configuration, specifying reaction scheme mapped to reaction constant.",
+            examples=[
+                [
+                    {"scheme": "fwd: E +(0.03) S -> ES", "rate": 86.78638438},
+                    {"scheme": "back: ES -> E +(0.03) S", "rate": 1.0},
+                    {"scheme": "prod: ES -> E +(0.03) P", "rate": 1.0},
+                ]
+            ]
+        ),
+        particles_config: List[ReaddyParticleConfig] = Body(
+            ...,
+            description="Particles Configuration, specifying initial particle positions for each particle.",
+            examples=[
+                [
+                    {
+                        "name": "E",
+                        "initial_positions": [
+                            [-0.11010841, 0.01048227, -0.07514985],
+                            [0.02715631, -0.03829782, 0.14395517],
+                            [0.05522253, -0.11880506, 0.02222362]
+                        ]
+                    },
+                    {
+                        "name": "S",
+                        "initial_positions": [
+                            [-0.21010841, 0.21048227, -0.07514985],
+                            [0.02715631, -0.03829782, 0.14395517],
+                            [0.05522253, -0.11880506, 0.02222362]
+                        ]
+                    }
+                ]
+            ]
+        ),
         unit_system_config: Dict[str, str] = Body({"length_unit": "micrometer", "time_unit": "second"}, description="Unit system configuration"),
-        reaction_handler: str = Query(default="UncontrolledApproximation", description="Reaction handler as per Readdy simulation documentation."),
+        reaction_handler: str = Query(default="UncontrolledApproximation", description="Reaction handler as per Readdy simulation documentation.")
 ) -> ReaddyRun:
     try:
         # get job params
