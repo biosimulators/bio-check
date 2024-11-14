@@ -203,25 +203,36 @@ def run_readdy(
         particles_config: Dict[str, Union[List[float], np.ndarray]],  # {PARTICLE_NAME: INITIAL_POSITIONS_ARRAY}  ie: {'E': np.random.random(size=(n_particles_e, 3)) * edge_length - .5*edge_length}
         dt: float,
         duration: float,
-        unit_system_config: Dict[str, str] = {"length_unit": "micrometer", "time_unit": "second"}
+        unit_system_config: Dict[str, str] = None
 ) -> Dict[str, str]:
     output = {}
     if READDY_ENABLED:
+        # establish reaction network system
+        unit_system = unit_system_config or {"length_unit": "micrometer", "time_unit": "second"}
         system = readdy.ReactionDiffusionSystem(
             box_size=box_size,
-            unit_system=unit_system_config
+            unit_system=unit_system
         )
+
+        # add species via spec
         for species_name, species_difc in species_config.items():
             system.add_species(species_name, species_difc)
+
+        # add reactions via spec
         for reaction_scheme, reaction_rate in reactions_config.items():
             system.reactions.add(reaction_scheme, reaction_rate)
+
+        # configure simulation outputs
         simulation = system.simulation(kernel="CPU")
         simulation.output_file = "out.h5"
         simulation.reaction_handler = "UncontrolledApproximation"
 
+        # set initial particle state
         for particle_name, particle_positions in particles_config.items():
             simulation.add_particles(particle_name, particle_positions)
         simulation.observe.number_of_particles(stride=1, types=list(species_config.keys()))
+
+        # run simulation for given time parameters
         n_steps = int(duration / dt)
         simulation.run(n_steps=n_steps, timestep=dt)
         output = {"results_file": simulation.output_file}

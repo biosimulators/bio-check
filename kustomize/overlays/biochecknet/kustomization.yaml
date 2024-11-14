@@ -14,13 +14,13 @@ images:
 - name: mongo
   newTag: 8.0-rc
 - name: ghcr.io/biosimulators/bio-compose-server-api
-  newTag: 0.0.1
-  # - name: ghcr.io/biosimulators/bio-check-compose_api
-  #   newTag: 1.11.9
+  newTag: 0.0.1-test
 - name: ghcr.io/biosimulators/bio-compose-server-worker
-  newTag: 0.0.1
-  # - name: ghcr.io/biosimulators/bio-check-compose_worker
-  #   newTag: 1.11.7
+  newTag: 0.0.1-test
+# - name: ghcr.io/biosimulators/bio-check-compose_api
+#   newTag: 1.11.9
+# - name: ghcr.io/biosimulators/bio-check-compose_worker
+#   newTag: 1.11.7
 
 replicas:
 - count: 1

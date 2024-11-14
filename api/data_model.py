@@ -23,6 +23,36 @@ class SmoldynRun(ApiRun):
     simulators: List[str] = ["smoldyn"]
 
 
+# Readdy run config
+# {
+#   "species_config": {
+#     "A": 0.1,
+#     "B": 0.2,
+#     "C": 0.1
+#   },
+#   "reactions_config": {
+#     "A + B -> C": 0.002
+#   },
+#   "particles_config": {
+#     "A": [1.0, 10.0, 2.0]
+#   }
+# }
+
+class ReaddySpeciesConfig(BaseModel):
+    name: str
+    diffusion_constant: float
+
+
+class ReaddyReactionConfig(BaseModel):
+    scheme: str
+    rate: float
+
+
+class ReaddyParticleConfig(BaseModel):
+    name: str
+    initial_positions: List[float]
+
+
 class ReaddyRun(BaseModel):
     job_id: str
     timestamp: str
@@ -30,10 +60,10 @@ class ReaddyRun(BaseModel):
     duration: float
     dt: float
     box_size: List[float]
-    species_config: Dict[str, Any]
-    particles_config: Dict[str, Any]
-    reactions_config: Dict[str, Any]
-    simulators: List[str] = ["readdy"]
+    species_config: Union[Dict[str, float], List[ReaddySpeciesConfig]]
+    particles_config: Union[Dict[str, List[float]], List[ReaddyParticleConfig]]
+    reactions_config: Union[Dict[str, float], List[ReaddyReactionConfig]]
+    simulators: Optional[List[str]] = ["readdy"]
     unit_system_config: Optional[Dict[str, Any]] = {"length_unit": "micrometer", "time_unit": "second"}
 
 

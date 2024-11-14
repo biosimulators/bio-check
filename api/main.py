@@ -14,6 +14,9 @@ from starlette.middleware.cors import CORSMiddleware
 
 from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 from data_model import (
+    ReaddySpeciesConfig,
+    ReaddyReactionConfig,
+    ReaddyParticleConfig,
     SmoldynJob,
     ReaddyRun,
     VerificationOutput,
@@ -31,8 +34,7 @@ from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_ex
 from log_config import setup_logging
 
 
-# logging TODO: implement this.
-logger = logging.getLogger("biochecknet.worker.verification.log")
+logger = logging.getLogger("biochecknet.api.main.log")
 setup_logging(logger)
 
 
@@ -45,13 +47,16 @@ dotenv.load_dotenv("../assets/dev/config/.env_dev")  # NOTE: create an env confi
 
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
 APP_TITLE = "bio-compose"
-APP_VERSION = "1.12.0"
+version_path = ".VERSION"
+if os.path.exists(version_path):
+    print('Exists!')
+    with open(version_path, 'r') as f:
+        APP_VERSION = f.read().strip()
+else:
+    print('No Exists!')
+    APP_VERSION = "0.0.1"
 
-# TODO: allow parsing of this prior to image build
-# with open('.CONTAINER_VERSION', 'r') as f:
-#     APP_VERSION = f.read().strip()
 # APP_SERVERS = [
 #     {
 #         "url": "https://biochecknet.biosimulations.org",
@@ -203,12 +208,12 @@ async def run_smoldyn(
     tags=["Simulation Execution"],
     summary="Run a smoldyn simulation.")
 async def run_readdy(
-        box_size: List[float] = Query(default=None, description="Box Size of box"),
-        duration: int = Query(default=None, description="Simulation Duration"),
-        dt: float = Query(default=None, description="Interval of step with which simulation runs"),
-        species_config: Dict[str, Any] = Body(..., description="Species Configuration"),
-        reactions_config: Dict[str, Any] = Body(..., description="Reactions Configuration"),
-        particles_config: Dict[str, Any] = Body(..., description="Particles Configuration"),
+        box_size: List[float] = Query(default=[1.0, 1.0, 1.0], description="Box Size of box"),
+        duration: int = Query(default=..., description="Simulation Duration"),
+        dt: float = Query(default=..., description="Interval of step with which simulation runs"),
+        species_config: List[ReaddySpeciesConfig] = Body(..., example={'A': 0.3}, description="Species Configuration, specifying species name mapped to diffusion constant"),
+        reactions_config: List[ReaddyReactionConfig] = Body(..., description="Reactions Configuration, specifying reaction scheme mapped to reaction constant."),
+        particles_config: List[ReaddyParticleConfig] = Body(..., description="Particles Configuration, specifying initial particle positions for each particle."),
 ) -> ReaddyRun:
     try:
         # get job params
@@ -219,6 +224,7 @@ async def run_readdy(
         readdy_run = ReaddyRun(
             job_id=job_id,
             timestamp=_time,
+            box_size=box_size,
             status=JobStatus.PENDING.value,
             duration=duration,
             dt=dt,
@@ -231,15 +237,16 @@ async def run_readdy(
         # insert job
         pending_job = await db_connector.insert_job_async(
             collection_name=DatabaseCollections.PENDING_JOBS.value,
+            box_size=readdy_run.box_size,
             job_id=readdy_run.job_id,
             timestamp=readdy_run.timestamp,
             status=readdy_run.status,
             duration=readdy_run.duration,
             dt=readdy_run.dt,
             simulators=readdy_run.simulators,
-            species_config=readdy_run.species_config,
-            reactions_config=readdy_run.reactions_config,
-            particles_config=readdy_run.particles_config
+            species_config=[config.model_dump() for config in readdy_run.species_config],
+            reactions_config=[config.model_dump() for config in readdy_run.reactions_config],
+            particles_config=[config.model_dump() for config in readdy_run.particles_config]
         )
 
         # return typed obj

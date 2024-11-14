@@ -17,6 +17,7 @@ from io_worker import get_sbml_species_mapping, read_h5_reports, download_file, 
 from data_generator import (
     generate_time_course_data,
     run_smoldyn,
+    run_readdy,
     handle_sbml_exception,
     generate_biosimulator_utc_outputs,
     generate_sbml_utc_outputs,
@@ -163,15 +164,16 @@ class Supervisor:
                         requested_simulators=pending_job.get('simulators')
                     )
 
-                    # store the state result
-                    state_result = worker.state_result
-                    await self.db_connector.insert_job_async(
-                        collection_name="result_states",
-                        job_id=job_id,
-                        timestamp=self.db_connector.timestamp(),
-                        source=source_name,
-                        state=state_result,
-                    )
+                    # store the state result if composite (currently only verification)
+                    if isinstance(worker, VerificationWorker):
+                        state_result = worker.state_result
+                        await self.db_connector.insert_job_async(
+                            collection_name="result_states",
+                            job_id=job_id,
+                            timestamp=self.db_connector.timestamp(),
+                            source=source_name,
+                            state=state_result,
+                        )
 
                     # remove in progress job
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
@@ -276,6 +278,35 @@ class SimulationRunWorker(Worker):
         results_file = result.get('results_file')
         if results_file is not None:
             uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.txt')
+            self.job_result = {'results_file': uploaded_file_location}
+        else:
+            self.job_result = result
+
+    async def run_readdy(self):
+        # get request params
+        duration = self.job_params.get('duration')
+        dt = self.job_params.get('dt')
+        box_size = self.job_params.get('box_size')
+        species_config = self.job_params.get('species_config')
+        particles_config = self.job_params.get('particles_config')
+        reactions_config = self.job_params.get('reactions_config')
+        unit_system_config = self.job_params.get('unit_system_config')
+
+        # run simulations
+        result = run_readdy(
+            box_size=box_size,
+            species_config=species_config,
+            particles_config=particles_config,
+            reactions_config=reactions_config,
+            unit_system_config=unit_system_config,
+            duration=duration,
+            dt=dt
+        )
+
+        # extract results file and write to bucket
+        results_file = result.get('results_file')
+        if results_file is not None:
+            uploaded_file_location = await write_uploaded_file(job_id=self.job_id, uploaded_file=results_file, bucket_name=BUCKET_NAME, extension='.h5')
             self.job_result = {'results_file': uploaded_file_location}
         else:
             self.job_result = result
