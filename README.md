@@ -1,6 +1,6 @@
 ![GitHub CI](https://github.com/biosimulators/bio-check/actions/workflows/ci.yml/badge.svg)
 ![Base Deployment](https://github.com/biosimulators/bio-check/actions/workflows/deploy-base.yml/badge.svg)
-![Microservices Deployment](https://github.com/biosimulators/bio-check/actions/workflows/deploy-microservices.yml/badge.svg)
+
 # BioCheck (bio-compose-server): A Biological Simulation Verification Service
 ### __This service utilizes separate containers for REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
