@@ -2,10 +2,13 @@ name: Deploy Base Image
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  release:
+    branches:
+      - "main"
+  # workflow_run:
+  #   workflows: ["CI"]
+  #   types:
+  #     - completed
 
 jobs:
   deploy-base-image:
