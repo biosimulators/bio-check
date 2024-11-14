@@ -219,12 +219,12 @@ def run_readdy(
         for config in species_config:
             for species_name, species_difc in config.items():
                 species_names.append(species_name)
-                system.add_species(species_name, species_difc)
+                system.add_species(species_name, float(species_difc))
 
         # add reactions via spec
         for config in reactions_config:
             for reaction_scheme, reaction_rate in config.items():
-                system.reactions.add(reaction_scheme, reaction_rate)
+                system.reactions.add(reaction_scheme, float(reaction_rate))
 
         # configure simulation outputs
         simulation = system.simulation(kernel="CPU")
@@ -241,7 +241,7 @@ def run_readdy(
         )
 
         # run simulation for given time parameters
-        n_steps = int(duration / dt)
+        n_steps = int(float(duration) / dt)
         simulation.run(n_steps=n_steps, timestep=dt)
         output = {"results_file": simulation.output_file}
     else:
