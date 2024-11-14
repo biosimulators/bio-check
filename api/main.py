@@ -538,7 +538,7 @@ async def verify_sbml(
 async def get_output_file(job_id: str):
     # state-case: job is completed
     if "smoldyn" not in job_id or "readdy" not in job_id:
-        raise HTTPException(status_code=404, detail="This must be an output file job query.")
+        raise HTTPException(status_code=404, detail="This must be an output file job query with either Smoldyn or Readdy.")
 
     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
     if job is not None:
