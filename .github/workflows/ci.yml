@@ -3,9 +3,9 @@ name: CI
 # TODO: add main here
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - "main"
+  push:
+    branches:
+      - "main"
 
 jobs:
   test-microservices:
@@ -100,5 +100,5 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Check if Docker Compose is installed correctly
 
-      - name: Build Docker containers with Docker Compose
-        run: docker-compose build
+      # - name: Build Docker containers with Docker Compose
+      #   run: docker-compose build
