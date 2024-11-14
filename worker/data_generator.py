@@ -236,7 +236,7 @@ def run_readdy(
         # set initial particle state and configure observations
         for config in particles_config:
             particle_name = config["name"]
-            particle_positions = config["positions"]
+            particle_positions = config["initial_positions"]
             simulation.add_particles(particle_name, particle_positions)
         simulation.observe.number_of_particles(
             stride=1,
