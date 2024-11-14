@@ -217,24 +217,27 @@ def run_readdy(
         # add species via spec
         species_names = []
         for config in species_config:
-            for species_name, species_difc in config.items():
-                species_names.append(species_name)
-                system.add_species(species_name, float(species_difc))
+            species_name = config["name"]
+            species_difc = config["diffusion_constant"]
+            species_names.append(species_name)
+            system.add_species(species_name, diffusion_constant=float(species_difc))
 
         # add reactions via spec
         for config in reactions_config:
-            for reaction_scheme, reaction_rate in config.items():
-                system.reactions.add(reaction_scheme, float(reaction_rate))
+            reaction_scheme = config["scheme"]
+            reaction_rate = config["rate"]
+            system.reactions.add(reaction_scheme, rate=float(reaction_rate))
 
         # configure simulation outputs
         simulation = system.simulation(kernel="CPU")
         simulation.output_file = "out.h5"
         simulation.reaction_handler = "UncontrolledApproximation"
 
-        # set initial particle state
+        # set initial particle state and configure observations
         for config in particles_config:
-            for particle_name, particle_positions in config.items():
-                simulation.add_particles(particle_name, particle_positions)
+            particle_name = config["name"]
+            particle_positions = config["positions"]
+            simulation.add_particles(particle_name, particle_positions)
         simulation.observe.number_of_particles(
             stride=1,
             types=list(set(species_names))
