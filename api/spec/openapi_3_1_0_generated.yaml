@@ -589,7 +589,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BigraphRegistryAddresses'
-  /get-composition-state:
+  /get-composition-state/{job_id}:
     get:
       tags:
       - Composition
@@ -597,7 +597,7 @@ paths:
       operationId: get-composition-state
       parameters:
       - name: job_id
-        in: query
+        in: path
         required: true
         schema:
           type: string

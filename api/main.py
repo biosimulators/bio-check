@@ -342,6 +342,35 @@ async def run_utc(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# TODO: create an implementation of the bigraph node spec via data model here instead of arbitrary dict
+@app.post(
+    "/run-composition",
+    name="Run a process bigraph composition",
+    operation_id="run-composition",
+    tags=["Composition"],
+    summary="Run a process bigraph composition.")
+async def run_composition(
+        spec: Dict[str, Any] = Body(..., description="Process bigraph specification"),
+):
+    try:
+        job_id = "composition" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+        pending_composition_job = {
+            'status': JobStatus.PENDING.value,
+            'state_spec': spec,
+            'timestamp': _time,
+        }
+        await db_connector.write(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            **pending_composition_job,
+        )
+
+        return pending_composition_job
+    except Exception as e:
+        logger.error(str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post(
     "/verify-omex",
     response_model=OmexVerificationRun,
@@ -845,17 +874,19 @@ async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
 
 
 @app.get(
-    "/get-composition-state",
+    "/get-composition-state/{job_id}",
     operation_id="get-composition-state",
     tags=["Composition"],
     summary="Get the composite spec of a given simulation run indexed by job_id.")
 async def get_composition_state(job_id: str):
-    spec = await db_connector.read(collection_name="result_states", job_id=job_id)
+    try:
+        spec = await db_connector.read(collection_name="result_states", job_id=job_id)
+        if "_id" in spec.keys():
+            spec.pop("_id")
 
-    # TODO: here return a more specific data schema
-    if spec is not None:
         return spec
-    else:
+    except Exception as e:
+        logger.error(str(e))
         raise HTTPException(status_code=500, detail=f"No specification found for job with id: {job_id}.")
 
 

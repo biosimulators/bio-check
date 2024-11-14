@@ -17,6 +17,7 @@ from log_config import setup_logging
 from io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
 from data_generator import (
     generate_time_course_data,
+    generate_composition_result_data,
     run_smoldyn,
     run_readdy,
     handle_sbml_exception,
@@ -149,6 +150,8 @@ class Supervisor:
                     # check: files
                     elif job_id.startswith('files'):
                         worker = FilesWorker(job=pending_job)
+                    elif job_id.startswith('composition'):
+                        worker = CompositionRunWorker(job=pending_job)
 
                     # when worker completes, dismiss worker (if in parallel)
                     await worker.run()
@@ -165,8 +168,8 @@ class Supervisor:
                         requested_simulators=pending_job.get('simulators')
                     )
 
-                    # store the state result if composite (currently only verification)
-                    if isinstance(worker, VerificationWorker):
+                    # store the state result if composite (currently only verification and Composition)
+                    if isinstance(worker, VerificationWorker) or isinstance(worker, CompositionRunWorker):
                         state_result = worker.state_result
                         await self.db_connector.insert_job_async(
                             collection_name="result_states",
@@ -240,6 +243,23 @@ class Worker(ABC):
 
     def result(self) -> tuple[dict, bool]:
         return (self.job_result, self.job_failed)
+
+
+class CompositionRunWorker(Worker):
+    def __init__(self, job: Dict, supervisor: Supervisor = None):
+        super().__init__(job=job, supervisor=supervisor)
+        self.state_result = {}
+
+    async def run(self):
+        spec = self.job_params.get('state_spec')
+        duration = self.job_params.get('duration')
+        await self.generate_composition_result_data(state_spec=spec, duration=duration)
+        return self.job_result
+
+    async def generate_composition_result_data(self, state_spec, duration):
+        result = generate_composition_result_data(state_spec=state_spec, core=APP_PROCESS_REGISTRY, duration=duration)
+        self.job_result = {'results': result['results']}
+        self.state_result = result.get('state_result')
 
 
 class SimulationRunWorker(Worker):

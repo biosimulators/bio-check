@@ -194,6 +194,28 @@ def generate_time_course_data(
     return {'output_data': output_data, 'state': state_spec}
 
 
+def generate_composition_result_data(
+        state_spec: Dict[str, Any],
+        duration: int = None,
+        core: ProcessTypes = None,
+        out_dir: str = None
+) -> Dict[str, Union[List[Dict[str, Any]], Dict[str, Any]]]:
+    simulation = Composite({'state': state_spec, 'emitter': {'mode': 'all'}}, core=core)
+    if duration is None:
+        duration = 10
+    simulation.run(duration)
+
+    results = simulation.gather_results()[('emitter',)]
+
+    import json
+    if out_dir is None:
+        out_dir = mkdtemp()
+    with open(f'{out_dir}/update.json', 'r') as f:
+        state_spec = json.load(f)
+
+    return {'results': results, 'state': state_spec}
+
+
 # -- direct simulator API wrappers -- #
 
 def run_readdy(
