@@ -33,7 +33,7 @@ load_dotenv('../assets/dev/config/.env_dev')
 
 
 # logging TODO: implement this.
-logger = logging.getLogger("biochecknet.worker.job.log")
+logger = logging.getLogger("biochecknet.job.global.log")
 setup_logging(logger)
 
 
@@ -75,6 +75,8 @@ class Supervisor:
         self.job_queue = self.db_connector.pending_jobs()
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
         self.app_process_registry = app_process_registry
+        self.logger = logging.getLogger("biochecknet.job.supervisor.log")
+        setup_logging(self.logger)
 
     async def check_jobs(self) -> int:
         """Returns non-zero if max retries reached, zero otherwise.
@@ -184,6 +186,7 @@ class Supervisor:
                 except:
                     # save new execution error to db
                     error = handle_exception('Job Execution Error')
+                    self.logger.error(error)
                     await self.db_connector.insert_job_async(
                         collection_name="failed_jobs",
                         job_id=job_id,
@@ -222,8 +225,9 @@ class Worker(ABC):
     job_result: Dict | None
     job_failed: bool
     supervisor: Supervisor
+    logger: logging.Logger
 
-    def __init__(self, job: Dict, supervisor: Supervisor = None):
+    def __init__(self, job: Dict, scope: str, supervisor: Supervisor = None):
         """
         Args:
             job: job parameters received from the supervisor (who gets it from the db) which is a document from the pending_jobs collection within mongo.
@@ -236,6 +240,9 @@ class Worker(ABC):
         # for parallel processing in a pool of workers. TODO: eventually implement this.
         self.worker_id = unique_id()
         self.supervisor = supervisor
+        self.scope = scope
+        self.logger = logging.getLogger(f"biochecknet.job.worker-{self.scope}.log")
+        setup_logging(self.logger)
 
     @abstractmethod
     async def run(self):
@@ -247,7 +254,7 @@ class Worker(ABC):
 
 class CompositionRunWorker(Worker):
     def __init__(self, job: Dict, supervisor: Supervisor = None):
-        super().__init__(job=job, supervisor=supervisor)
+        super().__init__(job=job, supervisor=supervisor, scope='composition')
         self.state_result = {}
 
     async def run(self):
@@ -264,7 +271,7 @@ class CompositionRunWorker(Worker):
 
 class SimulationRunWorker(Worker):
     def __init__(self, job: Dict):
-        super().__init__(job=job)
+        super().__init__(job=job, scope='simulation-run')
 
     async def run(self):
         # check which endpoint methodology to implement
@@ -350,7 +357,7 @@ class SimulationRunWorker(Worker):
 
 class VerificationWorker(Worker):
     def __init__(self, job: Dict, supervisor: Supervisor = None):
-        super().__init__(job=job, supervisor=supervisor)
+        super().__init__(job=job, supervisor=supervisor, scope='verification')
         self.state_result = {}
 
     async def run(self, selection_list: List[str] = None) -> Dict:
@@ -374,6 +381,7 @@ class VerificationWorker(Worker):
             # self.job_result['rmse'] = self._calculate_pairwise_rmse()
         except:
             e = handle_exception('RMSE Calculation')
+            self.logger.error(e)
             self.job_result['rmse'] = {'error': e}
 
         # simulators = self.job_params.get('simulators')
@@ -877,7 +885,7 @@ class VerificationWorker(Worker):
                     mse_matrix[j, i] = mse_matrix[i, j]
         return pd.DataFrame(mse_matrix, index=_simulators, columns=_simulators)
 
-    def calculate_mse(self, a, b) -> float:
+    def calculate_mse(self, a, b) -> np.float64:
         if isinstance(a, list):
             a = np.array(a)
         if isinstance(b, list):
@@ -895,7 +903,7 @@ class VerificationWorker(Worker):
 
 class FilesWorker(Worker):
     def __init__(self, job):
-        super().__init__(job)
+        super().__init__(job, scope='files')
 
     async def run(self):
         job_id = self.job_params['job_id']
@@ -942,70 +950,4 @@ class FilesWorker(Worker):
     #     # set uploaded file as result
     #     self.job_result = {'results_file': uploaded_file_location}
 
-
-"""class CompositionSupervisor:
-    def __init__(self, db_connector: MongoDbConnector):
-        self.db_connector = db_connector
-        self.queue_timer = 5
-        self.preferred_queue_index = 0
-        self.job_queue = self.db_connector.pending_jobs()
-        self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
-
-    def job_exists(self, job_id: str, collection_name: str) -> bool:
-        unique_id_query = {'job_id': job_id}
-        coll: MongoCollection = self.db_connector.db[collection_name]
-        job = coll.find_one(unique_id_query) or None
-
-        return job is not None
-
-    async def check_jobs(self) -> int:
-        for _ in range(self.queue_timer):
-            # perform check
-            await self._check()
-
-            # rest
-            await sleep(2)
-
-            # refresh jobs
-            self.job_queue = self.db_connector.pending_jobs()
-
-        return 0
-
-    async def _check(self):
-        worker = None
-        for i, pending_job in enumerate(self.job_queue):
-            # get job params
-            job_id = pending_job.get('job_id')
-            source = pending_job.get('path')
-            source_name = source.split('/')[-1]
-            duration = pending_job.get('duration')
-            simulator = pending_job.get('simulator')
-
-            # check terminal collections for job
-            job_completed = self.job_exists(job_id=job_id, collection_name="completed_jobs")
-            job_failed = self.job_exists(job_id=job_id, collection_name="failed_jobs")
-
-            # case: job is not complete, otherwise do nothing
-            if not job_completed and not job_failed:
-                # run job again
-                try:
-                    # check: composition
-                    if job_id.startswith('composition-run'):
-                        worker = CompositionWorker(job=pending_job)
-
-                    worker.run_composite_sse(duration)
-                    result_data = worker.job_result
-
-                    await self.db_connector.insert_job_async(
-                        collection_name=DatabaseCollections.COMPLETED_JOBS.value,
-                        job_id=job_id,
-                        timestamp=self.db_connector.timestamp(),
-                        status=JobStatus.COMPLETED.value,
-                        source=source_name,
-                        simulator=simulator,
-                        results=result_data['data']
-                    )
-                except:
-                    print('Error!')
-"""
 
