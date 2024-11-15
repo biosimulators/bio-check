@@ -11,7 +11,6 @@
 ### This application ("BioCompose") uses a microservices architecture which presents the following libraries:
 
 - `api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
-- `storage`: This library handles MongoDB configs as well as bucket-like storages for uploaded files.
 - `worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and comparison execution.
 
 ### The simulators used by this application consist of multiple python language bindings of C/C++ libraries. Given this fact, is it helpful to be aware of the dependency network required by each simulator. See the following documentation for simulators used in this application:
