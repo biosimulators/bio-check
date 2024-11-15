@@ -171,26 +171,17 @@ class Supervisor:
                         source=source_name,
                         requested_simulators=pending_job.get('simulators')
                     )
-                    # await self.db_connector.insert_job_async(
-                    #     collection_name=DatabaseCollections.COMPLETED_JOBS.value,
-                    #     job_id=job_id,
-                    #     timestamp=self.db_connector.timestamp(),
-                    #     status=JobStatus.COMPLETED.value,
-                    #     results=result_data,
-                    #     source=source_name,
-                    #     requested_simulators=pending_job.get('simulators')
-                    # )
 
                     # store the state result if composite (currently only verification and Composition)
-                    # if isinstance(worker, VerificationWorker) or isinstance(worker, CompositionRunWorker):
-                    #     state_result = worker.state_result
-                    #     await self.db_connector.insert_job_async(
-                    #         collection_name="result_states",
-                    #         job_id=job_id,
-                    #         timestamp=self.db_connector.timestamp(),
-                    #         source=source_name,
-                    #         state=state_result,
-                    #     )
+                    if isinstance(worker, VerificationWorker) or isinstance(worker, CompositionRunWorker):
+                        state_result = worker.state_result
+                        await self.db_connector.write(
+                            collection_name="result_states",
+                            job_id=job_id,
+                            timestamp=self.db_connector.timestamp(),
+                            source=source_name,
+                            state=state_result,
+                        )
 
                     # remove in progress job
                     self.db_connector.db.in_progress_jobs.delete_one({'job_id': job_id})
@@ -198,7 +189,7 @@ class Supervisor:
                     # save new execution error to db
                     error = handle_exception('Job Execution Error')
                     self.logger.error(error)
-                    await self.db_connector.insert_job_async(
+                    await self.db_connector.write(
                         collection_name="failed_jobs",
                         job_id=job_id,
                         timestamp=self.db_connector.timestamp(),
