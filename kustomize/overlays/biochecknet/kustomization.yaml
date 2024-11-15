@@ -15,7 +15,7 @@ images:
   newTag: 8.0-rc
 - name: ghcr.io/biosimulators/bio-compose-server-api
   newTag: 0.0.1-test
-- name: ghcr.io/biosimulators/bio-compose-server-worker:0.0.1-test
+- name: ghcr.io/biosimulators/bio-compose-server-worker
   newTag: 0.0.1-test
 # - name: ghcr.io/biosimulators/bio-check-compose_api
 #   newTag: 1.11.9
