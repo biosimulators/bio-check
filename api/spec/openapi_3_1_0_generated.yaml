@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 0.0.1-test
+  version: 0.1.0
 paths:
   /:
     get:
@@ -167,6 +167,32 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Body_run-utc'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /run-composition:
+    post:
+      tags:
+      - Composition
+      summary: Run a process bigraph composition.
+      operationId: run-composition
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              title: Spec
+              description: Process bigraph specification
+        required: true
       responses:
         '200':
           description: Successful Response
