@@ -1,0 +1,66 @@
+name: Deploy Worker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get-worker-microservice-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Extract worker container version
+        id: extract_worker_version
+        run: |
+          WORKER_VERSION=$(python -B .github/parse_container_version.py worker)
+          echo "WORKER_VERSION=$WORKER_VERSION" >> $GITHUB_ENV
+          echo "WORKER Version: $WORKER_VERSION"
+
+      - name: Debug output of extracted versions
+        run: |
+          echo "WORKER_VERSION=${{ env.WORKER_VERSION }}"
+
+  build-worker-microservice-image:
+    needs: get-worker-microservice-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r assets/pipeline/config/requirements.github.cd.txt
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version  # Check if Docker Compose is installed correctly
+
+      - name: Authorize push script
+        run: chmod +x ./assets/docker/scripts/push_image.sh
+
+      - name: Build worker microservice image
+        run: |
+          sudo rm -rf worker/__pycache__
+          docker-compose build worker
+
+      - name: Deploy worker microservice container to GHCR
+        run: |
+          ./assets/docker/scripts/push_image.sh worker ${{ env.WORKER_VERSION }}
+        env:
+          REPO_ADMIN_GH_USERNAME: ${{ secrets.REPO_ADMIN_GH_USERNAME }}
+          REPO_ADMIN_GHCR_TOKEN: ${{ secrets.REPO_ADMIN_GHCR_TOKEN }}
