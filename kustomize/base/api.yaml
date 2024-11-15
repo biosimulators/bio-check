@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: biochecknet-api
-          image: ghcr.io/biosimulators/bio-check-api  # push to ghcr.io/biosimulators
+          image: ghcr.io/biosimulators/bio-compose-server-api  # push to ghcr.io/biosimulators/bio-check-compose_worker
           imagePullPolicy: "Always"
           resources:
             requests:
