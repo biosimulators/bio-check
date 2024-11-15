@@ -19,9 +19,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check" \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1 \
-    TEST_SBML_FP="test-fixtures/sbml-core/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
+    TEST_SBML_FP="../test_fixtures/sbml-core/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
     TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
-    TEST_OMEX_FP="test-fixtures/sbml-core/Elowitz-Nature-2000-Repressilator.omex"
+    TEST_OMEX_FP="../test_fixtures/sbml-core/Elowitz-Nature-2000-Repressilator.omex"
 
 # copy docker assets
 COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
