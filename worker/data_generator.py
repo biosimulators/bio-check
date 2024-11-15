@@ -467,7 +467,10 @@ def run_sbml_amici(sbml_fp: str, start: int, dur: int, steps: int) -> Dict[str, 
         results = {}
         floating_results = dict(zip(
             sbml_species_ids,
-            list(map(lambda x: result_data.by_id(x), floating_species_list))
+            list(map(
+                lambda x: result_data.by_id(x).tolist() if isinstance(x, np.ndarray) else result_data.by_id(x),
+                floating_species_list
+            ))
         ))
         results = floating_results
 
