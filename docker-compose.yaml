@@ -33,7 +33,7 @@ services:
     build:
       context: ./worker
       dockerfile: Dockerfile-worker
-    image: bio-compose-server-worker:0.1.0  # ghcr.io/biosimulators/bio-check-compose_worker:1.11.9  # .7
+    image: bio-compose-server-worker:0.1.1  # ghcr.io/biosimulators/bio-check-compose_worker:1.11.9  # .7
     container_name: worker
     environment:
       - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
