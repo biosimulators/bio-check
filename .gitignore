@@ -19,8 +19,6 @@ bucket.sh
 NOTES
 scratch.ipynb
 test.ipynb
-.ipynb_checkpoints
-.ipynb_checkpoints/
 poetry.lock
 *_parsetab.py
 condaenv.n_dn60fa.requirements.txt
