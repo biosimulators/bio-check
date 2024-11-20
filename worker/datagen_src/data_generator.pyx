@@ -18,12 +18,13 @@ from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
-from log_config import setup_logging
-from shared_worker import handle_exception
-from compatible import COMPATIBLE_UTC_SIMULATORS
-from io_worker import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping, read_report_outputs, read_h5_reports, make_dir
-from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from data_model import BiosimulationsRunOutputData
+# TODO: make other content for this 
+# from log_config import setup_logging
+# from shared_worker import handle_exception
+# from compatible import COMPATIBLE_UTC_SIMULATORS
+# from io_worker import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping, read_report_outputs, read_h5_reports, make_dir
+# from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+# from data_model import BiosimulationsRunOutputData
 
 # logging TODO: implement this.
 logger: Logger = logging.getLogger("biochecknet.worker.data_generator.log")
