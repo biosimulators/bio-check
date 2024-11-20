@@ -8,7 +8,8 @@ FROM ghcr.io/biosimulators/bio-compose-server-base:0.0.1-test
 
 SHELL ["/usr/bin/env", "bash", "-c"]
 
-COPY . .
+COPY ./service ./service
+COPY ./datagen_build ./datagen_build
 
 ENV MONGO_URI=mongodb://mongodb/service_requests
 

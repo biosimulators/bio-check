@@ -1,6 +1,7 @@
+import sys
+import os
 import logging
 import math
-import os
 import tempfile
 from abc import ABC, abstractmethod
 from asyncio import sleep
@@ -15,17 +16,21 @@ from pymongo.collection import Collection as MongoCollection
 from shared_worker import MongoDbConnector, JobStatus, DatabaseCollections, unique_id, BUCKET_NAME, handle_exception
 from log_config import setup_logging
 from io_worker import get_sbml_species_mapping, read_h5_reports, download_file, format_smoldyn_configuration, write_uploaded_file
-from data_generator import (
-    generate_time_course_data,
-    generate_composition_result_data,
-    run_smoldyn,
-    run_readdy,
-    handle_sbml_exception,
-    generate_biosimulator_utc_outputs,
-    generate_sbml_utc_outputs,
-    get_output_stack,
-    sbml_output_stack
-)
+
+
+# TODO: fully implement and import this data generator content from build and cython:
+sys.path.append(os.path.abspath('../datagen_build'))
+# from data_generator import (
+#     generate_time_course_data,
+#     generate_composition_result_data,
+#     run_smoldyn,
+#     run_readdy,
+#     handle_sbml_exception,
+#     generate_biosimulator_utc_outputs,
+#     generate_sbml_utc_outputs,
+#     get_output_stack,
+#     sbml_output_stack
+# )
 
 
 # TODO: Create general Worker process implementation!

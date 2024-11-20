@@ -8,9 +8,10 @@ channels:
 dependencies:
   - pip
   - python=3.10
+  - cython
   - pysces
-  # - pymem3dg
   - readdy
+  - # - pymem3dg
   - pip:
       - h5py
       - process-bigraph
