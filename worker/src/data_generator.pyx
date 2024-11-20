@@ -3,7 +3,7 @@ from importlib import import_module
 from tempfile import mkdtemp
 import uuid
 from pprint import pformat
-from typing import *
+from typing import Dict, List, Tuple, Any
 from abc import abstractmethod
 from logging import warn, Logger
 from uuid import uuid4
