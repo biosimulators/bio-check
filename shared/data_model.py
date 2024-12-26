@@ -4,7 +4,6 @@ import os
 from dataclasses import dataclass, asdict
 from enum import Enum
 from typing import *
-from typing import List, Optional, Any, Dict, Union
 
 from dotenv import load_dotenv
 from pydantic import Field, BaseModel as _BaseModel, ConfigDict
@@ -13,7 +12,7 @@ import numpy as np
 
 
 REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
-DEV_ENV_PATH = os.path.join(REPO_ROOT, 'assets', 'dev', 'config', '.env')
+DEV_ENV_PATH = os.path.join(REPO_ROOT, 'shared', '.env')
 
 load_dotenv(DEV_ENV_PATH)
 
@@ -211,39 +210,6 @@ class OutputData(BaseModel):
 # -- verification --
 
 # -- simulation execution --
-
-class PendingSmoldynJob(Job):
-    job_id: str
-    timestamp: str
-    path: str
-    status: str = "PENDING"
-    duration: Optional[int] = None
-    dt: Optional[float] = None
-    # initial_species_counts: Optional[Dict] = None
-
-
-class PendingUtcJob(Job):
-    job_id: str
-    timestamp: str
-    status: str
-    path: str
-    start: int
-    end: int
-    steps: int
-    simulator: str
-
-
-# -- files --
-
-class PendingSimulariumJob(Job):
-    """jobid timestamp path filename box_size status"""
-    job_id: str
-    timestamp: str
-    path: str
-    filename: str
-    box_size: float
-    status: str = "PENDING"
-
 
 # -- composition --
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 platform="$(python3 -c 'import platform;print(platform.system())')"
 
 # create conda env from env file
@@ -13,6 +15,6 @@ if [ "$platform" == "Darwin" ]; then
 fi
 
 # install deps from pyproject and activate env
-conda run -n bio-compose-servser pip install --upgrade pip
+conda run -n bio-compose-server pip install --upgrade pip
 conda run -n bio-compose-server pip install -e .
 conda activate bio-compose-server
