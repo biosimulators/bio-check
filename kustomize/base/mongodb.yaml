@@ -48,12 +48,12 @@ spec:
             - name: MONGODB_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-api-secrets
+                  name: biochecknet-gateway-secrets
                   key: mongo-password
             - name: MONGODB_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-api-secrets
+                  name: biochecknet-gateway-secrets
                   key: mongo-username
           ports:
             - containerPort: 27017

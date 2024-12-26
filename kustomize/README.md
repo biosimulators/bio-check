@@ -135,7 +135,7 @@ kubectl apply -f mysealedsecret.yaml
 ```bash
 brew install cmctl
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.yaml
-cmctl check api
+cmctl check gateway
 ```
 
 # Configure minikube networking for local development
@@ -232,7 +232,7 @@ run VCell Java Client (cbit.vcell.client.VCellClientMain) against local minikube
 2. use local DNS entry for minikube cluster (see spec.tls.hosts in /overlays/devjim/vcell-ingress.yaml)
 
 ```sh
---api-host=minikube.local:443
+--gateway-host=minikube.local:443
 ```
 
 # debugging

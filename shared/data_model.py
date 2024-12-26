@@ -1,10 +1,12 @@
-# -- api models -- #
+# -- gateway models -- #
+# -- worker models -- #
+from dataclasses import dataclass, asdict
+from typing import *
 from typing import List, Optional, Any, Dict, Union
 
 from pydantic import Field
 from fastapi.responses import FileResponse
-
-from shared_api import BaseModel, Job, JobStatus
+import numpy as np
 
 
 # PENDING JOBS:
@@ -116,25 +118,6 @@ class UtcRun(ApiRun):
     steps: int
 
 
-class VerificationRun(ApiRun):
-    include_outputs: Optional[bool] = True
-    selection_list: Optional[List[str]] = None
-    # expected_results: Optional[str] = None
-    comparison_id: Optional[str] = None
-    rTol: Optional[float] = None
-    aTol: Optional[float] = None
-
-
-class OmexVerificationRun(VerificationRun):
-    pass
-
-
-class SbmlVerificationRun(VerificationRun):
-    start: int
-    end: int
-    steps: int
-
-
 # IN PROGRESS JOBS:
 
 # TODO: Implement this:
@@ -179,63 +162,16 @@ class SmoldynOutput(FileResponse):
     pass
 
 
-class VerificationOutput(Output):
-    """
-    Return schema for get-verification-output.
-
-    Parameters:
-        job_id: str
-        timestamp: str
-        status: str --> may be COMPLETE, IN_PROGRESS, FAILED, or PENDING
-        source: str
-        requested_simulators: List[str]
-        results: Optional[dict] = None TODO: parse this
-    """
-    requested_simulators: Optional[List[str]] = None
-    results: Optional[Union[List[Union[ObservableData, SimulatorRMSE, Any]], Dict[str, Any]]] = None
-
-
 class OutputData(BaseModel):
-    content: Union[VerificationOutput, SmoldynOutput]
+    content: Union[Any, SmoldynOutput]
 
 
 # -- verification --
 
-class PendingOmexVerificationJob(Job):
-    job_id: str
-    status: str
-    timestamp: str
-    path: str
-    simulators: List[str]
-    comparison_id: Optional[str] = None
-    expected_results: Optional[str] = None
-    include_output: Optional[bool] = True
-    rTol: Optional[float] = None
-    aTol: Optional[float] = None
-    selection_list: Optional[List[str]] = None
-
-
-class PendingSbmlVerificationJob(Job):
-    job_id: str
-    status: str
-    timestamp: str
-    path: str
-    start: int 
-    end: int
-    steps: int
-    simulators: List[str]
-    comparison_id: Optional[str] = None
-    expected_results: Optional[str] = None
-    include_output: Optional[bool] = True
-    rTol: Optional[float] = None
-    aTol: Optional[float] = None
-    selection_list: Optional[List[str]] = None
-
-
 # -- simulation execution --
 
 class PendingSmoldynJob(Job):
-    job_id: str 
+    job_id: str
     timestamp: str
     path: str
     status: str = "PENDING"
@@ -268,26 +204,6 @@ class PendingSimulariumJob(Job):
 
 
 # -- composition --
-
-class CompositionNode(BaseModel):
-    name: str = Field(default=None, examples=["fba-process"], description="Descriptive name of the composition node.")
-    node_type: str = Field(examples=['<IMPLEMENTATION TYPE>'], description="Type name, usually either step or process.")
-    address: str = Field(examples=['<ADDRESS PROTOCOL>:<ADDRESS ID>'], description="Node (process or step) implementation address within Bigraph schema via some sort of ProcessTypes implementation.")
-    config: Optional[Any] = Field(
-        default=None,
-        examples=[{'<REQUIRED PARAMETER NAME>': '<REQUIRED PARAMETER VALUE>'}],
-        description="A mapping of config_schema names to required values as per the given process bigraph step or process implementation."
-    )
-    inputs: Optional[Dict[str, List[str]]] = Field(
-        default=None,
-        examples=[{'<INPUT PORT NAME>': ['<INPUT PORT STORE NAME>']}],
-        description="A mapping of input port (data) names and a list describing the path at which results for that data name are stored within the composite bigraph."
-    )
-    outputs: Optional[Dict[str, List[str]]] = Field(
-        default=None,
-        examples=[{'<OUTPUT PORT NAME>': ['<OUTPUT PORT STORE NAME>']}],
-        description="A mapping of output port (data) names and a list describing the path at which results for that data name are stored within the composite bigraph."
-    )
 
 
 class AgentParameter(BaseModel):
@@ -350,4 +266,54 @@ class CompatibleSimulators(BaseModel):
     simulators: List[Simulator]
 
 
+@dataclass
+class BiosimulationsReportOutput(BaseClass):
+    dataset_label: str
+    data: np.ndarray
 
+
+@dataclass
+class BiosimulationsRunOutputData(BaseClass):
+    report_path: str
+    data: List[BiosimulationsReportOutput]
+
+
+# these are data model-style representation of the functions from output_generator:
+@dataclass
+class NodeSpec:
+    address: str
+    config: Dict[str, Any]
+    inputs: Dict[str, Any]
+    outputs: Dict[str, Any]
+    _type: str
+    name: Optional[str] = None
+
+    def to_dict(self):
+        return asdict(self)
+
+
+@dataclass
+class StepNodeSpec(NodeSpec):
+    _type: str = "step"
+
+
+@dataclass
+class ProcessNodeSpec(NodeSpec):
+    _type: str = "process"
+
+
+@dataclass
+class CompositionSpec:
+    """To be used as input to process_bigraph.Composition() like:
+
+        spec = CompositionSpec(nodes=nodes, emitter_mode='ports')
+        composite = Composition({'state': spec
+    """
+    nodes: List[NodeSpec]
+    emitter_mode: str = "all"
+
+    def get_spec(self):
+        return {
+            node_spec.name: node_spec
+            for node_spec in self.nodes
+        }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-image="$1"  # which lib container to run (base, api, compose_worker)
+image="$1"  # which lib container to run (base, gateway, compose_worker)
 version="$2"
 use_biocompose="$3"
 

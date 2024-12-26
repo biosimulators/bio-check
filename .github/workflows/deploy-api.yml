@@ -22,7 +22,7 @@ jobs:
           echo "API_VERSION=${{ env.WORKER_VERSION }}"
 
   build-api-microservice-image:
-    needs: get-api-microservice-version
+    needs: get-gateway-microservice-version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -53,12 +53,12 @@ jobs:
       - name: Authorize push script
         run: chmod +x ./assets/docker/scripts/push_image.sh
 
-      - name: Build api microservice image
+      - name: Build gateway microservice image
         run: |
           sudo rm -rf api/__pycache__
           docker-compose build api
 
-      - name: Deploy api microservice container to GHCR
+      - name: Deploy gateway microservice container to GHCR
         run: |
           ./assets/docker/scripts/push_image.sh api ${{ env.API_VERSION }}
         env:

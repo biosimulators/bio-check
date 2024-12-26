@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: biochecknet
 
 # CURRENT STABLE PRODUCTION VERSIONS OF CONTAINERS(pre-namespace change, pre-deps change):
-# api:
+# gateway:
 # ghcr.io/biosimulators/bio-check-compose_api:1.11.9
 # worker:
 # - name: ghcr.io/biosimulators/bio-check-compose_worker:1.11.7
@@ -13,7 +13,7 @@ namespace: biochecknet
 images:
 - name: mongo
   newTag: 8.0-rc
-- name: ghcr.io/biosimulators/bio-compose-server-api
+- name: ghcr.io/biosimulators/bio-compose-server-gateway
   newTag: 0.1.0
 - name: ghcr.io/biosimulators/bio-compose-server-worker
   newTag: 0.1.1
@@ -24,14 +24,14 @@ images:
 
 replicas:
 - count: 1
-  name: biochecknet-api
+  name: biochecknet-gateway
 - count: 1
   name: worker
 - count: 1
   name: mongodb
 
 resources:
-- biochecknet-api-secrets.yaml
+- biochecknet-gateway-secrets.yaml
 - mongodb-pvc.yaml
 - secret-ghcr.yaml
 - biochecknet-ingress.yaml

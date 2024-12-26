@@ -1131,7 +1131,7 @@ class OutputGenerator(Step):
         NOTE: args and kwargs are not defined in this function, but rather should be defined by the
         inheriting class' constructor: i,e; start_time, etc.
 
-        Kwargs relate only to the given simulator api you are working with.
+        Kwargs relate only to the given simulator gateway you are working with.
         """
         pass
 

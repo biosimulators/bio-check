@@ -8,11 +8,11 @@ if [ "$prune" == "-p" ]; then
 fi
 
 # remove old spec and create new spec
-rm -f api/spec/openapi_3_1_0_generated.yaml
-conda run -n server python api/openapi_spec.py
+rm -f gateway/spec/openapi_3_1_0_generated.yaml
+conda run -n server python gateway/openapi_spec.py
 
 # remove pycaches if exists
-sudo rm -r api/__pycache__
+sudo rm -r gateway/__pycache__
 sudo rm -r worker/__pycache__
 
 if [ "$lib" != "" ]; then
@@ -22,7 +22,7 @@ if [ "$lib" != "" ]; then
 else
   echo "No specific library specified."
   echo "Building API microservice..."
-  if docker compose build api --no-cache; then
+  if docker compose build gateway --no-cache; then
     echo "API built!"
   else
     echo "API build failed. Now attempting to build Worker..."

@@ -14,7 +14,7 @@ def check_upload_file_extension(file: UploadFile, purpose: str, ext: str, messag
 
 
 async def save_uploaded_file(uploaded_file: UploadFile, save_dest: str) -> str:
-    """Write `fastapi.UploadFile` instance passed by api gateway user to `save_dest`."""
+    """Write `fastapi.UploadFile` instance passed by gateway gateway user to `save_dest`."""
     file_path = os.path.join(save_dest, uploaded_file.filename)
     with open(file_path, 'wb') as file:
         contents = await uploaded_file.read()

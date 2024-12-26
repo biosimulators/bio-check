@@ -32,28 +32,28 @@ spec:
             - name: MONGO_DB_PWD
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-api-secrets
+                  name: biochecknet-gateway-secrets
                   key: mongo-password
             - name: MONGO_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-api-secrets
+                  name: biochecknet-gateway-secrets
                   key: mongo-username
             - name: GOOGLE_APPLICATION_CREDENTIALS
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-api-secrets
+                  name: biochecknet-gateway-secrets
                   key: google-application-credentials
           ports:
             - containerPort: 3001
           volumeMounts:
-            - name: biochecknet-api-secrets
-              mountPath: /run/secrets/api-secrets
+            - name: biochecknet-gateway-secrets
+              mountPath: /run/secrets/gateway-secrets
       restartPolicy: Always
       imagePullSecrets:
         - name: ghcr-secret
       volumes:
-        - name: biochecknet-api-secrets
+        - name: biochecknet-gateway-secrets
           secret:
             items:
               - key: mongo-password
@@ -62,7 +62,7 @@ spec:
                 path: mongo-username
               - key: google-application-credentials
                 path: google-application-credentials
-            secretName: biochecknet-api-secrets
+            secretName: biochecknet-gateway-secrets
 
 ---
 apiVersion: v1

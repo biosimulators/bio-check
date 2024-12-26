@@ -24,7 +24,7 @@ function run_biocom_pipeline {
     set -e
     if [ "$deploy" == "-d" ]; then
       echo "Deploying API microservice..."
-      /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh api
+      /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh gateway
 
       echo "Deploying Worker microservice..."
       /Users/alexanderpatrie/desktop/repos/bio-check/assets/docker/scripts/push_image.sh worker

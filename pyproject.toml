@@ -1,0 +1,5 @@
+[project]
+name = "bio-compose-server"
+version = "0.0.1"
+readme ="README.md"
+packages = [{include = "gateway"}, {include = "shared"}, {include = "worker"}]

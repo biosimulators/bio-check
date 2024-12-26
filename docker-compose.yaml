@@ -13,10 +13,10 @@ services:
 
   api:
     build:
-      context: ./api
+      context: gateway
       dockerfile: Dockerfile-api
     image: bio-compose-server-api:0.1.0  # .9  ghcr.io/biosimulators/bio-check-compose_api:1.11.11  # .9
-    container_name: api
+    container_name: gateway
     environment:
       - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
       - MONGO_USERNAME=alex

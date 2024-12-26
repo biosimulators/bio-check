@@ -3,7 +3,8 @@
 # FROM condaforge/miniforge-pypy3:24.9.0-0
 # FROM condaforge/miniforge:24.9.0-0
 
-FROM continuumio/miniconda3:main
+# FROM continuumio/miniconda3:main
+FROM condaforge/miniforge3:latest
 
 LABEL org.opencontainers.image.title="bio-compose-server-base" \
     org.opencontainers.image.description="Base Docker image for BioCompose REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance." \
@@ -63,5 +64,5 @@ RUN mkdir -p /Pysces \
 
 # create lockfile conda analogy: conda env export --no-builds > environment.lock.yml
 # && conda create -n conda-env python=3.10 -y \
-# && poetry install --without=api,worker,composition \
+# && poetry install --without=gateway,worker,composition \
 # && poetry config virtualenvs.in-project true \
