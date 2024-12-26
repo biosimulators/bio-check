@@ -7,7 +7,7 @@
 #   mongo_pswd
 #
 #   and outputs a sealed secret to stdout
-# Example: ./sealed_secret_api.sh remote pswd12345 pswd39393 mongo_user pswd292929 > output.yaml
+# Example: ./sealed_secret_gateway.sh remote pswd12345 pswd39393 mongo_user pswd292929 > output.yaml
 
 # validate the number of arguments
 if [ "$#" -ne 4 ]; then
