@@ -1,7 +1,7 @@
 ![Deploy API](https://github.com/biosimulators/bio-check/actions/workflows/deploy-api.yml/badge.svg)
 ![Deploy Worker](https://github.com/biosimulators/bio-check/actions/workflows/deploy-worker.yml/badge.svg)
 
-# BioCompose Server (compose-server): A Biological Simulation Verification Service
+# BioCompose Server: A Biological Simulation Verification Service
 ### __This service utilizes separate containers for REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
 ## **The REST API can be accessed via Swagger UI here: [https://compose.biosimulations.org/docs](https://compose.biosimulations.org/docs)
@@ -10,8 +10,9 @@
 
 ### This application ("BioCompose") uses a microservices architecture which presents the following libraries:
 
-- `api`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
-- `worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and comparison execution.
+- `gateway`: This library handles all requests including saving uploaded files, pending job creation, fetching results, and contains the user-facing endpoints.
+- `shared`: A library of common objects/pointers used by both `gateway` and `worker`.
+- `worker`: This library handles all job processing tasks for verification services such as job status adjustment, job retrieval, and more.
 
 ### The simulators used by this application consist of multiple python language bindings of C/C++ libraries. Given this fact, is it helpful to be aware of the dependency network required by each simulator. See the following documentation for simulators used in this application:
 
@@ -34,9 +35,9 @@ _*Remotely in microservice containers*_:
 
 ### The installation process is outlined as follows:
 
-1. `git clone https://github.com/biosimulators/compose-server.git`
-2. `cd compose-server/shared`
-3. `touch .env`
+1. `git clone https://github.com/biosimulators/bio-compose-server.git`
+2. `cd bio-compose-server/shared`
+3. `mv .env_template .env`
 4. Enter the following fields into the `.env` file: 
         
         MONGO_URI=<uri of your mongo instance. In this case we use the standard mongodb image with the app name bio-check>
@@ -46,7 +47,7 @@ _*Remotely in microservice containers*_:
 6. Pull and run the latest version of Mongo from the Docker Hub. (`docker run -d -it mongo:latest` or similar.)
 7. Create a conda env from the environment file at the root of this repo:
          
-        conda env create -f environment.yml -y && conda activate composer-server-dev
+        conda env create -f environment.yml -y && conda activate bio-compose-server
 8. Install pysces with conda and amici with pip:
    
         conda install -c conda-forge -c pysces pysces

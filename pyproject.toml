@@ -1,5 +1,5 @@
 [project]
-name = "compose-server"
+name = "bio-compose-server"
 version = "0.0.1"
 readme ="README.md"
 description = "compose server"

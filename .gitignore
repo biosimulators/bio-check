@@ -25,4 +25,5 @@ condaenv.n_dn60fa.requirements.txt
 worker/.worker_STABLE
 build
 .DS_Store
-.env
+shared/.env
+.biosimulations.json
