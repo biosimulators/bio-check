@@ -9,10 +9,4 @@ dependencies:
   - pip
   - python=3.10
   # - readdy
-  - pymem3dg
-  # pip install here to specify simulators, the rest are in pyproject.toml ("pure" python)
-  - pip:
-    - copasi-basico
-    - tellurium
-    - python-libsbml
-    - smoldyn
+  # - pymem3dg

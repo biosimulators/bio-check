@@ -24,7 +24,11 @@ dependencies = [
     "numpy",
     "pandas",
     "process-bigraph",
-    "bigraph-schema"
+    "bigraph-schema",
+    "copasi-basico",
+    "tellurium",
+    "python-libsbml",
+    "smoldyn"
 ]
 
 
