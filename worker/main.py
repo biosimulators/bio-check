@@ -1,17 +1,17 @@
 import os
 import asyncio
 import logging
-from typing import List, Tuple
 
 from dotenv import load_dotenv
 
-from shared_worker import MongoDbConnector
-from log_config import setup_logging
+from shared.database import MongoDbConnector
+from shared.log_config import setup_logging
+from shared.data_model import DEV_ENV_PATH
 from job import Supervisor
 
 
 # set up dev env if possible
-load_dotenv('../assets/dev/config/.env_dev')
+load_dotenv(DEV_ENV_PATH)
 
 # logging
 logger = logging.getLogger("compose.worker.main.log")

@@ -14,24 +14,19 @@ from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
-from io_worker import get_sbml_species_mapping
-from data_generator import SBML_EXECUTORS
-from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from log_config import setup_logging
-
-
-logger = logging.getLogger("compose.bigraph_steps.main.log")
-setup_logging(logger)
+from bio_bundles.data_generator import SBML_EXECUTORS
+from bio_bundles.io import get_sbml_species_mapping
+from bio_bundles.simularium_utils import translate_data_object, write_simularium_file, calculate_agent_radius
 
 try:
     import smoldyn as sm
     from smoldyn._smoldyn import MolecState
 except:
-    logger.warning(str(ImportError(
+    print(
         '\nPLEASE NOTE: Smoldyn is not correctly installed on your system which prevents you from ' 
         'using the SmoldynProcess. Please refer to the README for further information '
         'on installing Smoldyn.'
-    )))
+    )
 
 HISTORY_INDEXES = [
     'data.time',
@@ -649,7 +644,7 @@ class TimeCourseOutputGenerator(OutputGenerator):
         return data
 
 
-BIGRAPH_IMPLEMENTATIONS = [
+STEP_IMPLEMENTATIONS = [
     ('output-generator', OutputGenerator),
     ('time-course-output-generator', TimeCourseOutputGenerator),
     ('smoldyn_step', SmoldynStep),

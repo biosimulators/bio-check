@@ -1,0 +1,12 @@
+name: bio-compose-server
+channels:
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - readdy
+  - conda-forge
+dependencies:
+  - pip
+  - python=3.10
+  # - readdy
+  # - pymem3dg
