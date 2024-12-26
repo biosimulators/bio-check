@@ -20,7 +20,11 @@ dependencies = [
     "uvicorn",
     "pyyaml",
     "chardet",
-    "python-libsbml",
+    "simulariumio",
+    "numpy",
+    "pandas",
+    "process-bigraph",
+    "bigraph-schema"
 ]
 
 

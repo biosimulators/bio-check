@@ -10,12 +10,9 @@ dependencies:
   - python=3.10
   # - readdy
   - pymem3dg
-  - pip:  # only simulator-level deps(C compat)
-    - simulariumio
-    - smoldyn
+  # pip install here to specify simulators, the rest are in pyproject.toml ("pure" python)
+  - pip:
     - copasi-basico
     - tellurium
-    - numpy
-    - pandas
-    - process-bigraph
-    - bigraph-schema
+    - python-libsbml
+    - smoldyn
