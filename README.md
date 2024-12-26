@@ -1,4 +1,4 @@
-![Deploy API](https://github.com/biosimulators/bio-check/actions/workflows/deploy-api.yml/badge.svg)
+![Deploy API](https://github.com/biosimulators/bio-check/actions/workflows/deploy-gateway.yml/badge.svg)
 ![Deploy Worker](https://github.com/biosimulators/bio-check/actions/workflows/deploy-worker.yml/badge.svg)
 
 # BioCompose Server: A Biological Simulation Verification Service
@@ -45,17 +45,8 @@ _*Remotely in microservice containers*_:
         BUCKET_NAME=bio-check-requests-1  # name of the bucket used in this app
 5. `cd ..`
 6. Pull and run the latest version of Mongo from the Docker Hub. (`docker run -d -it mongo:latest` or similar.)
-7. Create a conda env from the environment file at the root of this repo:
-         
-        conda env create -f environment.yml -y && conda activate bio-compose-server
-8. Install pysces with conda and amici with pip:
-   
-        conda install -c conda-forge -c pysces pysces
-        conda run pip3 install biosimulators-amici  # installs both biosimulators and amici
-9. If using Smoldyn, there is a arm-based mac installation script in `assets/dev/` called `install-smoldyn-mac-silicon.sh`. So run the following:
-
-        sudo chmod +x ./assets/dev/scripts/install-smoldyn-mac-silicon.sh  # or whichever method you are using to install
-        ./assets/dev/scripts/install-smoldyn-mac-silicon.sh  # conda is configured to install Smoldyn into its environment
+7. `sudo chmod +x ./assets/dev/scripts/install.sh`
+8. `./install.sh`
 
 
 ## Notes:

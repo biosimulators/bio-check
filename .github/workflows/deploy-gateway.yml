@@ -1,10 +1,10 @@
-name: Deploy Api
+name: Deploy Gateway
 
 on:
   workflow_dispatch:
 
 jobs:
-  get-api-microservice-version:
+  get-gateway-microservice-version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

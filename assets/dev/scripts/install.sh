@@ -18,3 +18,4 @@ fi
 conda run -n bio-compose-server pip install --upgrade pip
 conda run -n bio-compose-server pip install -e .
 conda activate bio-compose-server
+

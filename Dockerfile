@@ -1,54 +1,35 @@
-# FROM ubuntu:22.04  <-- heavy out of the box, substantially heavier after build
-# FROM continuumio/miniconda3:main  <-- issues with liscening/debian-only(not ubuntu)
-# FROM condaforge/miniforge-pypy3:24.9.0-0
-# FROM condaforge/miniforge:24.9.0-0
-
-# FROM continuumio/miniconda3:main
 FROM condaforge/miniforge3:latest
 
-LABEL org.opencontainers.image.title="compose-server-base" \
+LABEL org.opencontainers.image.title="bio-compose-server-base" \
     org.opencontainers.image.description="Base Docker image for BioCompose REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance." \
-    org.opencontainers.image.url="https://biosimulators.org/" \
-    org.opencontainers.image.source="https://github.com/biosimulators/bio-check" \
+    org.opencontainers.image.url="https://compose.biosimulators.org/" \
+    org.opencontainers.image.source="https://github.com/biosimulators/bio-compose-server" \
     org.opencontainers.image.authors="Alexander Patrie <apatrie@uchc.edu>, BioSimulators Team <info@biosimulators.org>" \
     org.opencontainers.image.vendor="BioSimulators Team"
 
-SHELL ["/usr/bin/env", "bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
 
-# shared env
-ENV DEBIAN_FRONTEND=noninteractive \
-    MONGO_URI="mongodb://mongodb/?retryWrites=true&w=majority&appName=bio-check" \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1 \
-    TEST_SBML_FP="../test_fixtures/sbml-core/Elowitz-Nature-2000-Repressilator/BIOMD0000000012_url.xml" \
-    TEST_PSC_FP="/Pysces/psc/BIOMD0000000012_url.xml.psc" \
-    TEST_OMEX_FP="../test_fixtures/sbml-core/Elowitz-Nature-2000-Repressilator.omex"
-
-# copy docker assets
-COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
+# copy assets
+COPY assets/docker/config/.biosimulations.json /.google/.bio-compose.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
-COPY assets/docker/shared.py /app/shared.py
 COPY tests/test_fixtures /test_fixtures
-COPY assets/docker/config/environment.base.yml /app/environment.base.yml
 
-# cd /app
 WORKDIR /app
 
+# copy container libs
 COPY ./gateway /app/gateway
 COPY ./shared /app/shared
 COPY ./worker /app/worker
+
+# copy env configs
 COPY ./environment.yml /app/environment.yml
 COPY ./pyproject.toml /app/pyproject.toml
 
-RUN mkdir -p /Pysces \
-    && mkdir -p /Pysces/psc \
-    && mkdir -p /root/Pysces \
-    && mkdir -p /root/Pysces/psc \
-    && mkdir config \
-    && conda update -n base -c conda-forge conda
 
-RUN apt-get update  \
+# install deps
+RUN mkdir config \
+    && apt-get update  \
     && apt install -y \
     meson \
     g++ \
@@ -78,27 +59,10 @@ RUN apt-get update  \
     gnupg \
     nano \
     libstdc++6 \
-    && conda env create -f environment.yml -y \
-    && echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:\$LD_LIBRARY_PATH' >> ~/.bashrc
-# && chmod +x ./dynamic_install.sh \
+    && conda update -n base -c conda-forge conda \
+    && conda env create -f environment.yml -y
+
+# && echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:\$LD_LIBRARY_PATH' >> ~/.bashrc
 
 # expose for gateway
 EXPOSE 3001
-
-
-# to run with a local network:
-# net=app-net
-# docker network create "$net"
-# docker run -d --rm --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib":latest
-# docker run -it --name "$lib" --net "$net" --platform linux/amd64 "$PKG_ROOT"-"$lib"
-
-# # create conda env from yml and ensure env activation
-# RUN conda env create -f config/environment.base.yml -y \
-#     && rm -f config/environment.base.yml \
-#     && conda env export --no-builds > config/environment.lock.yml \
-#     && poetry lock
-
-# create lockfile conda analogy: conda env export --no-builds > environment.lock.yml
-# && conda create -n conda-env python=3.10 -y \
-# && poetry install --without=gateway,worker,composition \
-# && poetry config virtualenvs.in-project true \
