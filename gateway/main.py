@@ -12,19 +12,15 @@ from fastapi.responses import FileResponse
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from compatible import COMPATIBLE_VERIFICATION_SIMULATORS
-from data_model import (
+from gateway.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
+from shared.data_model import (
     ReaddySpeciesConfig,
     ReaddyReactionConfig,
     ReaddyParticleConfig,
     FileJob,
     ReaddyRun,
-    VerificationOutput,
-    OmexVerificationRun,
-    SbmlVerificationRun,
     SmoldynRun,
     DbClientResponse,
-    CompatibleSimulators,
     Simulator,
     AgentParameters,
     BigraphRegistryAddresses,

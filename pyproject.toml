@@ -2,4 +2,34 @@
 name = "bio-compose-server"
 version = "0.0.1"
 readme ="README.md"
-packages = [{include = "gateway"}, {include = "shared"}, {include = "worker"}]
+description = "bio-compose server"
+authors = [{name = "Alex Patrie", email = "alex@example.com"}]
+dependencies = [
+    "requests-toolbelt",
+    "python-dotenv",
+    "google-cloud-storage",
+    "python-multipart",
+    "fastapi",
+    "toml",
+    "typing-extensions",
+    "pymongo",
+    "pydantic-settings",
+    "pydantic",
+    "uvicorn",
+    "pyyaml",
+    "chardet",
+    "python-libsbml",
+    "numpy",
+    "pandas",
+    "process-bigraph",
+    "bigraph-schema"
+]
+
+
+[tool.setuptools]
+packages = ["gateway", "shared", "worker"]
+
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -3,20 +3,10 @@ channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
+  - readdy
+  - conda-forge
 dependencies:
   - pip
   - python=3.10
-  - pip:
-    - pip-autoremove
-    - requests-toolbelt
-    - python-dotenv
-    - google-cloud-storage
-    - python-multipart
-    - fastapi
-    - toml
-    - typing-extensions
-    - pymongo
-    - pydantic-settings
-    - pydantic
-    - uvicorn
-    - pyyaml
+  # - readdy
+  # - pymem3dg

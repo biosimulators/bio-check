@@ -1,15 +1,45 @@
 # -- gateway models -- #
 # -- worker models -- #
 from dataclasses import dataclass, asdict
+from enum import Enum
 from typing import *
 from typing import List, Optional, Any, Dict, Union
 
-from pydantic import Field
+from pydantic import Field, BaseModel as _BaseModel, ConfigDict
 from fastapi.responses import FileResponse
 import numpy as np
 
 
+class BaseModel(_BaseModel):
+    """Base Pydantic Model with custom app configuration"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+@dataclass
+class BaseClass:
+    """Base Python Dataclass multipurpose class with custom app configuration."""
+    def to_dict(self):
+        return asdict(self)
+
+
+class SBMLSpeciesMapping(dict):
+    pass
+
+
 # PENDING JOBS:
+
+class JobStatus(Enum):
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class DatabaseCollections(Enum):
+    PENDING_JOBS = "PENDING_JOBS".lower()
+    IN_PROGRESS_JOBS = "IN_PROGRESS_JOBS".lower()
+    COMPLETED_JOBS = "COMPLETED_JOBS".lower()
+
 
 class ApiRun(BaseModel):
     job_id: str
