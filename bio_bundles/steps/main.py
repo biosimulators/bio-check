@@ -642,15 +642,3 @@ class TimeCourseOutputGenerator(OutputGenerator):
         data = executor(self.input_file, self.start_time, self.end_time, self.num_steps)
 
         return data
-
-
-STEP_IMPLEMENTATIONS = [
-    ('output-generator', OutputGenerator),
-    ('time-course-output-generator', TimeCourseOutputGenerator),
-    ('smoldyn_step', SmoldynStep),
-    ('simularium_smoldyn_step', SimulariumSmoldynStep),
-    ('mongo-emitter', MongoDatabaseEmitter)
-]
-
-# BIGRAPH_ADDRESS_REGISTRY = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS)
-

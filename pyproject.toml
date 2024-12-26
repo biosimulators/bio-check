@@ -23,12 +23,13 @@ dependencies = [
     "simulariumio",
     "numpy",
     "pandas",
-    "process-bigraph",
+    "process-bigraph==0.0.22",
     "bigraph-schema",
     "copasi-basico",
     "tellurium",
     "python-libsbml",
-    "smoldyn"
+    "smoldyn",
+    "pip-autoremove"
 ]
 
 

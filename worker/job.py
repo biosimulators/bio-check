@@ -365,7 +365,7 @@ class FilesWorker(Worker):
         return self.job_result
 
     # async def _run_simularium(self, job_id: str, input_path: str, dest: str):
-    #     from steps.py import generate_simularium_file
+    #     from main.py import generate_simularium_file
     #     # get parameters from job
     #     box_size = self.job_params['box_size']
     #     translate = self.job_params['translate_output']

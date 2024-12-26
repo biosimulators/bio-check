@@ -1,7 +1,6 @@
 import logging
 import os
 import traceback
-from importlib import import_module
 from tempfile import mkdtemp
 import uuid
 from pprint import pformat
@@ -19,14 +18,11 @@ from pymongo.database import Database
 from simulariumio import InputFileData, UnitData, DisplayData, DISPLAY_TYPE
 from simulariumio.smoldyn import SmoldynData
 
-
-from shared_worker import handle_exception
-
 from bio_bundles.data_model.bigraph import time_course_node_spec
-from compatible import COMPATIBLE_UTC_SIMULATORS
+from bio_bundles.compatible import COMPATIBLE_UTC_SIMULATORS
 from bio_bundles.io import normalize_smoldyn_output_path_in_root, get_sbml_species_mapping
-from simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
-from data_model import BiosimulationsRunOutputData
+from bio_bundles.simularium_utils import calculate_agent_radius, translate_data_object, write_simularium_file
+from bio_bundles.utils import handle_exception, handle_sbml_exception
 
 # logging TODO: implement this.
 logger: Logger = logging.getLogger("compose.worker.data_generator.log")
@@ -313,12 +309,6 @@ def run_smoldyn(model_fp: str, duration: int, dt: float = None) -> Dict[str, Uni
     return output_data
 
 
-def handle_sbml_exception() -> str:
-    tb_str = traceback.format_exc()
-    error_message = pformat(f"time-course-simulation-error:\n{tb_str}")
-    return error_message
-
-
 def run_sbml_pysces(sbml_fp: str, start: int, dur: int, steps: int) -> Dict[str, Union[List[float], str]]:
     # model compilation
     sbml_filename = sbml_fp.split('/')[-1]
@@ -489,17 +479,6 @@ def generate_sbml_outputs(sbml_fp: str, start: int, dur: int, steps: int, simula
                 sim_data["error"] = output[simulator_name][spec_id]
 
         final_output[simulator_name] = sim_data
-
-    # handle expected outputs
-    if truth is not None:
-        final_output['ground_truth'] = {}
-        report_results = read_report_outputs(truth)
-        report_data = report_results.to_dict()['data'] if isinstance(report_results, BiosimulationsRunOutputData) else {}
-        for datum in report_data:
-            spec_name = datum['dataset_label']
-            if not spec_name.lower() == 'time':
-                spec_data = datum['data']
-                final_output['ground_truth'][spec_name] = spec_data
 
     return final_output
 
