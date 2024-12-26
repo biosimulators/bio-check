@@ -1,4 +1,4 @@
-name: bio-compose-server-dev
+name: compose-server-dev
 channels:
   - conda-forge
 dependencies:
@@ -275,4 +275,4 @@ dependencies:
       - webencodings==0.5.1
       - websocket-client==1.8.0
       - yamldown==0.1.8
-prefix: /Users/alexanderpatrie/miniconda3/envs/bio-compose-server-dev
+prefix: /Users/alexanderpatrie/miniconda3/envs/compose-server-dev

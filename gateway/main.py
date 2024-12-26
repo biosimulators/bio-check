@@ -12,26 +12,23 @@ from fastapi.responses import FileResponse
 from pydantic import BeforeValidator
 from starlette.middleware.cors import CORSMiddleware
 
-from gateway.compatible import COMPATIBLE_VERIFICATION_SIMULATORS
 from shared.data_model import (
     ReaddySpeciesConfig,
     ReaddyReactionConfig,
     ReaddyParticleConfig,
-    FileJob,
     ReaddyRun,
     SmoldynRun,
     DbClientResponse,
-    Simulator,
     AgentParameters,
     BigraphRegistryAddresses,
     IncompleteJob
 )
-from shared_api import upload_blob, MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
-from io_api import write_uploaded_file, save_uploaded_file, check_upload_file_extension, download_file_from_bucket
-from log_config import setup_logging
+from shared_api import MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
+from io_api import write_uploaded_file, download_file_from_bucket
+from shared.log_config import setup_logging
 
 
-logger = logging.getLogger("biochecknet.gateway.main.log")
+logger = logging.getLogger("compose.gateway.main.log")
 setup_logging(logger)
 
 
@@ -54,7 +51,7 @@ else:
 
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-APP_TITLE = "bio-compose"
+APP_TITLE = "compose"
 APP_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:4200',
@@ -74,11 +71,11 @@ APP_ORIGINS = [
     'https://biosimulations.dev',
     'https://biosimulations.org',
     'https://bio.libretexts.org',
-    'https://biochecknet.biosimulations.org'
+    'https://compose.biosimulations.org'
 ]
 APP_SERVERS = [
     # {
-    #     "url": "https://biochecknet.biosimulations.org",
+    #     "url": "https://compose.biosimulations.org",
     #     "description": "Production server"
     # },
     # {
@@ -142,7 +139,7 @@ def stop_mongo_client() -> DbClientResponse:
 
 @app.get("/")
 def root():
-    return {'root': 'https://biochecknet.biosimulations.org'}
+    return {'root': 'https://compose.biosimulations.org'}
 
 
 # run simulations

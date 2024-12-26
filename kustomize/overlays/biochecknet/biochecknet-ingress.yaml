@@ -7,51 +7,51 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "600m"
     nginx.org/client-max-body-size: "600m"
-  name: biochecknet-ingress
+  name: compose-ingress
   labels:
-    app: biochecknet-ingress
+    app: compose-ingress
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-      - biochecknet.biosimulations.org
-      secretName: biochecknet-ingress-tls
+      - compose.biosimulations.org
+      secretName: compose-ingress-tls
   rules:
-    - host: biochecknet.biosimulations.org
+    - host: compose.biosimulations.org
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: biochecknet-gateway
+                name: compose-gateway
                 port:
                   number: 3001
           - path: /verify-omex
             pathType: Prefix
             backend:
               service:
-                name: biochecknet-gateway
+                name: compose-gateway
                 port:
                   number: 3001
           - path: /verify-sbml
             pathType: Prefix
             backend:
               service:
-                name: biochecknet-gateway
+                name: compose-gateway
                 port:
                   number: 3001
           - path: /get-compatible
             pathType: Prefix
             backend:
               service:
-                name: biochecknet-gateway
+                name: compose-gateway
                 port:
                   number: 3001
           - path: /get-verify-output/
             pathType: Prefix
             backend:
               service:
-                name: biochecknet-gateway
+                name: compose-gateway
                 port:
                   number: 3001

@@ -15,7 +15,7 @@ function construct_env {
   conda run -n server pip install --upgrade pip
   ./assets/dev/scripts/install-smoldyn-mac-silicon.sh
   conda run -n server pip3 install amici biosimulators-amici
-  # conda install -n bio-compose-server -c conda-forge -c pysces pysces -y
+  # conda install -n compose-server -c conda-forge -c pysces pysces -y
   echo "Environment created!"
 }
 

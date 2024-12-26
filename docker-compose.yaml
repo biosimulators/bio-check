@@ -1,53 +1,38 @@
-# version: '3.8'
-
 services:
   mongodb:
     image: mongo:latest
     container_name: mongodb
     ports:
       - "27017:27017"
-    # volumes:
-      # - mongo-data:/data/db
     networks:
       - appnetwork
 
-  api:
+  gateway:
     build:
-      context: gateway
-      dockerfile: Dockerfile-api
-    image: bio-compose-server-api:0.1.0  # .9  ghcr.io/biosimulators/bio-check-compose_api:1.11.11  # .9
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/biosimulators/bio-compose-server-gateway:0.0.1
     container_name: gateway
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
-      - MONGO_USERNAME=alex
-      - MONGO_DB_PWD=123
-      - GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
-      - DB_NAME=service_requests
-      - BUCKET_NAME=files-biochecknet
     ports:
       - "3001:3001"
     networks:
       - appnetwork
+    command: poetry run uvicorn gateway.main:app --host 0.0.0.0 --port 3001 --reload
+    depends_on:
+      - mongodb
 
-  worker:
+  compose-worker:
     build:
-      context: ./worker
-      dockerfile: Dockerfile-worker
-    image: bio-compose-server-worker:0.1.1  # ghcr.io/biosimulators/bio-check-compose_worker:1.11.9  # .7
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/biosimulators/bio-compose-server-worker:0.0.1
     container_name: worker
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/?retryWrites=true&w=majority&appName=bio-compose
-      - MONGO_USERNAME=alex
-      - MONGO_DB_PWD=123
-      - GOOGLE_APPLICATION_CREDENTIALS=/.google/.bio-check.json
-      - DB_NAME=service_requests
-      - BUCKET_NAME=files-biochecknet
     networks:
       - appnetwork
+    command: poetry run python worker/main.py
+    depends_on:
+      - mongodb
 
 networks:
   appnetwork:
     driver: bridge
-
-
-# The API will be available at http://localhost:3001 once docker compose up is run

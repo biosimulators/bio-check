@@ -1,11 +1,11 @@
 # local minikube config
 
 
-### Apply biochecknet overlays (commonly used):
+### Apply compose overlays (commonly used):
 
 ```bash
 cd kustomize \
-  && kubectl kustomize overlays/biochecknet | kubectl apply -f - \
+  && kubectl kustomize overlays/compose | kubectl apply -f - \
   && cd ..
 ```
 
@@ -198,9 +198,9 @@ sudo minikube tunnel
 kubectl kustomize overlays/dev | kubectl apply -f -
 ```
 
-2a. Apply **biocheck** overlays:
+2a. Apply **BioCompose Server** overlays:
 ```bash
-kubectl kustomize overlays/biochecknet | kubectl apply -f -
+kubectl kustomize overlays/compose | kubectl apply -f -
 ```
 
 ### expose JMS and Mongo services to UCH routable ip address

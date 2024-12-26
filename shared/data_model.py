@@ -1,13 +1,25 @@
 # -- gateway models -- #
 # -- worker models -- #
+import os
 from dataclasses import dataclass, asdict
 from enum import Enum
 from typing import *
 from typing import List, Optional, Any, Dict, Union
 
+from dotenv import load_dotenv
 from pydantic import Field, BaseModel as _BaseModel, ConfigDict
 from fastapi.responses import FileResponse
 import numpy as np
+
+
+REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
+DEV_ENV_PATH = os.path.join(REPO_ROOT, 'assets', 'dev', 'config', '.env')
+
+load_dotenv(DEV_ENV_PATH)
+
+DB_TYPE = "mongo"
+DB_NAME = "service_requests"
+BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 
 class BaseModel(_BaseModel):

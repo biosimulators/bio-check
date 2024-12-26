@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: biochecknet-gateway
-  name: biochecknet-gateway
+    app: gateway
+  name: gateway
 spec:
   selector:
     matchLabels:
-      app: biochecknet-gateway
+      app: gateway
   replicas: 0
   template:
     metadata:
       labels:
-        app: biochecknet-gateway
+        app: gateway
     spec:
       containers:
-        - name: biochecknet-gateway
+        - name: gateway
           image: ghcr.io/biosimulators/bio-compose-server-gateway  # push to ghcr.io/biosimulators/bio-check-compose_worker
           imagePullPolicy: "Always"
           resources:
@@ -27,33 +27,33 @@ spec:
 #              cpu: "500m"
           envFrom:
             - configMapRef:
-                name: biochecknet-gateway-config
+                name: gateway-config
           env:
             - name: MONGO_DB_PWD
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-gateway-secrets
+                  name: gateway-secrets
                   key: mongo-password
             - name: MONGO_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-gateway-secrets
+                  name: gateway-secrets
                   key: mongo-username
             - name: GOOGLE_APPLICATION_CREDENTIALS
               valueFrom:
                 secretKeyRef:
-                  name: biochecknet-gateway-secrets
+                  name: gateway-secrets
                   key: google-application-credentials
           ports:
             - containerPort: 3001
           volumeMounts:
-            - name: biochecknet-gateway-secrets
+            - name: gateway-secrets
               mountPath: /run/secrets/gateway-secrets
       restartPolicy: Always
       imagePullSecrets:
         - name: ghcr-secret
       volumes:
-        - name: biochecknet-gateway-secrets
+        - name: gateway-secrets
           secret:
             items:
               - key: mongo-password
@@ -62,19 +62,19 @@ spec:
                 path: mongo-username
               - key: google-application-credentials
                 path: google-application-credentials
-            secretName: biochecknet-gateway-secrets
+            secretName: gateway-secrets
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: biochecknet-gateway
-  name: biochecknet-gateway
+    app: gateway
+  name: gateway
 spec:
   ports:
     - protocol: TCP
       port: 3001
       targetPort: 3001
   selector:
-    app: biochecknet-gateway
+    app: gateway

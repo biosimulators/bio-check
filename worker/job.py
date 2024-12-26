@@ -21,10 +21,8 @@ from data_generator import (
     run_smoldyn,
     run_readdy,
     handle_sbml_exception,
-    generate_biosimulator_utc_outputs,
-    generate_sbml_utc_outputs,
     get_output_stack,
-    sbml_output_stack
+    generate_sbml_outputs
 )
 
 
@@ -35,7 +33,7 @@ load_dotenv('../assets/dev/config/.env_dev')
 
 
 # logging TODO: implement this.
-logger = logging.getLogger("biochecknet.job.global.log")
+logger = logging.getLogger("compose.job.global.log")
 setup_logging(logger)
 
 
@@ -77,7 +75,7 @@ class Supervisor:
         self.job_queue = self.db_connector.pending_jobs()
         self._supervisor_id: Optional[str] = "supervisor_" + unique_id()
         self.app_process_registry = app_process_registry
-        self.logger = logging.getLogger("biochecknet.job.supervisor.log")
+        self.logger = logging.getLogger("compose.job.supervisor.log")
         setup_logging(self.logger)
 
     async def check_jobs(self) -> int:
@@ -243,7 +241,7 @@ class Worker(ABC):
         self.worker_id = unique_id()
         self.supervisor = supervisor
         self.scope = scope
-        self.logger = logging.getLogger(f"biochecknet.job.worker-{self.scope}.log")
+        self.logger = logging.getLogger(f"compose.job.worker-{self.scope}.log")
         setup_logging(self.logger)
 
     @abstractmethod
@@ -353,7 +351,7 @@ class SimulationRunWorker(Worker):
         steps = self.job_params['steps']
         simulator = self.job_params.get('simulators')[0]
 
-        result = generate_sbml_utc_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
+        result = generate_sbml_outputs(sbml_fp=local_fp, start=start, dur=end, steps=steps, simulators=[simulator])
         self.job_result = result[simulator]
 
 
@@ -927,7 +925,7 @@ class FilesWorker(Worker):
         return self.job_result
 
     # async def _run_simularium(self, job_id: str, input_path: str, dest: str):
-    #     from bigraph_steps import generate_simularium_file
+    #     from steps.py import generate_simularium_file
     #     # get parameters from job
     #     box_size = self.job_params['box_size']
     #     translate = self.job_params['translate_output']

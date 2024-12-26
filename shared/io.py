@@ -176,154 +176,38 @@ async def _save_uploaded_file(uploaded_file: UploadFile | str, save_dest: str) -
     return file_path
 
 
-class IOBase(object):
-    @classmethod
-    def make_dir(cls, fp: str, mk_temp: bool = False) -> str | None:
-        if mk_temp:
-            return mkdtemp()
+def make_dir(fp: str, mk_temp: bool = False) -> str | None:
+    if mk_temp:
+        return mkdtemp()
+    else:
+        if not os.path.exists(fp):
+            os.mkdir(fp)
+
+
+def detect_encoding(file_path: os.PathLike[str]) -> dict:
+    with open(file_path, 'rb') as f:
+        raw_data = f.read()
+        result = chardet.detect(raw_data)
+        return result
+
+
+def fix_non_ascii_characters(file_path: os.PathLike[str], output_file: os.PathLike[str]) -> None:
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    non_ascii_chars = set(re.findall(r'[^\x00-\x7F]', content))
+    replacements = {}
+    for char in non_ascii_chars:
+        ascii_name = unicodedata.name(char, None)
+        if ascii_name:
+            ascii_equivalent = ascii_name.lower().replace(" ", "_")
+            replacements[char] = ascii_equivalent
         else:
-            if not os.path.exists(fp):
-                os.mkdir(fp)
-
-    @classmethod
-    def detect_encoding(cls, file_path: os.PathLike[str]) -> dict:
-        with open(file_path, 'rb') as f:
-            raw_data = f.read()
-            result = chardet.detect(raw_data)
-            return result
-
-    @classmethod
-    # find report and get data
-    def get_report_filepath(cls, output_dirpath: os.PathLike[str]) -> str | None:
-        # find report and get data
-        report_fp = None
-        for filepath in os.listdir(output_dirpath):
-            if "output" in filepath:
-                output_dir = os.path.join(output_dirpath, filepath)
-                for outfile in os.listdir(output_dir):
-                    out_path = os.path.join(output_dir, outfile)
-                    if out_path.endswith(".h5"):
-                        report_fp = out_path
-
-        return report_fp
-
-    @classmethod
-    def extract_simulator_report_outputs(
-            cls,
-            simulator_output_zippath: os.PathLike[str],
-            output_dirpath: os.PathLike[str]
-    ) -> Union[BiosimulationsRunOutputData, dict[str, str]]:
-        """
-        Extract simulator output data from
-        """
-        # unzip and extract output files
-        with zipfile.ZipFile(simulator_output_zippath, 'r') as zip_ref:
-            zip_ref.extractall(output_dirpath)
-
-        report_fp = cls.get_report_filepath(output_dirpath)
-
-        return cls.get_formatted_simulator_report_outputs(report_file_path=report_fp)
-
-    @classmethod
-    def get_formatted_simulator_report_outputs(
-            cls,
-            report_file_path: os.PathLike[str] | str,
-            return_as_dict: bool = True,
-            dataset_label_id: str = 'sedmlDataSetLabels',
-    ) -> Union[SimulatorReportData, BiosimulationsRunOutputData]:
-        """
-        Get the output/observables data for the specified report, derived from a simulator run submission.
-
-        :param report_file_path: Path to the report file.
-        :param return_as_dict: If True, return a dictionary containing the simulator report data, otherwise return a BiosimulationsRunOutputData object (See documentation for more details).
-        :param dataset_label_id: Dataset label ID. Defaults to 'sedmlDataSetLabels'.
-
-        :return: Report data for the specified simulator output report indexed by observable/species name.
-        :rtype: Union[SimulatorReportData, BiosimulationsRunOutputData]
-        """
-        with h5py.File(report_file_path, 'r') as sedml_group:
-            # get the dataset path for reports within sedml group
-            dataset_path = cls.get_report_dataset_path(report_file_path)
-            dataset = sedml_group[dataset_path]
-
-            if return_as_dict:
-                # check if dataset has attributes for labels
-                if dataset_label_id in dataset.attrs:
-                    labels = [label.decode('utf-8') for label in dataset.attrs[dataset_label_id]]
-                    if "Time" in labels:
-                        labels.remove("Time")
-                else:
-                    raise ValueError(f"No dataset labels found in the attributes with the name '{dataset_label_id}'.")
-
-                # get labeled data from report
-                data = dataset[()]
-                return SimulatorReportData({label: data[idx].tolist() for idx, label in enumerate(labels)})
-            else:
-                # return as datamodel
-                outputs = []
-                ds_labels = [label.decode('utf-8') for label in dataset.attrs[dataset_label_id]]
-                for label in ds_labels:
-                    dataset_index = list(ds_labels).index(label)
-                    data = dataset[()]
-                    specific_data = data[dataset_index]
-                    output = BiosimulationsReportOutput(dataset_label=label, data=specific_data)
-                    outputs.append(output)
-
-                return BiosimulationsRunOutputData(report_path=report_file_path, data=outputs)
-
-    @classmethod
-    def get_report_dataset_path(
-            cls,
-            report_file_path: str,
-            keyword: str = "report"
-    ) -> ReportDataSetPath:
-        with h5py.File(report_file_path, 'r') as f:
-            report_ds = visit_datasets(f)
-            ds_paths = list(report_ds.keys())
-            report_ds_path = ds_paths.pop() if len(ds_paths) < 2 else list(sorted(ds_paths))[0]   # TODO: make this better
-            return ReportDataSetPath(report_ds_path)
-
-    @classmethod
-    def get_sbml_species_mapping(cls, sbml_fp: str) -> SBMLSpeciesMapping:
-        sbml_reader = libsbml.SBMLReader()
-        sbml_doc = sbml_reader.readSBML(sbml_fp)
-        sbml_model_object = sbml_doc.getModel()
-
-        # parse and handle names/ids
-        sbml_species_ids = []
-        for spec in sbml_model_object.getListOfSpecies():
-            spec_name = spec.name
-            if not spec_name:
-                spec.name = spec.getId()
-            if not spec.name == "":
-                sbml_species_ids.append(spec)
-        names = list(map(lambda s: s.name, sbml_species_ids))
-        species_ids = [spec.getId() for spec in sbml_species_ids]
-
-        return SBMLSpeciesMapping(zip(names, species_ids))
-
-    @classmethod
-    def fix_non_ascii_characters(cls, file_path: os.PathLike[str], output_file: os.PathLike[str]) -> None:
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        non_ascii_chars = set(re.findall(r'[^\x00-\x7F]', content))
-        replacements = {}
-        for char in non_ascii_chars:
-            ascii_name = unicodedata.name(char, None)
-            if ascii_name:
-                ascii_equivalent = ascii_name.lower().replace(" ", "_")
-                replacements[char] = ascii_equivalent
-            else:
-                replacements[char] = ""
-
-        for original, replacement in replacements.items():
-            content = content.replace(original, replacement)
-
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        print(f"Fixed file saved to {output_file}")
+            replacements[char] = ""
+    for original, replacement in replacements.items():
+        content = content.replace(original, replacement)
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"Fixed file saved to {output_file}")
 
 
 def normalize_smoldyn_output_path_in_root(root_fp) -> str | None:

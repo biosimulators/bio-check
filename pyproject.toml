@@ -1,9 +1,11 @@
 [project]
-name = "bio-compose-server"
+name = "compose-server"
 version = "0.0.1"
 readme ="README.md"
-description = "bio-compose server"
+description = "compose server"
 authors = [{name = "Alex Patrie", email = "alex@example.com"}]
+
+# only app-level deps
 dependencies = [
     "requests-toolbelt",
     "python-dotenv",
@@ -19,10 +21,6 @@ dependencies = [
     "pyyaml",
     "chardet",
     "python-libsbml",
-    "numpy",
-    "pandas",
-    "process-bigraph",
-    "bigraph-schema"
 ]
 
 

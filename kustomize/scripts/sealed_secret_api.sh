@@ -16,7 +16,7 @@ if [ "$#" -ne 4 ]; then
     exit 1
 fi
 
-SECRET_NAME="biochecknet-api-secrets"
+SECRET_NAME="gateway-secrets"
 NAMESPACE=$1
 MONGO_USERNAME=$2
 MONGO_PASSWORD=$3

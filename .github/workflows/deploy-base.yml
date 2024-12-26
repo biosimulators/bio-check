@@ -24,7 +24,7 @@ jobs:
         run: |
           BASE_VERSION=$(cat ./assets/docker/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
-          BASE_IMG=ghcr.io/biosimulators/bio-compose-server-base
+          BASE_IMG=ghcr.io/biosimulators/compose-server-base
           echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
           echo "Base Version: $BASE_VERSION"
           echo "Base Tag: $BASE_IMG"

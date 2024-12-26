@@ -17,7 +17,7 @@ if [ "$version" == "" ]; then
 fi
 
 if [ "$use_biocompose" == 1 ]; then
-  img="bio-compose-server-$image"
+  img="compose-server-$image"
 else
   img="$image"
 fi

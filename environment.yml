@@ -1,4 +1,4 @@
-name: bio-compose-server
+name: compose-server
 channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
@@ -9,4 +9,13 @@ dependencies:
   - pip
   - python=3.10
   # - readdy
-  # - pymem3dg
+  - pymem3dg
+  - pip:  # only simulator-level deps(C compat)
+    - simulariumio
+    - smoldyn
+    - copasi-basico
+    - tellurium
+    - numpy
+    - pandas
+    - process-bigraph
+    - bigraph-schema

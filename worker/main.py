@@ -14,7 +14,7 @@ from job import Supervisor
 load_dotenv('../assets/dev/config/.env_dev')
 
 # logging
-logger = logging.getLogger("biochecknet.worker.main.log")
+logger = logging.getLogger("compose.worker.main.log")
 setup_logging(logger)
 
 # sleep params

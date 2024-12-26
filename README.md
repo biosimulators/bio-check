@@ -1,10 +1,10 @@
 ![Deploy API](https://github.com/biosimulators/bio-check/actions/workflows/deploy-api.yml/badge.svg)
 ![Deploy Worker](https://github.com/biosimulators/bio-check/actions/workflows/deploy-worker.yml/badge.svg)
 
-# BioCheck (bio-compose-server): A Biological Simulation Verification Service
+# BioCompose Server (compose-server): A Biological Simulation Verification Service
 ### __This service utilizes separate containers for REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance.__
 
-## **The REST API can be accessed via Swagger UI here: [https://biochecknet.biosimulations.org/docs](https://biochecknet.biosimulations.org/docs)
+## **The REST API can be accessed via Swagger UI here: [https://compose.biosimulations.org/docs](https://compose.biosimulations.org/docs)
 
 ## **For Developers:**
 
@@ -34,10 +34,10 @@ _*Remotely in microservice containers*_:
 
 ### The installation process is outlined as follows:
 
-1. `git clone https://github.com/biosimulators/bio-check.git`
-2. `cd assets`
-3. `touch .env_dev`
-4. Enter the following fields into the `.env_dev` file: 
+1. `git clone https://github.com/biosimulators/compose-server.git`
+2. `cd compose-server/shared`
+3. `touch .env`
+4. Enter the following fields into the `.env` file: 
         
         MONGO_URI=<uri of your mongo instance. In this case we use the standard mongodb image with the app name bio-check>
         GOOGLE_APPLICATION_CREDENTIALS=<path to your gcloud credentials .json file. Contact us for access>
@@ -46,7 +46,7 @@ _*Remotely in microservice containers*_:
 6. Pull and run the latest version of Mongo from the Docker Hub. (`docker run -d -it mongo:latest` or similar.)
 7. Create a conda env from the environment file at the root of this repo:
          
-        conda env create -f environment.yml -y && conda activate bio-composer-server-dev
+        conda env create -f environment.yml -y && conda activate composer-server-dev
 8. Install pysces with conda and amici with pip:
    
         conda install -c conda-forge -c pysces pysces

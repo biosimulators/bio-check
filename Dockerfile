@@ -6,7 +6,7 @@
 # FROM continuumio/miniconda3:main
 FROM condaforge/miniforge3:latest
 
-LABEL org.opencontainers.image.title="bio-compose-server-base" \
+LABEL org.opencontainers.image.title="compose-server-base" \
     org.opencontainers.image.description="Base Docker image for BioCompose REST API management, job processing, and datastorage with MongoDB, ensuring scalable and robust performance." \
     org.opencontainers.image.url="https://biosimulators.org/" \
     org.opencontainers.image.source="https://github.com/biosimulators/bio-check" \
@@ -29,25 +29,61 @@ COPY assets/docker/config/.biosimulations.json /.google/.bio-check.json
 COPY assets/docker/config/.pys_usercfg.ini /Pysces/.pys_usercfg.ini
 COPY assets/docker/config/.pys_usercfg.ini /root/Pysces/.pys_usercfg.ini
 COPY assets/docker/shared.py /app/shared.py
-COPY test_fixtures /test_fixtures
+COPY tests/test_fixtures /test_fixtures
 COPY assets/docker/config/environment.base.yml /app/environment.base.yml
 
 # cd /app
 WORKDIR /app
+
+COPY ./gateway /app/gateway
+COPY ./shared /app/shared
+COPY ./worker /app/worker
+COPY ./environment.yml /app/environment.yml
+COPY ./pyproject.toml /app/pyproject.toml
 
 RUN mkdir -p /Pysces \
     && mkdir -p /Pysces/psc \
     && mkdir -p /root/Pysces \
     && mkdir -p /root/Pysces/psc \
     && mkdir config \
-    && conda update -n base -c conda-forge conda \
-    && conda run -n base pip3 install --upgrade pip \
-    && conda run -n base pip install --upgrade pip \
-    && conda env create -n server -f environment.base.yml -y \
-    && echo "conda activate server" >> ~/.bashrc \
-    && source ~/.bashrc \
-    && conda env export -n server --no-builds -f config/environment.base.lock.yml \
-    && rm -f environment.base.yml
+    && conda update -n base -c conda-forge conda
+
+RUN apt-get update  \
+    && apt install -y \
+    meson \
+    g++ \
+    gfortran \
+    libblas-dev \
+    liblapack-dev \
+    libgfortran5 \
+    libhdf5-dev \
+    libhdf5-serial-dev \
+    libatlas-base-dev \
+    cmake \
+    make \
+    git \
+    build-essential \
+    python3-dev \
+    swig \
+    libc6-dev \
+    libx11-dev \
+    libc6 \
+    libgl1-mesa-dev \
+    pkg-config \
+    curl \
+    tar \
+    libgl1-mesa-glx \
+    libice6 \
+    libsm6 \
+    gnupg \
+    nano \
+    libstdc++6 \
+    && conda env create -f environment.yml -y \
+    && echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:\$LD_LIBRARY_PATH' >> ~/.bashrc
+# && chmod +x ./dynamic_install.sh \
+
+# expose for gateway
+EXPOSE 3001
 
 
 # to run with a local network:

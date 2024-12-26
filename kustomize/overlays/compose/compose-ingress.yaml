@@ -1,0 +1,59 @@
+# ingress for gateway
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "600m"
+    nginx.org/client-max-body-size: "600m"
+  name: compose-ingress
+  labels:
+    app: compose-ingress
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - compose.biosimulations.org
+      secretName: compose-ingress-tls
+  rules:
+    - host: compose.biosimulations.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 3001
+          # TODO: Update these paths!!
+          # - path: /verify-omex
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: gateway
+          #       port:
+          #         number: 3001
+          # - path: /verify-sbml
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: compose-gateway
+          #       port:
+          #         number: 3001
+          # - path: /get-compatible
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: gateway
+          #       port:
+          #         number: 3001
+          # - path: /get-verify-output/
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: compose-gateway
+          #       port:
+          #         number: 3001
+#

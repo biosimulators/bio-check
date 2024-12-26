@@ -13,12 +13,12 @@ if [ "$version" == "" ]; then
 fi
 
 # push version to GHCR
-docker tag bio-compose-server-"$lib":"$version" ghcr.io/biosimulators/bio-compose-server-"$lib":"$version"
-docker push ghcr.io/biosimulators/bio-compose-server-"$lib":"$version"
+docker tag compose-server-"$lib":"$version" ghcr.io/biosimulators/compose-server-"$lib":"$version"
+docker push ghcr.io/biosimulators/compose-server-"$lib":"$version"
 
 # push newest latest to GHCR
-docker tag ghcr.io/biosimulators/bio-compose-server-"$lib":"$version" ghcr.io/biosimulators/bio-compose-server-"$lib":latest
-docker push ghcr.io/biosimulators/bio-compose-server-"$lib":latest
+docker tag ghcr.io/biosimulators/compose-server-"$lib":"$version" ghcr.io/biosimulators/compose-server-"$lib":latest
+docker push ghcr.io/biosimulators/compose-server-"$lib":latest
 
 # handle version
 if [ "$lib" == "base" ]; then

@@ -20,7 +20,7 @@ from simularium_utils import calculate_agent_radius, translate_data_object, writ
 from log_config import setup_logging
 
 
-logger = logging.getLogger("biochecknet.bigraph_steps.main.log")
+logger = logging.getLogger("compose.bigraph_steps.main.log")
 setup_logging(logger)
 
 try:

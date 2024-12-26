@@ -19,6 +19,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: biochecknet-gateway
+                name: compose-gateway
                 port:
                   number: 3001
