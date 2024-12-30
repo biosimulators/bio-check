@@ -15,7 +15,7 @@ if [ "$platform" == "Darwin" ]; then
 fi
 
 # install deps from pyproject and activate env
-conda run -n bio-compose-server pip install --upgrade pip
-conda run -n bio-compose-server pip install -e .
-conda activate bio-compose-server
+conda run -n server pip install --upgrade pip
+conda run -n server pip install -e .
+conda activate server
 

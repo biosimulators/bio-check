@@ -1,42 +1,70 @@
-[project]
+[tool.poetry]
 name = "bio-compose-server"
 version = "0.0.1"
 readme ="README.md"
 description = "Backend for BioCompose: a microservices-based data service leveraging Kubernetes for efficient orchestration of bio-chemical simulation comparisons."
-authors = [{name = "Alex Patrie", email = "alex@example.com"}]
-
-# only app-level deps
-dependencies = [
-    "requests-toolbelt",
-    "python-dotenv",
-    "google-cloud-storage",
-    "python-multipart",
-    "fastapi",
-    "toml",
-    "typing-extensions",
-    "pymongo",
-    "pydantic-settings",
-    "pydantic",
-    "uvicorn",
-    "pyyaml",
-    "chardet",
-    "simulariumio",
-    "numpy",
-    "pandas",
-    "process-bigraph==0.0.22",
-    "bigraph-schema",
-    "copasi-basico",
-    "tellurium",
-    "python-libsbml",
-    "smoldyn",
-    "pip-autoremove"
+authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
+packages = [
+    {include ="bio_bundles"},
+    {include ="gateway"},
+    {include ="shared"},
+    {include ="tests"},
+    {include ="worker"}
 ]
 
 
-[tool.setuptools]
-packages = ["bio_bundles", "gateway", "shared", "tests", "worker"]
+[tool.poetry.dependencies]
+python = ">=3.10"
+
+
+[tool.poetry.group.api.dependencies]
+uvicorn = "*"
+fastapi = "^0.115.6"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "*"
+pytest = "*"
+pip-autoremove = "*"
+
+
+[tool.poetry.group.quantum.dependencies]
+jupyterlab = "*"
+ipykernel = "*"
+
+
+[tool.poetry.group.quantum.dependencies]
+networkx = "*"
+rustworkx = "*"
+qiskit = "*"
+qiskit-ibm-runtime = "*"
+
+
+[tool.poetry.group.simulators.dependencies]
+numpy = "*"
+pandas = "*"
+process-bigraph = "*"
+bigraph-schema = "*"
+copasi-basico = "*"
+tellurium = "*"
+python-libsbml = "*"
+smoldyn = "*"
+
+
+[tool.poetry.group.shared.dependencies]
+requests-toolbelt = "^1.0.0"
+python-dotenv = "^1.0.1"
+google-cloud-storage = "^2.19.0"
+python-multipart = "^0.0.20"
+toml = "^0.10.2"
+typing-extensions = "^4.12.2"
+pymongo = "^4.10.1"
+pydantic-settings = "^2.7.0"
+pydantic = "^2.10.4"
+chardet = "*"
+pyyaml = "*"
 
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

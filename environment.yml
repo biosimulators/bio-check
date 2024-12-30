@@ -1,4 +1,4 @@
-name: bio-compose-server
+name: server
 channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
@@ -8,5 +8,34 @@ channels:
 dependencies:
   - pip
   - python=3.10
+  - poetry
   # - readdy
   # - pymem3dg
+  - pip:
+      - uvicorn
+      - fastapi
+      - mypy
+      - pytest
+      - pip-autoremove
+      - networkx
+      - rustworkx
+      - qiskit
+      - qiskit-ibm-runtime
+      - numpy
+      - pandas
+      - process-bigraph
+      - copasi-basico
+      - tellurium
+      - python-libsbml
+      - smoldyn
+      - requests-toolbelt
+      - python-dotenv
+      - google-cloud-storage
+      - python-multipart
+      - toml
+      - typing-extensions
+      - pymongo
+      - pydantic
+      - pydantic-settings
+      - chardet
+      - pyyaml

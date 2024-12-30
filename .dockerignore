@@ -15,6 +15,7 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
+.ipynb_checkpoints
 .git
 .mypy_cache
 .pytest_cache

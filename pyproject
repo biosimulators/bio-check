@@ -1,0 +1,46 @@
+[project]
+name = "bio-compose-server"
+version = "0.0.1"
+readme ="README.md"
+description = "Backend for BioCompose: a microservices-based data service leveraging Kubernetes for efficient orchestration of bio-chemical simulation comparisons."
+authors = [{name = "Alex Patrie", email = "alex@example.com"}]
+
+# only app-level deps
+dependencies = [
+    "requests-toolbelt",
+    "python-dotenv",
+    "google-cloud-storage",
+    "python-multipart",
+    "fastapi",
+    "toml",
+    "typing-extensions",
+    "pymongo",
+    "pydantic-settings",
+    "pydantic",
+    "uvicorn",
+    "pyyaml",
+    "chardet",
+    "simulariumio",
+    "numpy",
+    "pandas",
+    "process-bigraph==0.0.22",
+    "bigraph-schema",
+    "copasi-basico",
+    "tellurium",
+    "python-libsbml",
+    "smoldyn",
+    "pip-autoremove",
+    "networkx",
+    "qiskit",
+    "qiskit-ibm-runtime",
+    "mypy"
+]
+
+
+[tool.setuptools]
+packages = ["bio_bundles", "gateway", "shared", "tests", "worker"]
+
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
