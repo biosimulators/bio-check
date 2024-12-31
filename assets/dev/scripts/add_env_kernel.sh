@@ -14,4 +14,4 @@ if [ "$kernel" == "" ]; then
 fi
 
 python_version=$(conda run -n "$env" python --version)
-conda run -n "$env" python -m ipykernel install --user --name="$env" --display-name "BioCompose Server($env): Python$python_version"
+conda run -n "$env" python -m ipykernel install --user --name="$env" --display-name "BioCompose Server($env): $python_version"

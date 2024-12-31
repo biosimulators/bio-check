@@ -21,9 +21,11 @@ dependencies:
       - rustworkx
       - qiskit
       - qiskit-ibm-runtime
+      - qiskit-nature
+      - pylatexenc
       - numpy
       - pandas
-      - process-bigraph
+      - process-bigraph==0.0.22
       - copasi-basico
       - tellurium
       - python-libsbml

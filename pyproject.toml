@@ -28,7 +28,7 @@ pytest = "*"
 pip-autoremove = "*"
 
 
-[tool.poetry.group.quantum.dependencies]
+[tool.poetry.group.notebook.dependencies]
 jupyterlab = "*"
 ipykernel = "*"
 
@@ -38,6 +38,8 @@ networkx = "*"
 rustworkx = "*"
 qiskit = "*"
 qiskit-ibm-runtime = "*"
+qiskit-nature = "*"
+pylatexenc = "*"
 
 
 [tool.poetry.group.simulators.dependencies]

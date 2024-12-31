@@ -11,7 +11,7 @@ conda env create -f environment.yml -y
 if [ "$platform" == "Darwin" ]; then
   smoldyn_installer=./assets/dev/scripts/install-smoldyn-mac-silicon.sh
   sudo chmod +x "$smoldyn_installer"
-  "$smoldyn_installer"
+  "$smoldyn_installer" server
 fi
 
 # install deps from pyproject and activate env
