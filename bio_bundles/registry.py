@@ -68,7 +68,8 @@ class Registrar(object):
             # Register the process
             type_registry.process_registry.register(address, bigraph_class)
         except Exception as e:
-            print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
+            if verbose:
+                print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
 
     def register_initial_modules(self, items_to_register: List[Tuple[str, str]], package: str = "bio_bundles", verbose=False) -> None:
         for process_name, path in items_to_register:
@@ -81,5 +82,6 @@ class Registrar(object):
                 bigraph_class = getattr(module, class_name)
                 self.core.process_registry.register(process_name, bigraph_class)
             except Exception as e:
-                print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
+                if verbose:
+                    print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
                 continue
