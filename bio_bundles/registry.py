@@ -53,6 +53,12 @@ class Registrar(object):
     def register_type(self, type_id: str, type_schema: Dict):
         self.core.register_types({type_id: type_schema})
 
+    def register_process(self, address: str, implementation: object, verbose=False) -> None:
+        type_registry = self.core
+        type_registry.process_registry.register(address, implementation)
+        if verbose:
+            print(f"Successfully registered {implementation} to address: {address}")
+
     def register_module(self, type_registry: ProcessTypes, import_statement: str, address: str, verbose=False) -> None:
         class_name = import_statement.split('.')[-1]
         try:
@@ -67,6 +73,8 @@ class Registrar(object):
 
             # Register the process
             type_registry.process_registry.register(address, bigraph_class)
+            if verbose:
+                print(f"Successfully registered {class_name} at the address: {address}")
         except Exception as e:
             if verbose:
                 print(f"Cannot register {class_name}. Error:\n**\n{e}\n**")
