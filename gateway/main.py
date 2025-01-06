@@ -59,7 +59,7 @@ else:
 
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-APP_TITLE = "compose"
+APP_TITLE = "bio-compose"
 APP_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:4200',
