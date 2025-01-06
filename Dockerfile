@@ -61,23 +61,12 @@ RUN mkdir config \
 
 RUN conda update -n base -c conda-forge conda \
     && conda env create -f /bio-compose-server/environment.yml -y \
+    && conda run -n server pip install --upgrade pip \
     && echo "conda activate server" >> /.bashrc
 
 RUN conda run -n server poetry config virtualenvs.create false \
     && conda run -n server poetry lock \
-    && conda run -n server poetry install \
-    && conda run -n server poetry run pip install biosimulator-processes[cobra,copasi,smoldyn] \
-    && conda install -n server pymem3dg -y
-
-
-# && conda run -n server poetry config virtualenvs.create false \
-# && conda run -n server poetry lock \
-# && conda run -n server poetry install \
-# && poetry run pip install
-
-# && conda create -n server python=3.10 -y \
-# && conda run -n server pip install --upgrade pip
-# && conda run -n server pip install -e .
+    && conda run -n server poetry install
 
 # && conda config --env --add channels conda-forge \
 # && conda config --set channel_priority strict \
