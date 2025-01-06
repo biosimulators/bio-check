@@ -16,9 +16,16 @@ DEV_ENV_PATH = os.path.join(REPO_ROOT, 'shared', '.env')
 
 load_dotenv(DEV_ENV_PATH)
 
+
 DB_TYPE = "mongo"
-DB_NAME = "service_requests"
-BUCKET_NAME = os.getenv("BUCKET_NAME")
+DB_NAME = os.getenv("DB_NAME", "composition_requests")
+BUCKET_NAME = os.getenv("BUCKET_NAME", "files_compose")
+
+
+class JobCollections:
+    COMPOSITION_COLLECTION = os.getenv("COMPOSITION_COLLECTION")
+    SMOLDYN_COLLECTION = os.getenv("SMOLDYN_COLLECTION")
+    READDY_COLLECTION = os.getenv("READDY_COLLECTION")
 
 
 class BaseModel(_BaseModel):

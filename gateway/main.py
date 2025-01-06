@@ -26,10 +26,12 @@ from shared.data_model import (
     DB_TYPE,
     DB_NAME,
     BUCKET_NAME,
+    JobCollections,
     JobStatus,
     DatabaseCollections,
     CompositionNode,
-    CompositionSpec, CompositionRun
+    CompositionSpec,
+    CompositionRun
 )
 from shared.database import MongoDbConnector
 from shared.io import write_uploaded_file, download_file_from_bucket
@@ -159,6 +161,7 @@ def root():
     tags=["Composition"],
     summary="Get process bigraph implementation addresses for composition specifications.")
 async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
+    # TODO: adjust this. Currently, if the optional simulator dep is not included, the process implementations will not show up
     from bsp import app_registrar
     addresses = app_registrar.registered_addresses
     version = "latest"
@@ -197,7 +200,7 @@ async def submit_composition(spec_file: UploadFile = File(..., description="Comp
         # write spec to db for job, immediately available to the worker
         timestamp = db_connector.timestamp()
         confirmation = await db_connector.write(
-            collection_name="jobs",
+            collection_name=JobCollections.COMPOSITION_COLLECTION,
             status="SUBMITTED:PENDING",
             spec=composition.spec,
             job_id=composition.job_id,
@@ -249,7 +252,7 @@ async def run_smoldyn(
 
         # insert job
         pending_job = await db_connector.insert_job_async(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            collection_name=JobCollections.SMOLDYN_COLLECTION,
             job_id=smoldyn_run.job_id,
             timestamp=smoldyn_run.timestamp,
             status=smoldyn_run.status,
@@ -350,7 +353,7 @@ async def run_readdy(
 
         # insert job
         pending_job = await db_connector.insert_job_async(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            collection_name=JobCollections.READDY_COLLECTION,
             box_size=readdy_run.box_size,
             job_id=readdy_run.job_id,
             timestamp=readdy_run.timestamp,
@@ -373,7 +376,7 @@ async def run_readdy(
 
 
 # -- output data --
-
+# TODO: refactor this for collections
 @app.get(
     "/get-output-file/{job_id}",
     operation_id='get-output-file',
