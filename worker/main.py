@@ -33,7 +33,17 @@ supervisor = Supervisor(db_connector=db_connector)
 
 # async def main(max_retries=MAX_RETRIES):
 #     n_retries = 0
-#     await supervisor.run_job_check()
+#     # address_registration = await supervisor.store_registered_addresses()
+#     # if not address_registration:
+#     #     logger.error("Failed to register addresses.")
+#
+#     while True:
+#         # no job has come in a while
+#         if n_retries == MAX_RETRIES:
+#             await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
+#         await supervisor.check_jobs()
+#         await asyncio.sleep(5)
+#         n_retries += 1
 
 
 async def main(max_retries=MAX_RETRIES):
@@ -46,7 +56,7 @@ async def main(max_retries=MAX_RETRIES):
         # no job has come in a while
         if n_retries == MAX_RETRIES:
             await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
-        await supervisor.check_jobs()
+        await supervisor.check_jobs()  # TODO: here is the location for dynamic install
         await asyncio.sleep(5)
         n_retries += 1
 

@@ -19,7 +19,7 @@ chardet = "*"
 fastapi = "*"
 python-multipart = "^0.0.20"
 h5py = "*"
-# biosimulator-processes = {version = "0.3.2", extras=["fba,ode"]}
+# biosimulator-processes = "^0.3.5"}
 # copasi-basico = "*"
 # smoldyn = "*"
 # tellurium = "*"

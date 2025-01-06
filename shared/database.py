@@ -129,3 +129,10 @@ class MongoDbConnector(DatabaseConnector):
 
     def _parse_enum_input(self, _input: Any) -> str:
         return _input.value if isinstance(_input, Enum) else _input
+
+    def store_implementation_addresses(self):
+        from bsp import app_registrar
+        addresses = {
+            address_name: f"local:{address_name}"
+            for address_name in list(app_registrar.core.process_registry.registry.keys())
+        }
