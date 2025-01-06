@@ -11,21 +11,15 @@ from fastapi.responses import FileResponse
 import numpy as np
 
 
-REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
-DEV_ENV_PATH = os.path.join(REPO_ROOT, 'shared', '.env')
+PROJECT_ROOT_PATH = os.path.dirname(os.path.dirname(__file__))
+DEV_ENV_PATH = os.path.join(PROJECT_ROOT_PATH, 'shared', '.env')
 
 load_dotenv(DEV_ENV_PATH)
 
-
-DB_TYPE = "mongo"
-DB_NAME = os.getenv("DB_NAME", "composition_requests")
-BUCKET_NAME = os.getenv("BUCKET_NAME", "files_compose")
-
-
-class JobCollections:
-    COMPOSITION_COLLECTION = os.getenv("COMPOSITION_COLLECTION")
-    SMOLDYN_COLLECTION = os.getenv("SMOLDYN_COLLECTION")
-    READDY_COLLECTION = os.getenv("READDY_COLLECTION")
+DB_TYPE = os.getenv("DB_TYPE", "mongo")
+DB_NAME = os.getenv("DB_NAME")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
+JOB_COLLECTION_NAME = os.getenv("JOB_COLLECTION_NAME", "jobs")
 
 
 class BaseModel(_BaseModel):
@@ -38,6 +32,15 @@ class BaseClass:
     """Base Python Dataclass multipurpose class with custom app configuration."""
     def to_dict(self):
         return asdict(self)
+
+
+@dataclass
+class WriteResponse(BaseClass):
+    result: int
+
+    @property
+    def status(self):
+        return "success" if self.result == 0 else "failed"
 
 
 class SBMLSpeciesMapping(dict):

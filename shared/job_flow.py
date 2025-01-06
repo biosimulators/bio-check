@@ -1,5 +1,8 @@
 """
-A.P:
+Alex Patrie 1/6/2025
+
+NOTE: This workflow is run by the microservices architecture and offloads ALL simulation logic to Biosimulator Processes!
+
 The general workflow should be:
 
 1. gateway: client uploads JSON spec file
@@ -18,8 +21,12 @@ The general workflow should be:
 
 import dotenv
 import os
+from typing import Any, Mapping, List
 
-from shared.data_model import DB_TYPE, DB_NAME
+from process_bigraph import Composite
+from bsp import app_registrar
+
+from shared.data_model import DB_TYPE, DB_NAME, JOB_COLLECTION_NAME
 from shared.database import MongoDbConnector
 
 
@@ -29,29 +36,44 @@ dotenv.load_dotenv("./.env")  # NOTE: create an env config at this filepath if d
 MONGO_URI = os.getenv("MONGO_URI")
 db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
-
 # check jobs for most recent submission
+all_jobs = db_connector.get_jobs()
 
 
-# set job id
+class JobDispatcher(object):
+    def __init__(self, connection_uri: str, database_id: str):
+        self.db_connector = MongoDbConnector(connection_uri=connection_uri, database_id=database_id)
 
+    @property
+    def current_jobs(self) -> List[Mapping[str, Any]]:
+        return self.db_connector.get_jobs()
 
-# determine sims needed
+    async def run(self):
+        # iterate over all jobs
+        for job in self.current_jobs:
+            await self.process_job(job)
 
+    async def process_job(self, job: Mapping[str, Any]):
+        job_status = job["status"]
+        if job_status.lower() != "pending":
+            # 1. set job id
+            job_id = job["job_id"]
 
-# run dynamic install
+            # 2. determine sims needed
 
+            # 3. run dynamic env
 
-# change job status to IN_PROGRESS
+            # 4. change job status to IN_PROGRESS
 
+            # 5. from bsp import app_registrar.core
 
-# run composition with Composite()
+            # 6. create Composite() with core and job["job_spec"]
 
+            # 7. run composition with instance from #6
 
-# change status to COMPLETE
+            # 8. change status to COMPLETE
 
-
-# update job in DB ['results'] to Composite().gather_results()
+            # 9. update job in DB ['results'] to Composite().gather_results()
 
 
 
