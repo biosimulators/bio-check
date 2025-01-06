@@ -5,66 +5,25 @@ readme ="README.md"
 description = "Backend for BioCompose: a microservices-based data service leveraging Kubernetes for efficient orchestration of bio-chemical simulation comparisons."
 authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
 packages = [
-    {include ="bio_bundles"},
     {include ="gateway"},
     {include ="shared"},
-    {include ="tests"},
     {include ="worker"}
 ]
 
 
 [tool.poetry.dependencies]
-python = ">=3.10"
-
-
-[tool.poetry.group.api.dependencies]
+python = "^3.10"
 uvicorn = "*"
-fastapi = "^0.115.6"
-
-
-[tool.poetry.group.dev.dependencies]
-mypy = "*"
-pytest = "*"
-pip-autoremove = "*"
-
-
-[tool.poetry.group.notebook.dependencies]
-jupyterlab = "*"
-ipykernel = "*"
-
-
-[tool.poetry.group.quantum.dependencies]
-networkx = "*"
-rustworkx = "*"
-qiskit = "*"
-qiskit-ibm-runtime = "*"
-qiskit-nature = "*"
-pylatexenc = "*"
-
-
-[tool.poetry.group.simulators.dependencies]
-numpy = "*"
-pandas = "*"
-process-bigraph = "*"
-bigraph-schema = "*"
-copasi-basico = "*"
-tellurium = "*"
-python-libsbml = "*"
-smoldyn = "*"
-
-
-[tool.poetry.group.shared.dependencies]
-requests-toolbelt = "^1.0.0"
-python-dotenv = "^1.0.1"
-google-cloud-storage = "^2.19.0"
-python-multipart = "^0.0.20"
-toml = "^0.10.2"
-typing-extensions = "^4.12.2"
-pymongo = "^4.10.1"
-pydantic-settings = "^2.7.0"
-pydantic = "^2.10.4"
+google-cloud-storage = "*"
 chardet = "*"
-pyyaml = "*"
+fastapi = "*"
+# biosimulator-processes = {version = "0.3.2", extras=["fba,ode"]}
+# copasi-basico = "*"
+# smoldyn = "*"
+# tellurium = "*"
+# python-libnuml = "*"
+# biosimulator-processes = {version = "0.3.2", extras=["ode","fba"]}
+# pymem3dg = "*"
 
 
 [build-system]

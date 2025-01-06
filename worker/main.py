@@ -38,9 +38,9 @@ supervisor = Supervisor(db_connector=db_connector)
 
 async def main(max_retries=MAX_RETRIES):
     n_retries = 0
-    address_registration = await supervisor.store_registered_addresses()
-    if not address_registration:
-        logger.error("Failed to register addresses.")
+    # address_registration = await supervisor.store_registered_addresses()
+    # if not address_registration:
+    #     logger.error("Failed to register addresses.")
 
     while True:
         # no job has come in a while

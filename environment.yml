@@ -11,33 +11,36 @@ dependencies:
   - poetry
   # - readdy
   # - pymem3dg
-  - pip:
-      - uvicorn
-      - fastapi
-      - mypy
-      - pytest
-      - pip-autoremove
-      - networkx
-      - rustworkx
-      - qiskit
-      - qiskit-ibm-runtime
-      - qiskit-nature
-      - pylatexenc
-      - numpy
-      - pandas
-      - process-bigraph==0.0.22
-      - copasi-basico
-      - tellurium
-      - python-libsbml
-      - smoldyn
-      - requests-toolbelt
-      - python-dotenv
-      - google-cloud-storage
-      - python-multipart
-      - toml
-      - typing-extensions
-      - pymongo
-      - pydantic
-      - pydantic-settings
-      - chardet
-      - pyyaml
+  # - pip:
+      # - google-cloud-storage
+      # - typing-extensions
+      # - uvicorn
+      # - fastapi
+      # - mypy
+      # - pytest
+      # - pip-autoremove
+      # - networkx
+      # - rustworkx
+      # - qiskit
+      # - qiskit-ibm-runtime
+      # - qiskit-nature
+      # - pylatexenc
+      # - numpy
+      # - pandas
+      # - process-bigraph==0.0.22
+      # - copasi-basico
+      # - tellurium
+      # - python-libsbml
+      # - smoldyn
+      # - requests-toolbelt
+      # - python-dotenv
+      # - google-cloud-storage
+      # - python-multipart
+      # - toml
+      # - typing-extensions
+      # - pymongo
+      # - pydantic
+      # - pydantic-settings
+      # - chardet
+      # - pyyaml
+      # - biosimulator-processes

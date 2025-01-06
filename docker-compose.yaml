@@ -8,6 +8,7 @@ services:
       - appnetwork
 
   gateway:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,11 +18,12 @@ services:
       - "3001:3001"
     networks:
       - appnetwork
-    command: poetry run uvicorn gateway.main:app --host 0.0.0.0 --port 3001 --reload
+    command: conda run -n server uvicorn gateway.main:app --host 0.0.0.0 --port 3001 --reload
     depends_on:
       - mongodb
 
   compose-worker:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
@@ -29,7 +31,7 @@ services:
     container_name: worker
     networks:
       - appnetwork
-    command: poetry run python worker/main.py
+    command: conda run -n server python worker/main.py
     depends_on:
       - mongodb
 

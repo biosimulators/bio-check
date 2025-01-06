@@ -21,10 +21,15 @@ from shared.data_model import (
     DbClientResponse,
     AgentParameters,
     BigraphRegistryAddresses,
-    IncompleteJob
+    IncompleteJob,
+    DB_TYPE,
+    DB_NAME,
+    BUCKET_NAME,
+    JobStatus,
+    DatabaseCollections
 )
-from shared_api import MongoDbConnector, DB_NAME, DB_TYPE, BUCKET_NAME, JobStatus, DatabaseCollections, file_upload_prefix
-from io_api import write_uploaded_file, download_file_from_bucket
+from shared.database import MongoDbConnector
+from shared.io import write_uploaded_file, download_file_from_bucket
 from shared.log_config import setup_logging
 
 
@@ -509,7 +514,7 @@ async def generate_simularium_file(
 ):
     job_id = "files-generate-simularium-file" + str(uuid.uuid4())
     _time = db_connector.timestamp()
-    upload_prefix, bucket_prefix = file_upload_prefix(job_id)
+    # upload_prefix, bucket_prefix = file_upload_prefix(job_id)
     uploaded_file_location = await write_uploaded_file(job_id=job_id, uploaded_file=uploaded_file, bucket_name=BUCKET_NAME, extension='.txt')
 
     # new simularium job in db
@@ -542,6 +547,23 @@ async def generate_simularium_file(
     # raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
 
 
+# @app.get(
+#     "/get-process-bigraph-addresses",
+#     operation_id="get-process-bigraph-addresses",
+#     response_model=BigraphRegistryAddresses,
+#     tags=["Composition"],
+#     summary="Get process bigraph implementation addresses for composition specifications.")
+# async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
+#     registry = await db_connector.read(collection_name="bigraph_registry", version="latest")
+#     if registry is not None:
+#         addresses = registry.get('registered_addresses')
+#         version = registry.get('version')
+#
+#         return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
+#     else:
+#         raise HTTPException(status_code=500, detail="Addresses not found.")
+
+
 @app.get(
     "/get-process-bigraph-addresses",
     operation_id="get-process-bigraph-addresses",
@@ -549,14 +571,12 @@ async def generate_simularium_file(
     tags=["Composition"],
     summary="Get process bigraph implementation addresses for composition specifications.")
 async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
-    registry = await db_connector.read(collection_name="bigraph_registry", version="latest")
-    if registry is not None:
-        addresses = registry.get('registered_addresses')
-        version = registry.get('version')
-
-        return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
-    else:
-        raise HTTPException(status_code=500, detail="Addresses not found.")
+    from bsp import app_registrar
+    addresses = list(app_registrar.core.process_registry.registry.keys())
+    version = "latest"
+    return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
+    # else:
+    #     raise HTTPException(status_code=500, detail="Addresses not found.")
 
 
 @app.get(

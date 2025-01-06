@@ -11,13 +11,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from process_bigraph import ProcessTypes
 from pymongo.collection import Collection as MongoCollection
-
-from shared.data_model import JobStatus, DatabaseCollections, BUCKET_NAME
-from shared.database import MongoDbConnector
-from shared.utils import unique_id, handle_sbml_exception
-from shared.log_config import setup_logging
-from shared.io import get_sbml_species_mapping, download_file, format_smoldyn_configuration, write_uploaded_file
-from bio_bundles.data_generator import (
+from bsp.data_generators import (
     generate_time_course_data,
     generate_composition_result_data,
     run_smoldyn,
@@ -25,6 +19,14 @@ from bio_bundles.data_generator import (
     handle_sbml_exception,
     generate_sbml_outputs
 )
+from bsp import app_registrar
+
+from shared.data_model import JobStatus, DatabaseCollections, BUCKET_NAME
+from shared.database import MongoDbConnector
+from shared.utils import unique_id, handle_sbml_exception
+from shared.log_config import setup_logging
+from shared.io import get_sbml_species_mapping, download_file, format_smoldyn_configuration, write_uploaded_file
+
 
 
 # TODO: Create general Worker process implementation!
@@ -56,16 +58,15 @@ def register_implementation_addresses(
     return core_registry, list(core_registry.process_registry.registry.keys())
 
 
-_CORE = ProcessTypes()
-BIGRAPH_IMPLEMENTATIONS = [
-    ('output-generator', 'OutputGenerator'),
-    ('time-course-output-generator', 'TimeCourseOutputGenerator'),
-    ('smoldyn_step', 'SmoldynStep'),
-    ('simularium_smoldyn_step', 'SimulariumSmoldynStep'),
-    ('mongo-emitter', 'MongoDatabaseEmitter')
-]
-
-APP_PROCESS_REGISTRY, REGISTERED_BIGRAPH_ADDRESSES = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS, _CORE)
+# _CORE = ProcessTypes()
+# BIGRAPH_IMPLEMENTATIONS = [
+#     ('output-generator', 'OutputGenerator'),
+#     ('time-course-output-generator', 'TimeCourseOutputGenerator'),
+#     ('smoldyn_step', 'SmoldynStep'),
+#     ('simularium_smoldyn_step', 'SimulariumSmoldynStep'),
+#     ('mongo-emitter', 'MongoDatabaseEmitter')
+# ]
+# APP_PROCESS_REGISTRY, REGISTERED_BIGRAPH_ADDRESSES = register_implementation_addresses(BIGRAPH_IMPLEMENTATIONS, _CORE)
 
 
 class Supervisor:
@@ -192,16 +193,19 @@ class Supervisor:
 
         return job is not None
 
-    async def store_registered_addresses(self):
-        # store list of process addresses that is available to the client via mongodb:
-        confirmation = await self.db_connector.write(
-            collection_name="bigraph_registry",
-            registered_addresses=REGISTERED_BIGRAPH_ADDRESSES,
-            timestamp=self.db_connector.timestamp(),
-            version="latest",
+    async def store_registered_addresses(self, core: ProcessTypes):
+        # store list of process addresses whose origin currently is Biosimulator Processes TODO: make this more general
+        registered_processes = list(core.process_registry.registry.keys())
+        stamp = self.db_connector.timestamp()
+        await self.db_connector.write(
+            collection_name="processes",
+            registered_addresses=registered_processes,
+            timestamp=stamp,
+            version=f"latest_{stamp}",
             return_document=True
         )
-        return confirmation
+
+        # store types? TODO: do this in biosimulator processes
 
 
 # run singularity in docker 1 batch mode 1 web version
