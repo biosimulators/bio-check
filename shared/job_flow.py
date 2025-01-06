@@ -41,8 +41,14 @@ all_jobs = db_connector.get_jobs()
 
 
 class JobDispatcher(object):
-    def __init__(self, connection_uri: str, database_id: str):
+    def __init__(self, connection_uri: str, database_id: str, timeout: int = 5):
+        """
+        :param connection_uri: mongodb connection URI
+        :param database_id: mongodb database ID
+        :param timeout: number of minutes for timeout. Default is 5 minutes
+        """
         self.db_connector = MongoDbConnector(connection_uri=connection_uri, database_id=database_id)
+        self.timeout = timeout * 60
 
     @property
     def current_jobs(self) -> List[Mapping[str, Any]]:
