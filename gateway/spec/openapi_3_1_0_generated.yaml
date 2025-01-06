@@ -26,17 +26,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BigraphRegistryAddresses'
-  /submit-composition-spec:
+  /submit-composition:
     post:
       tags:
       - Composition
       summary: Submit composition spec for simulation
-      operationId: submit-composition-spec
+      operationId: submit-composition
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_submit-composition-spec'
+              $ref: '#/components/schemas/Body_submit-composition'
         required: true
       responses:
         '200':
@@ -44,33 +44,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompositionSpec'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /run-composition:
-    post:
-      tags:
-      - Composition
-      summary: Run a process bigraph composition.
-      operationId: run-composition
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              title: Spec
-              description: Process bigraph specification
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
+                $ref: '#/components/schemas/CompositionRun'
         '422':
           description: Validation Error
           content:
@@ -486,7 +460,7 @@ components:
       required:
       - uploaded_file
       title: Body_run-smoldyn
-    Body_submit-composition-spec:
+    Body_submit-composition:
       properties:
         spec_file:
           type: string
@@ -496,60 +470,24 @@ components:
       type: object
       required:
       - spec_file
-      title: Body_submit-composition-spec
-    CompositionNode:
+      title: Body_submit-composition
+    CompositionRun:
       properties:
-        name:
+        job_id:
           type: string
-          title: Name
-        _type:
+          title: Job Id
+        timestamp:
           type: string
-          title: Type
-        address:
+          title: Timestamp
+        status:
           type: string
-          title: Address
-        config:
-          type: object
-          title: Config
-        inputs:
-          additionalProperties:
-            items:
-              type: string
-            type: array
-          type: object
-          title: Inputs
-        outputs:
-          anyOf:
-          - additionalProperties:
-              items:
-                type: string
-              type: array
-            type: object
-          - type: 'null'
-          title: Outputs
+          title: Status
+          default: PENDING
       type: object
       required:
-      - name
-      - _type
-      - address
-      - config
-      - inputs
-      title: CompositionNode
-    CompositionSpec:
-      properties:
-        nodes:
-          items:
-            $ref: '#/components/schemas/CompositionNode'
-          type: array
-          title: Nodes
-        emitter_mode:
-          type: string
-          title: Emitter Mode
-          default: all
-      type: object
-      required:
-      - nodes
-      title: CompositionSpec
+      - job_id
+      - timestamp
+      title: CompositionRun
     HTTPValidationError:
       properties:
         detail:

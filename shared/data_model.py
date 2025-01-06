@@ -295,6 +295,8 @@ class CompositionNode(BaseClass):
     def to_dict(self):
         rep = super().to_dict()
         rep.pop("name")
+        if not self.outputs:
+            rep.pop("outputs")
         return rep
 
 
@@ -306,6 +308,7 @@ class CompositionSpec(BaseClass):
         composite = Composition({'state': spec
     """
     nodes: List[CompositionNode]
+    job_id: str
     emitter_mode: str = "all"
 
     @property
@@ -314,3 +317,10 @@ class CompositionSpec(BaseClass):
             node_spec.name: node_spec.to_dict()
             for node_spec in self.nodes
         }
+
+
+@dataclass
+class CompositionRun(BaseClass):
+    job_id: str
+    timestamp: str
+    status: str = "PENDING"

@@ -29,7 +29,7 @@ from shared.data_model import (
     JobStatus,
     DatabaseCollections,
     CompositionNode,
-    CompositionSpec
+    CompositionSpec, CompositionRun
 )
 from shared.database import MongoDbConnector
 from shared.io import write_uploaded_file, download_file_from_bucket
@@ -168,13 +168,13 @@ async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
 
 
 @app.post(
-    "/submit-composition-spec",
-    response_model=CompositionSpec,
+    "/submit-composition",
+    response_model=CompositionRun,
     tags=["Composition"],
-    operation_id="submit-composition-spec",
+    operation_id="submit-composition",
     summary="Submit composition spec for simulation",
 )
-async def submit_composition_spec(spec_file: UploadFile = File(..., description="Composition JSON File")) -> CompositionSpec:
+async def submit_composition(spec_file: UploadFile = File(..., description="Composition JSON File")) -> CompositionRun:
     # validate filetype
     if not spec_file.filename.endswith('.json') and spec_file.content_type != 'application/json':
         raise HTTPException(status_code=400, detail="Invalid file type. Only JSON files are supported.")
@@ -188,48 +188,31 @@ async def submit_composition_spec(spec_file: UploadFile = File(..., description=
             node = CompositionNode(name=node_name, **node_spec)
             nodes.append(node)
 
-        composition = CompositionSpec(nodes=nodes, emitter_mode="all")
+        composition = CompositionSpec(
+            nodes=nodes,
+            emitter_mode="all",
+            job_id="composition" + str(uuid.uuid4())
+        )
 
         # write spec to db for job, immediately available to the worker
-        await db_connector.write(
+        timestamp = db_connector.timestamp()
+        confirmation = await db_connector.write(
             collection_name="jobs",
             status="SUBMITTED:PENDING",
             spec=composition.spec,
+            job_id=composition.job_id,
+            timestamp=timestamp,
         )
 
-        return composition
+        return CompositionRun(
+            job_id=composition.job_id,
+            timestamp=timestamp,
+            status=confirmation["status"]
+        )
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON format.")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post(
-    "/run-composition",
-    name="Run a process bigraph composition",
-    operation_id="run-composition",
-    tags=["Composition"],
-    summary="Run a process bigraph composition.")
-async def run_composition(
-        spec: Dict[str, Any] = Body(..., description="Process bigraph specification"),
-):
-    try:
-        job_id = "composition" + str(uuid.uuid4())
-        _time = db_connector.timestamp()
-        pending_composition_job = {
-            'status': JobStatus.PENDING.value,
-            'state_spec': spec,
-            'timestamp': _time,
-        }
-        await db_connector.write(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
-            **pending_composition_job,
-        )
-
-        return pending_composition_job
-    except Exception as e:
-        logger.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # -- run simulations ---
