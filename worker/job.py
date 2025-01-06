@@ -28,7 +28,6 @@ from shared.log_config import setup_logging
 from shared.io import get_sbml_species_mapping, download_file, format_smoldyn_configuration, write_uploaded_file
 
 
-
 # TODO: Create general Worker process implementation!
 
 # for dev only

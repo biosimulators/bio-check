@@ -153,12 +153,6 @@ class ReaddyRun(BaseModel):
     reaction_handler: Optional[str] = "UncontrolledApproximation"
 
 
-class UtcRun(ApiRun):
-    start: int
-    end: int
-    steps: int
-
-
 # IN PROGRESS JOBS:
 
 # TODO: Implement this:
@@ -177,28 +171,6 @@ class FileJob(BaseModel, FileResponse):
     pass
 
 
-# COMPLETED JOBS:
-
-# TODO: parse results and make object specs
-class ObservableData(BaseModel):
-    observable_name: str
-    mse: Dict[str, Any]   # Dict[str, float]]
-    proximity: Dict[str, Any]   #  Dict[str, bool]]
-    output_data: Dict[str, Union[List[float], str]]   #  List[float]]
-
-
-class SimulatorRMSE(BaseModel):
-    simulator: str
-    rmse_scores: Dict[str, float]
-
-
-class Output(BaseModel):
-    job_id: str
-    timestamp: str
-    status: str
-    source: Optional[str] = None
-
-
 class SmoldynOutput(FileResponse):
     pass
 
@@ -206,10 +178,6 @@ class SmoldynOutput(FileResponse):
 class OutputData(BaseModel):
     content: Union[Any, SmoldynOutput]
 
-
-# -- verification --
-
-# -- simulation execution --
 
 # -- composition --
 
@@ -260,10 +228,6 @@ class _OutputData(BaseModel):
     content: Any
 
 
-class UtcComparisonResult(_OutputData):
-    pass
-
-
 class Simulator(BaseModel):
     name: str
     version: Optional[str] = None
@@ -286,42 +250,67 @@ class BiosimulationsRunOutputData(BaseClass):
     data: List[BiosimulationsReportOutput]
 
 
-# these are data model-style representation of the functions from output_generator:
+# -- process-bigraph specs -- TODO: implement this!
+
+class DataStorePath(str):
+    pass
+
+
 @dataclass
-class NodeSpec:
+class DataStore(BaseClass):
+    paths: List[DataStorePath | str] | str
+
+    def __post_init__(self):
+        if isinstance(self.paths, str):
+            self.paths = [DataStorePath(self.paths)]
+        else:
+            paths = {
+                path_i: path for path_i, path in enumerate(self.paths)
+            }
+            for i, path in paths.items():
+                if isinstance(path, str):
+                    paths[i] = DataStorePath(path)
+            self.paths = list(paths.values())
+
+
+@dataclass
+class PortStore(BaseClass):
+    name: str  # outermost keys under "inputs"
+    store: DataStore | List[str]  # ie: ["concentrations_store"]
+
+    def __post_init__(self):
+        if isinstance(self.store, list):
+            self.store = DataStore(self.store)
+
+
+@dataclass
+class CompositionNode(BaseClass):
+    name: str
+    _type: str
     address: str
     config: Dict[str, Any]
-    inputs: Dict[str, Any]
-    outputs: Dict[str, Any]
-    _type: str
-    name: Optional[str] = None
+    inputs: Dict[str, List[str]]
+    outputs: Optional[Dict[str, List[str]]] = None
 
     def to_dict(self):
-        return asdict(self)
+        rep = super().to_dict()
+        rep.pop("name")
+        return rep
 
 
 @dataclass
-class StepNodeSpec(NodeSpec):
-    _type: str = "step"
-
-
-@dataclass
-class ProcessNodeSpec(NodeSpec):
-    _type: str = "process"
-
-
-@dataclass
-class CompositionSpec:
+class CompositionSpec(BaseClass):
     """To be used as input to process_bigraph.Composition() like:
 
         spec = CompositionSpec(nodes=nodes, emitter_mode='ports')
         composite = Composition({'state': spec
     """
-    nodes: List[NodeSpec]
+    nodes: List[CompositionNode]
     emitter_mode: str = "all"
 
-    def get_spec(self):
+    @property
+    def spec(self):
         return {
-            node_spec.name: node_spec
+            node_spec.name: node_spec.to_dict()
             for node_spec in self.nodes
         }

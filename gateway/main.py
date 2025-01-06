@@ -1,3 +1,4 @@
+import json
 import os
 import logging
 import uuid
@@ -26,7 +27,9 @@ from shared.data_model import (
     DB_NAME,
     BUCKET_NAME,
     JobStatus,
-    DatabaseCollections
+    DatabaseCollections,
+    Composition,
+    CompositionNode, CompositionSpec
 )
 from shared.database import MongoDbConnector
 from shared.io import write_uploaded_file, download_file_from_bucket
@@ -39,7 +42,7 @@ setup_logging(logger)
 
 # -- load dev env -- #
 
-dotenv.load_dotenv("../assets/dev/config/.env_dev")  # NOTE: create an env config at this filepath if dev
+dotenv.load_dotenv("../shared/.env")  # NOTE: create an env config at this filepath if dev
 
 
 # -- constraints -- #
@@ -145,6 +148,42 @@ def stop_mongo_client() -> DbClientResponse:
 @app.get("/")
 def root():
     return {'root': 'https://compose.biosimulations.org'}
+
+
+# -- submit composition jobs --
+
+@app.post(
+    "/submit-composition-spec",
+    response_model=CompositionSpec,
+)
+async def submit_composition_spec(spec_file: UploadFile = File(..., description="Composition JSON File")) -> CompositionSpec:
+    # validate filetype
+    if not spec_file.filename.endswith('.json') and spec_file.content_type != 'application/json':
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JSON files are supported.")
+
+    # parse uploaded file for Composition spec
+    try:
+        contents = await spec_file.read()
+        data: Dict = json.loads(contents)
+        nodes = []
+        for node_name, node_spec in data.items():
+            node = CompositionNode(name=node_name, **node_spec)
+            nodes.append(node)
+
+        composition = CompositionSpec(nodes=nodes, emitter_mode="all")
+
+        # write spec to db for job, immediately available to the worker
+        await db_connector.write(
+            collection_name="jobs",
+            status="SUBMITTED:PENDING",
+            spec=composition.spec,
+        )
+
+        return composition
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # run simulations
@@ -545,6 +584,9 @@ async def generate_simularium_file(
     return new_job_submission
     # except Exception as e:
     # raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
+
+
+
 
 
 # @app.get(
