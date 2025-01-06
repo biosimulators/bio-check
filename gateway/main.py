@@ -36,7 +36,7 @@ from shared.data_model import (
 from shared.database import MongoDbConnector
 from shared.io import write_uploaded_file, download_file_from_bucket
 from shared.log_config import setup_logging
-
+from shared.utils import get_project_version
 
 logger = logging.getLogger("compose.gateway.main.log")
 setup_logging(logger)
@@ -49,15 +49,17 @@ dotenv.load_dotenv("../shared/.env")  # NOTE: create an env config at this filep
 
 # -- constraints -- #
 
-version_path = os.path.join(
-    os.path.dirname(__file__),
-    ".VERSION"
-)
-if os.path.exists(version_path):
-    with open(version_path, 'r') as f:
-        APP_VERSION = f.read().strip()
-else:
-    APP_VERSION = "0.0.1"
+# version_path = os.path.join(
+#     os.path.dirname(__file__),
+#     ".VERSION"
+# )
+# if os.path.exists(version_path):
+#     with open(version_path, 'r') as f:
+#         APP_VERSION = f.read().strip()
+# else:
+#     APP_VERSION = "0.0.1"
+
+APP_VERSION = get_project_version()
 
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
