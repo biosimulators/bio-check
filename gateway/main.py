@@ -28,8 +28,8 @@ from shared.data_model import (
     BUCKET_NAME,
     JobStatus,
     DatabaseCollections,
-    Composition,
-    CompositionNode, CompositionSpec
+    CompositionNode,
+    CompositionSpec
 )
 from shared.database import MongoDbConnector
 from shared.io import write_uploaded_file, download_file_from_bucket
