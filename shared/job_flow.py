@@ -28,7 +28,7 @@ from bsp import app_registrar
 
 from shared.data_model import DB_TYPE, DB_NAME, JOB_COLLECTION_NAME
 from shared.database import MongoDbConnector
-
+from shared.dynamic_env import install_dependency
 
 dotenv.load_dotenv("./.env")  # NOTE: create an env config at this filepath if dev
 
@@ -66,8 +66,11 @@ class JobDispatcher(object):
             job_id = job["job_id"]
 
             # 2. determine sims needed
+            simulators = job["simulators"]
 
             # 3. run dynamic env
+            for simulator in simulators:
+                install_dependency(pypi_name=simulator, verbose=True)
 
             # 4. change job status to IN_PROGRESS
 

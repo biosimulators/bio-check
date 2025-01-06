@@ -179,7 +179,10 @@ async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
     operation_id="submit-composition",
     summary="Submit composition spec for simulation",
 )
-async def submit_composition(spec_file: UploadFile = File(..., description="Composition JSON File")) -> CompositionRun:
+async def submit_composition(
+        spec_file: UploadFile = File(..., description="Composition JSON File"),
+        simulators: List[str] = Query(..., description="Simulator package names to use for implementation"),
+) -> CompositionRun:
     # validate filetype
     if not spec_file.filename.endswith('.json') and spec_file.content_type != 'application/json':
         raise HTTPException(status_code=400, detail="Invalid file type. Only JSON files are supported.")
@@ -207,6 +210,7 @@ async def submit_composition(spec_file: UploadFile = File(..., description="Comp
             spec=composition.spec,
             job_id=composition.job_id,
             timestamp=timestamp,
+            simulators=simulators
         )
 
         return CompositionRun(
