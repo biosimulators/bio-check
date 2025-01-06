@@ -13,6 +13,70 @@ paths:
           content:
             application/json:
               schema: {}
+  /get-process-bigraph-addresses:
+    get:
+      tags:
+      - Composition
+      summary: Get process bigraph implementation addresses for composition specifications.
+      operationId: get-process-bigraph-addresses
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BigraphRegistryAddresses'
+  /submit-composition-spec:
+    post:
+      tags:
+      - Composition
+      summary: Submit composition spec for simulation
+      operationId: submit-composition-spec
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_submit-composition-spec'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionSpec'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /run-composition:
+    post:
+      tags:
+      - Composition
+      summary: Run a process bigraph composition.
+      operationId: run-composition
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              title: Spec
+              description: Process bigraph specification
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /run-smoldyn:
     post:
       tags:
@@ -116,32 +180,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReaddyRun'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /run-composition:
-    post:
-      tags:
-      - Composition
-      summary: Run a process bigraph composition.
-      operationId: run-composition
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              title: Spec
-              description: Process bigraph specification
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
         '422':
           description: Validation Error
           content:
@@ -265,19 +303,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /get-process-bigraph-addresses:
-    get:
-      tags:
-      - Composition
-      summary: Get process bigraph implementation addresses for composition specifications.
-      operationId: get-process-bigraph-addresses
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BigraphRegistryAddresses'
   /get-composition-state/{job_id}:
     get:
       tags:
@@ -461,6 +486,70 @@ components:
       required:
       - uploaded_file
       title: Body_run-smoldyn
+    Body_submit-composition-spec:
+      properties:
+        spec_file:
+          type: string
+          format: binary
+          title: Spec File
+          description: Composition JSON File
+      type: object
+      required:
+      - spec_file
+      title: Body_submit-composition-spec
+    CompositionNode:
+      properties:
+        name:
+          type: string
+          title: Name
+        _type:
+          type: string
+          title: Type
+        address:
+          type: string
+          title: Address
+        config:
+          type: object
+          title: Config
+        inputs:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+          title: Inputs
+        outputs:
+          anyOf:
+          - additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+          - type: 'null'
+          title: Outputs
+      type: object
+      required:
+      - name
+      - _type
+      - address
+      - config
+      - inputs
+      title: CompositionNode
+    CompositionSpec:
+      properties:
+        nodes:
+          items:
+            $ref: '#/components/schemas/CompositionNode'
+          type: array
+          title: Nodes
+        emitter_mode:
+          type: string
+          title: Emitter Mode
+          default: all
+      type: object
+      required:
+      - nodes
+      title: CompositionSpec
     HTTPValidationError:
       properties:
         detail:

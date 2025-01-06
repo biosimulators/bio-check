@@ -152,9 +152,27 @@ def root():
 
 # -- submit composition jobs --
 
+@app.get(
+    "/get-process-bigraph-addresses",
+    operation_id="get-process-bigraph-addresses",
+    response_model=BigraphRegistryAddresses,
+    tags=["Composition"],
+    summary="Get process bigraph implementation addresses for composition specifications.")
+async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
+    from bsp import app_registrar
+    addresses = app_registrar.registered_addresses
+    version = "latest"
+    return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
+    # else:
+    #     raise HTTPException(status_code=500, detail="Addresses not found.")
+
+
 @app.post(
     "/submit-composition-spec",
     response_model=CompositionSpec,
+    tags=["Composition"],
+    operation_id="submit-composition-spec",
+    summary="Submit composition spec for simulation",
 )
 async def submit_composition_spec(spec_file: UploadFile = File(..., description="Composition JSON File")) -> CompositionSpec:
     # validate filetype
@@ -186,7 +204,35 @@ async def submit_composition_spec(spec_file: UploadFile = File(..., description=
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# run simulations
+@app.post(
+    "/run-composition",
+    name="Run a process bigraph composition",
+    operation_id="run-composition",
+    tags=["Composition"],
+    summary="Run a process bigraph composition.")
+async def run_composition(
+        spec: Dict[str, Any] = Body(..., description="Process bigraph specification"),
+):
+    try:
+        job_id = "composition" + str(uuid.uuid4())
+        _time = db_connector.timestamp()
+        pending_composition_job = {
+            'status': JobStatus.PENDING.value,
+            'state_spec': spec,
+            'timestamp': _time,
+        }
+        await db_connector.write(
+            collection_name=DatabaseCollections.PENDING_JOBS.value,
+            **pending_composition_job,
+        )
+
+        return pending_composition_job
+    except Exception as e:
+        logger.error(str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -- run simulations ---
 
 @app.post(
     "/run-smoldyn",
@@ -343,34 +389,7 @@ async def run_readdy(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# TODO: create an implementation of the bigraph node spec via data model here instead of arbitrary dict
-@app.post(
-    "/run-composition",
-    name="Run a process bigraph composition",
-    operation_id="run-composition",
-    tags=["Composition"],
-    summary="Run a process bigraph composition.")
-async def run_composition(
-        spec: Dict[str, Any] = Body(..., description="Process bigraph specification"),
-):
-    try:
-        job_id = "composition" + str(uuid.uuid4())
-        _time = db_connector.timestamp()
-        pending_composition_job = {
-            'status': JobStatus.PENDING.value,
-            'state_spec': spec,
-            'timestamp': _time,
-        }
-        await db_connector.write(
-            collection_name=DatabaseCollections.PENDING_JOBS.value,
-            **pending_composition_job,
-        )
-
-        return pending_composition_job
-    except Exception as e:
-        logger.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-
+# -- output data --
 
 @app.get(
     "/get-output-file/{job_id}",
@@ -432,7 +451,6 @@ async def get_output_file(job_id: str):
         )
 
 
-# BELOW IS THE EXISTING GET OUTPUT!
 @app.get(
     "/get-output/{job_id}",
     # response_model=OutputData,
@@ -584,41 +602,6 @@ async def generate_simularium_file(
     return new_job_submission
     # except Exception as e:
     # raise HTTPException(status_code=404, detail=f"A simularium file cannot be parsed from your input. Please check your input file and refer to the simulariumio documentation for more details.")
-
-
-
-
-
-# @app.get(
-#     "/get-process-bigraph-addresses",
-#     operation_id="get-process-bigraph-addresses",
-#     response_model=BigraphRegistryAddresses,
-#     tags=["Composition"],
-#     summary="Get process bigraph implementation addresses for composition specifications.")
-# async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
-#     registry = await db_connector.read(collection_name="bigraph_registry", version="latest")
-#     if registry is not None:
-#         addresses = registry.get('registered_addresses')
-#         version = registry.get('version')
-#
-#         return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
-#     else:
-#         raise HTTPException(status_code=500, detail="Addresses not found.")
-
-
-@app.get(
-    "/get-process-bigraph-addresses",
-    operation_id="get-process-bigraph-addresses",
-    response_model=BigraphRegistryAddresses,
-    tags=["Composition"],
-    summary="Get process bigraph implementation addresses for composition specifications.")
-async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
-    from bsp import app_registrar
-    addresses = list(app_registrar.core.process_registry.registry.keys())
-    version = "latest"
-    return BigraphRegistryAddresses(registered_addresses=addresses, version=version)
-    # else:
-    #     raise HTTPException(status_code=500, detail="Addresses not found.")
 
 
 @app.get(
