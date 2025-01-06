@@ -5,6 +5,7 @@ from asyncio import sleep
 from typing import *
 from pprint import pformat
 
+import h5py
 import numpy as np
 
 

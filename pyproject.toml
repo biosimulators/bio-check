@@ -17,6 +17,7 @@ uvicorn = "*"
 google-cloud-storage = "*"
 chardet = "*"
 fastapi = "*"
+python-multipart = "*"
 # biosimulator-processes = {version = "0.3.2", extras=["fba,ode"]}
 # copasi-basico = "*"
 # smoldyn = "*"
