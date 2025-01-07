@@ -2,13 +2,6 @@ name: Deploy Base Image
 
 on:
   workflow_dispatch:
-  release:
-    branches:
-      - "main"
-  # workflow_run:
-  #   workflows: ["CI"]
-  #   types:
-  #     - completed
 
 jobs:
   deploy-base-image:
@@ -24,7 +17,7 @@ jobs:
         run: |
           BASE_VERSION=$(cat ./assets/docker/.BASE_VERSION)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
-          BASE_IMG=ghcr.io/biosimulators/compose-server-base
+          BASE_IMG=ghcr.io/biosimulators/bio-compose-server-base
           echo "BASE_IMG=$BASE_IMG" >> $GITHUB_ENV
           echo "Base Version: $BASE_VERSION"
           echo "Base Tag: $BASE_IMG"
@@ -37,7 +30,7 @@ jobs:
 
       - name: Build base image
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
+          docker build --no-cache -f ./Dockerfile -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
 
       - name: Deploy new base version to GHCR
         run: |
