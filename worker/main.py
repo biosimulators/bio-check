@@ -11,7 +11,7 @@ from worker.job import JobDispatcher
 
 
 # set up dev env if possible
-load_dotenv(os.path.join(PROJECT_ROOT_PATH, "shared/.env"))  # NOTE: create an env config at this filepath if dev
+load_dotenv(os.path.join(PROJECT_ROOT_PATH, "shared", ".env"))  # NOTE: create an env config at this filepath if dev
 
 # logging
 logger = setup_logging(__file__)
@@ -24,7 +24,8 @@ MAX_RETRIES = 30
 # creds params
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+# db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
+dispatcher = JobDispatcher(connection_uri=MONGO_URI, database_id=DB_NAME)
 
 
 async def main(max_retries=MAX_RETRIES):
@@ -33,7 +34,7 @@ async def main(max_retries=MAX_RETRIES):
         # no job has come in a while
         if n_retries == MAX_RETRIES:
             await asyncio.sleep(10)  # TODO: adjust this for client polling as needed
-        await supervisor.check_jobs()  # TODO: here is the location for dynamic install
+        await dispatcher.run()
         await asyncio.sleep(5)
         n_retries += 1
 

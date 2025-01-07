@@ -9,7 +9,7 @@ from pymongo.collection import Collection
 from pymongo.database import Database
 from pymongo.results import UpdateResult
 
-from shared.data_model import JOB_COLLECTION_NAME, WriteResponse, Job
+from shared.data_model import JOB_COLLECTION_NAME, WriteResponse
 
 
 class DatabaseConnector(ABC):
@@ -108,7 +108,7 @@ class MongoDbConnector(DatabaseConnector):
 
     def get_jobs(self):
         coll = self.get_collection(JOB_COLLECTION_NAME)
-        return [Job(item) for item in coll.find()]
+        return [item for item in coll.find()]
 
     async def update_job_status(self, job_id: str, status: str) -> UpdateResult:
         coll = self.get_collection(JOB_COLLECTION_NAME)
@@ -135,10 +135,3 @@ class MongoDbConnector(DatabaseConnector):
         coll = JOB_COLLECTION_NAME
         for job in self.db[coll].find():
             self.db[coll].delete_one(job)
-
-    def store_implementation_addresses(self):
-        from bsp import app_registrar
-        addresses = {
-            address_name: f"local:{address_name}"
-            for address_name in list(app_registrar.core.process_registry.registry.keys())
-        }

@@ -15,22 +15,22 @@ else
   argA=""
 fi
 
+img_name=ghcr.io/biosimulators/bio-compose-server-base:"$version"
+latest_name=ghcr.io/biosimulators/bio-compose-server-base:latest
+
 echo "Building base image..."
-docker build --platform linux/amd64 -f ./Dockerfile-base -t compose-server-base:"$version" .
+docker build --platform linux/amd64 -f ./Dockerfile -t "$img_name" .
 echo "Built base image."
 
 echo "Tagging new base image as latest..."
-docker tag compose-server-base:"$version" ghcr.io/biosimulators/compose-server-base:"$version"
-docker tag ghcr.io/biosimulators/compose-server-base:"$version" ghcr.io/biosimulators/compose-server-base:latest
-echo "New base image tagged:"
-docker images | grep compose-server-base:latest
+docker tag "$img_name" "$latest_name"
 
 if [ "$argB" == "--push" ]; then
   # push version to GHCR
-  docker push ghcr.io/biosimulators/compose-server-base:"$version"
+  docker push "$img_name"
 
   # push newest latest to GHCR
-  docker push ghcr.io/biosimulators/compose-server-base:latest
+  docker push "$latest_name"
 else
   argB=""
 fi
