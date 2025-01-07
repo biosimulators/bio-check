@@ -18,7 +18,7 @@ def format_dynamic_install(simulators: list[str], package_name: str = None) -> s
     return package
 
 
-def install_pypi_package(pypi_handle: str, verbose: bool = True) -> None:
+def install_pypi_package(pypi_handle: str, verbose: bool = True) -> int:
     """
     Dynamically installs a given pypi package.
 
@@ -32,11 +32,13 @@ def install_pypi_package(pypi_handle: str, verbose: bool = True) -> None:
         subprocess.check_call([sys.executable, "-m", "pip", "install", pypi_handle])
         if verbose:
             print(f"{pypi_handle} installed successfully.")
+        return 0
     except subprocess.CalledProcessError as e:
         logger.error(f">> {str(e)}")
+        raise e
 
 
-def install_request_dependencies(simulators: list[str]) -> None:
+def install_request_dependencies(simulators: list[str]) -> int:
     handle = format_dynamic_install(simulators=simulators)
     return install_pypi_package(pypi_handle=handle, verbose=False)
 

@@ -182,6 +182,7 @@ async def get_process_bigraph_addresses() -> BigraphRegistryAddresses:
 async def submit_composition(
         spec_file: UploadFile = File(..., description="Composition JSON File"),
         simulators: List[str] = Query(..., description="Simulator package names to use for implementation"),
+        duration: int = Query(..., description="Duration of simulation"),
 ) -> CompositionRun:
     # validate filetype
     if not spec_file.filename.endswith('.json') and spec_file.content_type != 'application/json':
@@ -209,8 +210,10 @@ async def submit_composition(
             status="PENDING",
             spec=composition.spec,
             job_id=composition.job_id,
-            timestamp=timestamp,
-            simulators=simulators
+            last_updated=timestamp,
+            simulators=simulators,
+            duration=duration,
+            results={}
         )
 
         return CompositionRun(

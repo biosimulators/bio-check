@@ -111,7 +111,25 @@ class MongoDbConnector(DatabaseConnector):
         return [Job(item) for item in coll.find()]
 
     async def update_job_status(self, job_id: str, status: str) -> UpdateResult:
-        return self.get_collection(JOB_COLLECTION_NAME).update_one({'job_id': job_id, }, {'$set': {'status': status}})
+        coll = self.get_collection(JOB_COLLECTION_NAME)
+        return coll.update_one(
+            filter={'job_id': job_id},
+            update={
+                '$set': {
+                    'status': status,
+                    'last_updated': self.timestamp()
+                }
+            }
+        )
+
+    async def update_job(self, job_id: str, **params) -> UpdateResult:
+        coll = self.get_collection(JOB_COLLECTION_NAME)
+        job_params = params.copy()
+        job_params['last_updated'] = self.timestamp()
+        return coll.update_one(
+            filter={'job_id': job_id},
+            update={'$set': job_params}
+        )
 
     def refresh_jobs(self):
         coll = JOB_COLLECTION_NAME

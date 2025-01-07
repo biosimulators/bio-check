@@ -17,7 +17,7 @@ The general workflow should be:
 10. worker: update job document ['results'] field with #8's data
 11. worker: perhaps emit an event?
 """
-
+import subprocess
 
 import dotenv
 import os
@@ -29,6 +29,8 @@ from bsp import app_registrar
 from shared.data_model import DB_TYPE, DB_NAME, JOB_COLLECTION_NAME
 from shared.database import MongoDbConnector
 from shared.dynamic_env import install_request_dependencies
+from shared.log_config import setup_logging
+
 
 dotenv.load_dotenv("./.env")  # NOTE: create an env config at this filepath if dev
 
@@ -38,6 +40,8 @@ db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 
 # check jobs for most recent submission
 all_jobs = db_connector.get_jobs()
+
+logger = setup_logging(__file__)
 
 
 class JobDispatcher(object):
@@ -68,21 +72,39 @@ class JobDispatcher(object):
             # 2. determine sims needed
             simulators = job["simulators"]
 
-            # 3. run dynamic env by installing biosimulator-processes[sim for sim in simulators]
-            install_request_dependencies(simulators)
+            # 3. try to run dynamic install
+            try:
+                installation_resp = install_request_dependencies(simulators)
+            except subprocess.CalledProcessError as e:
+                msg = f"Attempted installation for Job {job_id} was not successful."
+                logger.error(msg)
+                return {"job_id": job_id, "status": "FAILED", "result": msg}
 
             # 4. change job status to IN_PROGRESS
-            await self.db_connector.update_job_status(job_id=job_id, status="IN_PROGRESS")
+            # await self.db_connector.update_job_status(job_id=job_id, status="IN_PROGRESS")
+            await self.db_connector.update_job(job_id=job_id, status="IN_PROGRESS")
 
             # 5. from bsp import app_registrar.core
+            bsp = __import__("bsp")
+            core = bsp.app_registrar.core
 
             # 6. create Composite() with core and job["job_spec"]
+            composition = Composite(
+                config={"state": job["spec"]},
+                core=core
+            )
 
-            # 7. run composition with instance from #6
+            # 7. run composition with instance from #6 for specified duration (default 1)
+            dur = job.get("duration", 1)
+            composition.run(dur)
 
-            # 8. change status to COMPLETE
+            # 8. get composition results indexed from ram-emitter
+            results = composition.gather_results()[("emitter",)]
 
-            # 9. update job in DB ['results'] to Composite().gather_results()
+            # 9. update job in DB ['results'] to Composite().gather_results() AND change status to COMPLETE
+            await self.db_connector.update_job(job_id=job_id, status="COMPLETE", results=results)
+
+
 
 
 
