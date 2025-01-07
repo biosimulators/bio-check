@@ -10,9 +10,9 @@ def start_logging(fname: str):
     )
 
 
-def setup_logging(logger: logging.Logger):
+def setup_logging(fname: str, return_all: bool = False):
     # Create a root logger
-    root_logger = logging.getLogger()
+    root_logger = logging.getLogger(fname)
     root_logger.setLevel(logging.INFO)
 
     # Create a console handler
@@ -29,4 +29,5 @@ def setup_logging(logger: logging.Logger):
 
     # Add the console handler to the root logger and uvicorn logger
     root_logger.addHandler(console_handler)
-    logger.addHandler(console_handler)
+
+    return root_logger, console_handler if return_all else root_logger

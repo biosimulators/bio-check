@@ -45,7 +45,7 @@ class DatabaseConnector(ABC):
         pass
 
     @abstractmethod
-    async def update_job_status(self, collection_name: str, job_id: str, status: str):
+    async def update_job_status(self, job_id: str, status: str):
         pass
 
     @abstractmethod
@@ -110,8 +110,8 @@ class MongoDbConnector(DatabaseConnector):
         coll = self.get_collection(JOB_COLLECTION_NAME)
         return [Job(item) for item in coll.find()]
 
-    async def update_job_status(self, collection_name: str, job_id: str, status: str) -> UpdateResult:
-        return self.get_collection(collection_name).update_one({'job_id': job_id, }, {'$set': {'status': status}})
+    async def update_job_status(self, job_id: str, status: str) -> UpdateResult:
+        return self.get_collection(JOB_COLLECTION_NAME).update_one({'job_id': job_id, }, {'$set': {'status': status}})
 
     def refresh_jobs(self):
         coll = JOB_COLLECTION_NAME

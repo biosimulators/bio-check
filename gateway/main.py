@@ -206,7 +206,7 @@ async def submit_composition(
         timestamp = db_connector.timestamp()
         confirmation = await db_connector.write(
             collection_name=JobCollections.COMPOSITION_COLLECTION,
-            status="SUBMITTED:PENDING",
+            status="PENDING",
             spec=composition.spec,
             job_id=composition.job_id,
             timestamp=timestamp,
