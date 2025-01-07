@@ -11,14 +11,15 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./gateway/Dockerfile-gateway
+      # dockerfile: Dockerfile
     image: ghcr.io/biosimulators/bio-compose-server-gateway:0.0.1
     container_name: gateway
     ports:
       - "3001:3001"
     networks:
       - appnetwork
-    command: conda run -n server uvicorn gateway.main:app --host 0.0.0.0 --port 3001 --reload
+    # command: conda run -n server uvicorn gateway.main:app --host 0.0.0.0 --port 3001 --reload
     depends_on:
       - mongodb
 
@@ -26,12 +27,13 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./worker/Dockerfile-worker
+      # dockerfile: Dockerfile
     image: ghcr.io/biosimulators/bio-compose-server-worker:0.0.1
     container_name: worker
     networks:
       - appnetwork
-    command: conda run -n server python worker/main.py
+    # command: conda run -n server python worker/main.py
     depends_on:
       - mongodb
 

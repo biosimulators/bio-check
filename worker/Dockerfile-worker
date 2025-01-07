@@ -1,0 +1,3 @@
+FROM ghcr.io/biosimulators/bio-compose-server-base:latest
+
+ENTRYPOINT ["conda run -n server python worker/main.py"]
