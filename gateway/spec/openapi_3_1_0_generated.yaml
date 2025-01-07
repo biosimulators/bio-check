@@ -179,13 +179,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /get-output-file/{job_id}:
+  /get-output/{job_id}:
     get:
       tags:
       - Results
-      summary: Get the results of an existing simulation run from Smoldyn or Readdy
-        as either a downloadable file or job progression status.
-      operationId: get-output-file
+      summary: Get the results of an existing simulation run.
+      operationId: get-output
       parameters:
       - name: job_id
         in: path
@@ -198,19 +197,21 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputData'
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /get-output/{job_id}:
+  /get-output-file/{job_id}:
     get:
       tags:
       - Results
-      summary: Get the results of an existing simulation run.
-      operationId: get-output
+      summary: Get the results of an existing simulation run from Smoldyn or Readdy
+        as either a downloadable file or job progression status.
+      operationId: get-output-file
       parameters:
       - name: job_id
         in: path
@@ -533,6 +534,27 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    OutputData:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        status:
+          type: string
+          title: Status
+        last_updated:
+          type: string
+          title: Last Updated
+        results:
+          type: object
+          title: Results
+      type: object
+      required:
+      - job_id
+      - status
+      - last_updated
+      - results
+      title: OutputData
     ReaddyParticleConfig:
       properties:
         name:
