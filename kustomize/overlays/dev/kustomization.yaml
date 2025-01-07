@@ -5,26 +5,26 @@ kind: Kustomization
 namespace: dev
 
 images:
-- name: ghcr.io/biosimulators/bio-compose-server-api
+- name: ghcr.io/biosimulators/compose-server-gateway
   newTag: 0.0.1
-- name: ghcr.io/biosimulators/bio-compose-server-worker
+- name: ghcr.io/biosimulators/compose-server-worker
   newTag: 0.0.1
 - name: mongo
   newTag: 8.0-rc
 
 replicas:
 - count: 1
-  name: biochecknet-api
+  name: compose-gateway
 - count: 1
   name: worker
 - count: 1
   name: mongodb
 
 resources:
-- api-secrets.yaml
+- gateway-secrets.yaml
 - mongodb-pvc.yaml
 - secret-ghcr.yaml
-- api-certificate.yaml
+- gateway-certificate.yaml
 - selfsigned-issuer.yaml
 - bio-check-ingress.yaml
 - ../../config/dev

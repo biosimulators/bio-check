@@ -1,0 +1,101 @@
+name: Continuous Integration
+
+# TODO: add main here
+on:
+  workflow_dispatch:
+
+jobs:
+  test-microservices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install deps and run tests
+        run: |
+          pip install --upgrade pip
+          pip install -r assets/pipeline/config/requirements.github.ci.txt 
+          cd worker
+          python -B test_worker.py 
+
+  build-base-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get new base image version
+        run: |
+          BASE_VERSION=$(cat ./assets/.BASE_VERSION)
+          echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+          echo "Base Version: $BASE_VERSION"
+
+      - name: Create gcloud config artifact
+        run: |
+          echo "$BIOSIMULATIONS_GCLOUD_CONFIG" > ./assets/docker/config/.biosimulations.json
+        env:
+          BIOSIMULATIONS_GCLOUD_CONFIG: ${{ secrets.BIO_JSON_CONTENT }}
+
+      - name: Test build base image
+        run: |
+          docker build --no-cache -f ./Dockerfile-base -t ghcr.io/biosimulators/bio-compose-server-base:${{ env.BASE_VERSION }} .
+
+  get-microservice-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 5: Extract API container version
+      - name: Extract API container version
+        id: extract_api_version
+        run: |
+          API_VERSION=$(python -B .github/parse_container_version.py api)
+          echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
+          echo "API Version: $API_VERSION"
+
+      # Step 6: Extract worker container version
+      - name: Extract worker container version
+        id: extract_worker_version
+        run: |
+          WORKER_VERSION=$(python -B .github/parse_container_version.py worker)
+          echo "WORKER_VERSION=$WORKER_VERSION" >> $GITHUB_ENV
+          echo "WORKER Version: $WORKER_VERSION"
+
+      # Step 7: Debug output of extracted versions
+      - name: Debug output of extracted versions
+        run: |
+          echo "API_VERSION=${{ env.API_VERSION }}"
+          echo "WORKER_VERSION=${{ env.WORKER_VERSION }}"
+
+  build-microservice-images:
+    needs: get-microservice-versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.REPO_ADMIN_GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REPO_ADMIN_GH_USERNAME }}" --password-stdin
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version  # Check if Docker Compose is installed correctly
+
+      # - name: Build Docker containers with Docker Compose
+      #   run: docker-compose build

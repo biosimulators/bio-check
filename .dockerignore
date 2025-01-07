@@ -15,6 +15,7 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
+.ipynb_checkpoints
 .git
 .mypy_cache
 .pytest_cache
@@ -29,7 +30,7 @@ unused.txt
 # model-examples
 .gitignore
 .idea
-# bio_check/api
+# bio_check/gateway
 # bio_check/worker
 !enter.sh
 !add_deps.sh
@@ -39,7 +40,7 @@ worker/shared_worker.py
 tests.ipynb
 __pycache__
 __pycache__/
-api/__pycache__
+gateway/__pycache__
 worker/__pycache__
 test.ipynb
 worker/.composition

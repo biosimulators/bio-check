@@ -1,0 +1,30 @@
+# create kustimization.yaml file
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: compose
+
+images:
+- name: mongo
+  newTag: 8.0-rc
+- name: ghcr.io/biosimulators/bio-compose-server-gateway
+  newTag: 0.0.1
+- name: ghcr.io/biosimulators/bio-compose-server-worker
+  newTag: 0.0.1
+
+replicas:
+- count: 1
+  name: gateway
+- count: 1
+  name: worker
+- count: 1
+  name: mongodb
+
+resources:
+- gateway-secrets.yaml
+- mongodb-pvc.yaml
+- secret-ghcr.yaml
+- compose-ingress.yaml
+- ../../config/compose
+- ../../base
+

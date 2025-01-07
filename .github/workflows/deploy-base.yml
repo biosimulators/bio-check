@@ -2,13 +2,6 @@ name: Deploy Base Image
 
 on:
   workflow_dispatch:
-  release:
-    branches:
-      - "main"
-  # workflow_run:
-  #   workflows: ["CI"]
-  #   types:
-  #     - completed
 
 jobs:
   deploy-base-image:
@@ -37,7 +30,7 @@ jobs:
 
       - name: Build base image
         run: |
-          docker build --no-cache -f ./Dockerfile-base -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
+          docker build --no-cache -f ./Dockerfile -t ${{ env.BASE_IMG }}:${{ env.BASE_VERSION }} .
 
       - name: Deploy new base version to GHCR
         run: |

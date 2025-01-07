@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: gateway
+  name: gateway
+spec:
+  selector:
+    matchLabels:
+      app: gateway
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: ghcr.io/biosimulators/bio-compose-server-gateway  # push to ghcr.io/biosimulators/bio-check-compose_worker
+          imagePullPolicy: "Always"
+          resources:
+            requests:
+              memory: "400Mi"
+              cpu: "200m"
+            limits:
+              memory: "2000Mi"
+#              cpu: "500m"
+          envFrom:
+            - configMapRef:
+                name: gateway-config
+          env:
+            - name: MONGO_DB_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: mongo-password
+            - name: MONGO_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: mongo-username
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: google-application-credentials
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - name: gateway-secrets
+              mountPath: /run/secrets/gateway-secrets
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: ghcr-secret
+      volumes:
+        - name: gateway-secrets
+          secret:
+            items:
+              - key: mongo-password
+                path: mongo-password
+              - key: mongo-username
+                path: mongo-username
+              - key: google-application-credentials
+                path: google-application-credentials
+            secretName: gateway-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: gateway
+  name: gateway
+spec:
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+  selector:
+    app: gateway

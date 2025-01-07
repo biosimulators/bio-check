@@ -1,0 +1,58 @@
+{
+    "ode": {
+        "_type": "process",
+        "address": "local:fba",
+        "config": {
+            "model": {
+                "model_source": "/my/path"
+            }
+        },
+        "inputs": {
+            "species_concentrations": [
+                "species_concentrations_store"
+            ]
+        },
+        "outputs": {
+            "fluxes": [
+                "fluxes_store"
+            ]
+        }
+    },
+    "fba": {
+        "_type": "process",
+        "address": "local:fba",
+        "config": {
+            "model": {
+                "model_source": "/my/path"
+            }
+        },
+        "inputs": {
+            "species_concentrations": [
+                "species_concentrations_store"
+            ]
+        },
+        "outputs": {
+            "fluxes": [
+                "fluxes_store"
+            ]
+        }
+    },
+    "emitter": {
+        "_type": "step",
+        "address": "local:ram-emitter",
+        "config": {
+            "emit": {
+                "species_concentrations": "tree[float]",
+                "fluxes": "tree[float]"
+            }
+        },
+        "inputs": {
+            "species_concentrations": [
+                "species_concentrations_store"
+            ],
+            "fluxes": [
+                "fluxes_store"
+            ]
+        }
+    }
+}

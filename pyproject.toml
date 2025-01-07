@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "bio-compose-server"
+version = "0.0.1"
+readme ="README.md"
+description = "Backend for BioCompose: a microservices-based data service leveraging Kubernetes for efficient orchestration of bio-chemical simulation comparisons."
+authors = ["Alex Patrie <alexanderpatrie@gmail.com>"]
+packages = [
+    {include ="gateway"},
+    {include ="shared"},
+    {include ="worker"}
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+uvicorn = "*"
+google-cloud-storage = "*"
+chardet = "*"
+fastapi = "*"
+python-multipart = "^0.0.20"
+h5py = "*"
+biosimulator-processes = "^0.3.5"
+# copasi-basico = "*"
+# smoldyn = "*"
+# tellurium = "*"
+# python-libnuml = "*"
+# biosimulator-processes = {version = "0.3.2", extras=["ode","fba"]}
+# pymem3dg = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

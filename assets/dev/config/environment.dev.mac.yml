@@ -1,4 +1,4 @@
-name: bio-compose-server-dev
+name: compose-server-dev
 channels:
   - conda-forge
 dependencies:
@@ -155,7 +155,7 @@ dependencies:
       - fqdn==1.5.1
       - gitdb==4.0.11
       - gitpython==3.1.43
-      - google-api-core==2.22.0
+      - google-gateway-core==2.22.0
       - google-auth==2.36.0
       - google-cloud-core==2.4.1
       - google-cloud-storage==2.18.2
@@ -275,4 +275,4 @@ dependencies:
       - webencodings==0.5.1
       - websocket-client==1.8.0
       - yamldown==0.1.8
-prefix: /Users/alexanderpatrie/miniconda3/envs/bio-compose-server-dev
+prefix: /Users/alexanderpatrie/miniconda3/envs/compose-server-dev

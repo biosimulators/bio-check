@@ -1,3 +1,4 @@
+.ipynb_checkpoints
 release_env
 commit.sh
 .idea/
@@ -25,3 +26,6 @@ condaenv.n_dn60fa.requirements.txt
 worker/.worker_STABLE
 build
 .DS_Store
+shared/.env
+.biosimulations.json
+.env

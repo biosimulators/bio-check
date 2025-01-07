@@ -1,0 +1,46 @@
+name: server
+channels:
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - readdy
+  - conda-forge
+dependencies:
+  - pip
+  - python=3.10
+  - poetry
+  # - readdy
+  # - pymem3dg
+  # - pip:
+      # - google-cloud-storage
+      # - typing-extensions
+      # - uvicorn
+      # - fastapi
+      # - mypy
+      # - pytest
+      # - pip-autoremove
+      # - networkx
+      # - rustworkx
+      # - qiskit
+      # - qiskit-ibm-runtime
+      # - qiskit-nature
+      # - pylatexenc
+      # - numpy
+      # - pandas
+      # - process-bigraph==0.0.22
+      # - copasi-basico
+      # - tellurium
+      # - python-libsbml
+      # - smoldyn
+      # - requests-toolbelt
+      # - python-dotenv
+      # - google-cloud-storage
+      # - python-multipart
+      # - toml
+      # - typing-extensions
+      # - pymongo
+      # - pydantic
+      # - pydantic-settings
+      # - chardet
+      # - pyyaml
+      # - biosimulator-processes
