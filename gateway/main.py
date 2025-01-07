@@ -1,6 +1,6 @@
+import dataclasses
 import json
 import os
-import logging
 import uuid
 from typing import *
 
@@ -26,20 +26,21 @@ from shared.data_model import (
     DB_TYPE,
     DB_NAME,
     BUCKET_NAME,
-    JobCollections,
     JobStatus,
-    DatabaseCollections,
     CompositionNode,
     CompositionSpec,
-    CompositionRun
+    CompositionRun,
+    JOB_COLLECTION_NAME, BaseClass, OutputData
 )
 from shared.database import MongoDbConnector
 from shared.io import write_uploaded_file, download_file_from_bucket
 from shared.log_config import setup_logging
 from shared.utils import get_project_version
 
-logger = logging.getLogger("compose.gateway.main.log")
-setup_logging(logger)
+
+# setup logging
+
+logger = setup_logging(__file__)
 
 
 # -- load dev env -- #
@@ -47,20 +48,7 @@ setup_logging(logger)
 dotenv.load_dotenv("../shared/.env")  # NOTE: create an env config at this filepath if dev
 
 
-# -- constraints -- #
-
-# version_path = os.path.join(
-#     os.path.dirname(__file__),
-#     ".VERSION"
-# )
-# if os.path.exists(version_path):
-#     with open(version_path, 'r') as f:
-#         APP_VERSION = f.read().strip()
-# else:
-#     APP_VERSION = "0.0.1"
-
 APP_VERSION = get_project_version()
-
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 APP_TITLE = "bio-compose"
@@ -102,24 +90,17 @@ APP_SERVERS = [
 
 # -- app components -- #
 
+db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 router = APIRouter()
 app = FastAPI(title=APP_TITLE, version=APP_VERSION, servers=APP_SERVERS)
-
-# add origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=APP_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"])
+    allow_headers=["*"]
+)
 
-# add servers
-# app.servers = APP_SERVERS
-
-
-# -- mongo db -- #
-
-db_connector = MongoDbConnector(connection_uri=MONGO_URI, database_id=DB_NAME)
 app.mongo_client = db_connector.client
 
 # It will be represented as a `str` on the model so that it can be serialized to JSON. Represents an ObjectId field in the database.
@@ -205,8 +186,8 @@ async def submit_composition(
 
         # write spec to db for job, immediately available to the worker
         timestamp = db_connector.timestamp()
-        confirmation = await db_connector.write(
-            collection_name=JobCollections.COMPOSITION_COLLECTION,
+        write_confirmation = await db_connector.write(
+            collection_name=JOB_COLLECTION_NAME,
             status="PENDING",
             spec=composition.spec,
             job_id=composition.job_id,
@@ -216,11 +197,7 @@ async def submit_composition(
             results={}
         )
 
-        return CompositionRun(
-            job_id=composition.job_id,
-            timestamp=timestamp,
-            status=confirmation["status"]
-        )
+        return CompositionRun(**write_confirmation)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON format.")
     except Exception as e:
@@ -260,8 +237,8 @@ async def run_smoldyn(
         )
 
         # insert job
-        pending_job = await db_connector.insert_job_async(
-            collection_name=JobCollections.SMOLDYN_COLLECTION,
+        pending_job = await db_connector.write(
+            collection_name=JOB_COLLECTION_NAME,
             job_id=smoldyn_run.job_id,
             timestamp=smoldyn_run.timestamp,
             status=smoldyn_run.status,
@@ -361,8 +338,8 @@ async def run_readdy(
         )
 
         # insert job
-        pending_job = await db_connector.insert_job_async(
-            collection_name=JobCollections.READDY_COLLECTION,
+        pending_job = await db_connector.write(
+            collection_name=JOB_COLLECTION_NAME,
             box_size=readdy_run.box_size,
             job_id=readdy_run.job_id,
             timestamp=readdy_run.timestamp,
@@ -385,6 +362,33 @@ async def run_readdy(
 
 
 # -- output data --
+
+@app.get(
+    "/get-output/{job_id}",
+    response_model=OutputData,
+    operation_id='get-output',
+    tags=["Results"],
+    summary='Get the results of an existing simulation run.')
+async def get_output(job_id: str):
+    # get the job
+    job = await db_connector.read(collection_name=JOB_COLLECTION_NAME, job_id=job_id)
+
+    # parse id and return if job exist
+    if job is not None:
+        not_included = ["_id", "spec", "duration", "simulators"]
+        data = {}
+        for key in job.keys():
+            if key not in not_included:
+                data[key] = job[key]
+
+        return OutputData(**data)
+    else:
+        # otherwise, job does not exists
+        msg = f"Job with id: {job_id} not found. Please check the job_id and try again."
+        logger.error(msg)
+        raise HTTPException(status_code=404, detail=msg)
+
+
 # TODO: refactor this for collections
 @app.get(
     "/get-output-file/{job_id}",
@@ -446,108 +450,108 @@ async def get_output_file(job_id: str):
         )
 
 
-@app.get(
-    "/get-output/{job_id}",
-    # response_model=OutputData,
-    operation_id='get-output',
-    tags=["Results"],
-    summary='Get the results of an existing simulation run.')
-async def fetch_results(job_id: str):
-    # TODO: refactor this!
-
-    # state-case: job is completed
-    job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
-    if job is not None:
-        job.pop('_id', None)
-        job_data = job
-
-        # output-case: output content in dict is a downloadable file
-        if isinstance(job_data, dict):
-            remote_fp = job_data.get("results").get("results_file")
-            if remote_fp is not None:
-                temp_dest = mkdtemp()
-                local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
-
-                return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
-                # return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
-
-        # otherwise, return job content
-        return {'content': job}
-
-    # state-case: job has failed
-    if job is None:
-        job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
-        if job is not None:
-            job.pop('_id', None)
-            return {'content': job}
-
-    # state-case: job is not in completed:
-    if job is None:
-        job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
-
-    # state-case: job is not in progress:
-    if job is None:
-        job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
-
-    # return-case: job exists as either completed, failed, in_progress, or pending
-    if not isinstance(job, type(None)):
-        # remove autogen obj
-        job.pop('_id', None)
-
-        # status/content-case: case: job is completed
-        if job['status'] == "COMPLETED":
-            # check output for type (either raw data or file download)
-            job_data = None
-            results = job['results']
-            if isinstance(results, dict):
-                job_data = job['results'].get('results')
-            else:
-                job_data = job['results']
-
-            # job has results
-            if job_data is not None:
-                remote_fp = None
-
-                if isinstance(job_data, list):
-                    # return OutputData(content=job)
-                    return {'content': job}
-
-                # output-type-case: output is saved as a dict
-                if isinstance(job_data, dict):
-                    # output-case: output content in dict is a downloadable file
-                    if "results_file" in job_data.keys():
-                        remote_fp = job_data['results_file']
-                    # status/output-case: job is complete and output content is raw data and so return the full data TODO: do something better here
-                    else:
-                        # return OutputData(content=job)
-                        return {'content': job}
-
-                # output-type-case: output is saved as flattened (str) and thus also a file download
-                elif isinstance(job_data, str):
-                    remote_fp = job_data
-
-                # content-case: output content relates to file download
-                if remote_fp is not None:
-                    temp_dest = mkdtemp()
-                    local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
-
-                    # return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
-                    return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
-
-        # status/content-case: job is either pending or in progress and does not contain files to download
-        else:
-            # acknowledge the user submission to differentiate between original submission
-            status = job['status']
-            job['status'] = 'SUBMITTED:' + status
-
-            # return OutputData(content=job)
-            return {'content': job}
-
-    # return-case: no job exists in any collection by that id
-    else:
-        msg = f"Job with id: {job_id} not found. Please check the job_id and try again."
-        logger.error(msg)
-        raise HTTPException(status_code=404, detail=msg)
+# @app.get(
+#     "/get-output/{job_id}",
+#     # response_model=OutputData,
+#     operation_id='get-output',
+#     tags=["Results"],
+#     summary='Get the results of an existing simulation run.')
+# async def fetch_results(job_id: str):
+#     # TODO: refactor this!
+#
+#     # state-case: job is completed
+#     job = await db_connector.read(collection_name="completed_jobs", job_id=job_id)
+#     if job is not None:
+#         job.pop('_id', None)
+#         job_data = job
+#
+#         # output-case: output content in dict is a downloadable file
+#         if isinstance(job_data, dict):
+#             remote_fp = job_data.get("results").get("results_file")
+#             if remote_fp is not None:
+#                 temp_dest = mkdtemp()
+#                 local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+#
+#                 return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+#                 # return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
+#
+#         # otherwise, return job content
+#         return {'content': job}
+#
+#     # state-case: job has failed
+#     if job is None:
+#         job = await db_connector.read(collection_name="failed_jobs", job_id=job_id)
+#         if job is not None:
+#             job.pop('_id', None)
+#             return {'content': job}
+#
+#     # state-case: job is not in completed:
+#     if job is None:
+#         job = await db_connector.read(collection_name="in_progress_jobs", job_id=job_id)
+#
+#     # state-case: job is not in progress:
+#     if job is None:
+#         job = await db_connector.read(collection_name="pending_jobs", job_id=job_id)
+#
+#     # return-case: job exists as either completed, failed, in_progress, or pending
+#     if not isinstance(job, type(None)):
+#         # remove autogen obj
+#         job.pop('_id', None)
+#
+#         # status/content-case: case: job is completed
+#         if job['status'] == "COMPLETED":
+#             # check output for type (either raw data or file download)
+#             job_data = None
+#             results = job['results']
+#             if isinstance(results, dict):
+#                 job_data = job['results'].get('results')
+#             else:
+#                 job_data = job['results']
+#
+#             # job has results
+#             if job_data is not None:
+#                 remote_fp = None
+#
+#                 if isinstance(job_data, list):
+#                     # return OutputData(content=job)
+#                     return {'content': job}
+#
+#                 # output-type-case: output is saved as a dict
+#                 if isinstance(job_data, dict):
+#                     # output-case: output content in dict is a downloadable file
+#                     if "results_file" in job_data.keys():
+#                         remote_fp = job_data['results_file']
+#                     # status/output-case: job is complete and output content is raw data and so return the full data TODO: do something better here
+#                     else:
+#                         # return OutputData(content=job)
+#                         return {'content': job}
+#
+#                 # output-type-case: output is saved as flattened (str) and thus also a file download
+#                 elif isinstance(job_data, str):
+#                     remote_fp = job_data
+#
+#                 # content-case: output content relates to file download
+#                 if remote_fp is not None:
+#                     temp_dest = mkdtemp()
+#                     local_fp = download_file_from_bucket(source_blob_path=remote_fp, out_dir=temp_dest, bucket_name=BUCKET_NAME)
+#
+#                     # return FileResponse(path=local_fp, media_type="application/octet-stream", filename=local_fp.split("/")[-1])
+#                     return {'path': local_fp, 'media_type': 'application/octet-stream', 'filename': local_fp.split('/')[-1]}
+#
+#         # status/content-case: job is either pending or in progress and does not contain files to download
+#         else:
+#             # acknowledge the user submission to differentiate between original submission
+#             status = job['status']
+#             job['status'] = 'SUBMITTED:' + status
+#
+#             # return OutputData(content=job)
+#             return {'content': job}
+#
+#     # return-case: no job exists in any collection by that id
+#     else:
+#         msg = f"Job with id: {job_id} not found. Please check the job_id and try again."
+#         logger.error(msg)
+#         raise HTTPException(status_code=404, detail=msg)
 
 
 @app.post(
@@ -578,8 +582,8 @@ async def generate_simularium_file(
         for agent_param in agent_parameters.agents:
             agent_params[agent_param.name] = agent_param.model_dump()
 
-    new_job_submission = await db_connector.insert_job_async(
-        collection_name=DatabaseCollections.PENDING_JOBS.value,
+    new_job_submission = await db_connector.write(
+        collection_name=JOB_COLLECTION_NAME,
         status=JobStatus.PENDING.value,
         job_id=job_id,
         timestamp=_time,

@@ -70,69 +70,6 @@ class ApiRun(BaseModel):
     simulators: List[str]
 
 
-class SmoldynRun(ApiRun):
-    duration: Optional[int] = None
-    dt: Optional[float] = None
-    simulators: List[str] = ["smoldyn"]
-
-
-# ReaddyRun config:
-# {
-#   "species_config": [
-#     {
-#       "name": "E",
-#       "diffusion_constant": 10.0
-#     },
-#     {
-#       "name": "S",
-#       "diffusion_constant": 10.0
-#     },
-#     {
-#       "name": "ES",
-#       "diffusion_constant": 10.0
-#     },
-#     {
-#       "name": "P",
-#       "diffusion_constant": 10.0
-#     }
-#   ],
-#   "reactions_config": [
-#     {
-#       "scheme": "fwd: E +(0.03) S -> ES",
-#       "rate": 86.78638438
-#     },
-#     {
-#       "scheme": "back: ES -> E +(0.03) S", "rate": 1.0
-#     },
-#     {
-#       "scheme": "prod: ES -> E +(0.03) P", "rate": 1.0
-#     }
-#   ],
-#   "particles_config": [
-#     {
-#       "name": "E",
-#       "initial_positions": [
-#          [-0.11010841,  0.01048227, -0.07514985],
-#          [0.02715631, -0.03829782,  0.14395517],
-#          [0.05522253, -0.11880506,  0.02222362]
-#       ]
-#     },
-#     {
-#       "name": "S",
-#       "initial_positions": [
-#          [-0.21010841,  0.21048227, -0.07514985],
-#          [0.02715631, -0.03829782,  0.14395517],
-#          [0.05522253, -0.11880506,  0.02222362]
-#       ]
-#     }
-#   ],
-#   "unit_system_config": {
-#     "length_unit": "micrometer",
-#     "time_unit": "second"
-#   }
-# }
-
-
 class ReaddySpeciesConfig(BaseModel):
     name: str
     diffusion_constant: float
@@ -173,23 +110,7 @@ class IncompleteJob(BaseModel):
     source: Optional[str] = None
 
 
-class SmoldynJob(IncompleteJob):
-    pass
-
-
-class FileJob(BaseModel, FileResponse):
-    pass
-
-
-class SmoldynOutput(FileResponse):
-    pass
-
-
-class OutputData(BaseModel):
-    content: Union[Any, SmoldynOutput]
-
-
-# -- composition --
+# -- spatial (readdy/smoldyn) --
 
 
 class AgentParameter(BaseModel):
@@ -203,27 +124,15 @@ class AgentParameters(BaseModel):
     agents: List[AgentParameter]
 
 
-# class CompositionSpecification(BaseModel):
-#     composition_id: str = Field(default=None, examples=["ode-fba-species-a"], description="Unique composition ID.")
-#     nodes: List[CompositionNode]
+class SmoldynOutput(FileResponse):
+    pass
 
 
-class BigraphRegistryAddresses(BaseModel):
-    version: str
-    registered_addresses: List[str]
+class SmoldynRun(ApiRun):
+    duration: Optional[int] = None
+    dt: Optional[float] = None
+    simulators: List[str] = ["smoldyn"]
 
-
-class CompositionSpecification(BaseModel):
-    composition_id: str
-    nodes: List[Any]
-
-
-class PendingCompositionJob(BaseModel):
-    job_id: str
-    composition: Dict[str, Any]
-    duration: int
-    timestamp: str
-    status: str = JobStatus.PENDING.value
 
 
 class DbClientResponse(BaseModel):
@@ -232,35 +141,12 @@ class DbClientResponse(BaseModel):
     timestamp: str
 
 
-# -- data --
-
-class _OutputData(BaseModel):
-    content: Any
-
-
-class Simulator(BaseModel):
-    name: str
-    version: Optional[str] = None
-
-
-class CompatibleSimulators(BaseModel):
-    file: str
-    simulators: List[Simulator]
-
-
-@dataclass
-class BiosimulationsReportOutput(BaseClass):
-    dataset_label: str
-    data: np.ndarray
-
-
-@dataclass
-class BiosimulationsRunOutputData(BaseClass):
-    report_path: str
-    data: List[BiosimulationsReportOutput]
-
-
 # -- process-bigraph specs -- TODO: implement this!
+
+class BigraphRegistryAddresses(BaseModel):
+    version: str
+    registered_addresses: List[str]
+
 
 class DataStorePath(str):
     pass
@@ -332,5 +218,17 @@ class CompositionSpec(BaseClass):
 @dataclass
 class CompositionRun(BaseClass):
     job_id: str
-    timestamp: str
+    last_updated: str
+    simulators: List[str]
+    duration: int
+    spec: Dict[str, Any]
     status: str = "PENDING"
+    results: Dict[str, Any] = None
+
+
+@dataclass
+class OutputData(BaseClass):
+    job_id: str
+    status: str
+    last_updated: str
+    results: Dict

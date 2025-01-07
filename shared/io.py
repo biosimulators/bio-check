@@ -12,9 +12,6 @@ import chardet
 from fastapi import UploadFile
 from google.cloud import storage
 
-from shared.data_model import BiosimulationsRunOutputData, BiosimulationsReportOutput, SBMLSpeciesMapping
-from shared.utils import printc
-
 
 def check_upload_file_extension(file: UploadFile, purpose: str, ext: str, message: str = None) -> bool:
     if not file.filename.endswith(ext):

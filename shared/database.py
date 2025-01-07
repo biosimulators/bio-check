@@ -92,7 +92,7 @@ class MongoDbConnector(DatabaseConnector):
         result = coll.find_one(kwargs.copy())
         return result
 
-    async def write(self, collection_name: str, **kwargs) -> WriteResponse:
+    async def write(self, collection_name: str, **kwargs):
         """
             Args:
                 collection_name: str: collection name in mongodb
@@ -102,9 +102,9 @@ class MongoDbConnector(DatabaseConnector):
         try:
             coll = self.get_collection(collection_name)
             result = coll.insert_one(kwargs.copy())
-            return WriteResponse(0)
+            return kwargs.copy()
         except:
-            return WriteResponse(1)
+            return {}
 
     def get_jobs(self):
         coll = self.get_collection(JOB_COLLECTION_NAME)

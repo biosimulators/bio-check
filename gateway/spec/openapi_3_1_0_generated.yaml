@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: bio-compose
-  version: 0.0.2
+  version: 0.0.1
 paths:
   /:
     get:
@@ -32,12 +32,31 @@ paths:
       - Composition
       summary: Submit composition spec for simulation
       operationId: submit-composition
+      parameters:
+      - name: simulators
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+          description: Simulator package names to use for implementation
+          title: Simulators
+        description: Simulator package names to use for implementation
+      - name: duration
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Duration of simulation
+          title: Duration
+        description: Duration of simulation
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Body_submit-composition'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -476,17 +495,34 @@ components:
         job_id:
           type: string
           title: Job Id
-        timestamp:
+        last_updated:
           type: string
-          title: Timestamp
+          title: Last Updated
+        simulators:
+          items:
+            type: string
+          type: array
+          title: Simulators
+        duration:
+          type: integer
+          title: Duration
+        spec:
+          type: object
+          title: Spec
         status:
           type: string
           title: Status
           default: PENDING
+        results:
+          type: object
+          title: Results
       type: object
       required:
       - job_id
-      - timestamp
+      - last_updated
+      - simulators
+      - duration
+      - spec
       title: CompositionRun
     HTTPValidationError:
       properties:
